@@ -1,0 +1,34 @@
+specVersion: v0.1.0
+package:
+  name: "substreams_uniswap_v2"
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+
+protobuf:
+  files:
+    - uniswap_v2.proto
+  importPaths:
+    - ./proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: ./target/wasm32-unknown-unknown/release/substreams_uniswap_v2.wasm
+
+modules:
+  - name: block_to_pairs
+    kind: map
+    initialBlock: 10000834
+    inputs:
+      - source: sf.ethereum.type.v1.Block
+    output:
+      type: proto:eth.messari.uniswap.v1.Pairs
+
+  - name: store_pairs
+    kind: store
+    updatePolicy: set
+    valueType: proto:eth.messari.uniswap.v1.Pairs
+    inputs:
+      - map: block_to_pairs
