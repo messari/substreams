@@ -8,4 +8,4 @@ build:
 
 .PHONY: stream
 stream:
-	substreams run -e api-dev.streamingfast.io:443 substreams.yaml store_pairs -s 10008500 -t +10
+	substreams run -e api-dev.streamingfast.io:443 substreams.yaml map_pair -s 10008500 -t +10

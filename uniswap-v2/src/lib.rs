@@ -1,10 +1,14 @@
 mod abi;
 mod pb;
+mod rpc;
+mod utils;
+mod uniswap;
+mod math;
 
 use hex;
 use pb::uniswap_v2;
 use abi::factory;
-use substreams::{log, store};
+use substreams::{log, proto, store};
 use substreams_ethereum::{pb::eth::v1 as eth, Event as EventTrait};
 
 substreams_ethereum::init!();
@@ -12,43 +16,78 @@ substreams_ethereum::init!();
 pub const UNISWAP_V2_FACTORY: &str = "5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f";
 pub const UNISWAP_V2_FACTORY_START_BLOCK: u64 = 10000835;
 
-fn is_pair_created_event(sig: &str) -> bool {
-    /* keccak value for PoolCreated(address,address,uint24,int24,address) */
-    return sig == "783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118";
+trait BlockExt {
+    fn timestamp(&self) -> u64;
+}
+
+impl BlockExt for eth::Block {
+    fn timestamp(&self) -> u64 {
+        self.header
+            .as_ref()
+            .unwrap()
+            .timestamp
+            .as_ref()
+            .unwrap()
+            .seconds as u64
+    }
 }
 
 #[substreams::handlers::map]
-fn block_to_pairs(block: eth::Block) -> Result<uniswap_v2::Pairs, substreams::errors::Error> {
-    let mut pairs = uniswap_v2::Pairs { pairs: vec![] };
+fn map_pair_created_event(block: eth::Block) -> Result<uniswap_v2::PairCreatedEvents, substreams::errors::Error> {
+    let mut pair_created_events = uniswap_v2::PairCreatedEvents { items: vec![] };
 
     for log in block.logs() {
-        if let Some(_event) = factory::events::PairCreated::match_and_decode(log) {
-            // Uniswap v2 Factory
+        if let Some(event) = factory::events::PairCreated::match_and_decode(log) {
             if hex::encode(&log.log.address) != UNISWAP_V2_FACTORY {
                 continue;
             }
 
-            log::info!("matched");
-
-            let sig = hex::encode(&log.log.topics[0]);
-
-            if !is_pair_created_event(sig.as_str()) {
-                continue;
-            }
-
-            pairs.pairs.push(pb::uniswap_v2::Pair {
-                name: "name".to_string(),
-                address: "address".to_string(),
-                token0: "token0".to_string(),
-                token1: "token1".to_string(),
+            pair_created_events.items.push(uniswap_v2::PairCreatedEvent {
+                token0: hex::encode(event.token0),
+                token1: hex::encode(event.token1),
+                pair: hex::encode(event.pair),
+                block_number: block.number,
+                block_timestamp: block.timestamp(),
             })
         }
     }
 
-    Ok(pairs)
+    Ok(pair_created_events)
 }
 
 #[substreams::handlers::store]
-fn store_pairs(_pairs: uniswap_v2::Pairs, _s: store::StoreAddInt64) {
-    log::info!("Stored pairs {}", _pairs.pairs.len());
+fn store_pair_created_event(pair_created_events: uniswap_v2::PairCreatedEvents, output: store::StoreSet) {
+    log::info!("Stored pairs {}", pair_created_events.items.len());
+    for event in pair_created_events.items {
+        output.set(
+            0,
+            &event.pair,
+            &proto::encode(&event).unwrap(),
+        );
+    }
+}
+
+#[substreams::handlers::map]
+fn map_pair(pair_created_events: uniswap_v2::PairCreatedEvents) -> Result<uniswap_v2::Pairs, substreams::errors::Error> {
+    let mut pairs = uniswap_v2::Pairs { items: vec![] };
+
+    for event in pair_created_events.items {
+        match rpc::create_uniswap_token(&event.token0) {
+            None => {
+                continue;
+            }
+            Some(token) => {
+                log::info!("token name: {}", token.name);
+            }
+        }
+
+        pairs.items.push(uniswap_v2::Pair {
+            name: event.pair.clone(),
+            token0: event.token0,
+            token1: event.token1,
+            address: event.pair.clone(),
+        })
+    }
+
+    Ok(pairs)
 }
