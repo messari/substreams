@@ -1,0 +1,12 @@
+[package]
+name = "substreams-helper"
+description = "Substreams Helper Crate - by Messari"
+version = "0.0.1"
+edition = "2021"
+license = "MIT"
+homepage = "https://messari.io/"
+repository = "https://github.com/substreams/substreams-helper"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
