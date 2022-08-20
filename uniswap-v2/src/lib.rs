@@ -11,6 +11,8 @@ use abi::factory;
 use substreams::{log, proto, store};
 use substreams_ethereum::{pb::eth::v1 as eth, Event as EventTrait};
 
+use pb::erc721;
+
 substreams_ethereum::init!();
 
 pub const UNISWAP_V2_FACTORY: &str = "5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f";
@@ -87,6 +89,17 @@ fn map_pair(pair_created_events: uniswap_v2::PairCreatedEvents) -> Result<uniswa
             token1: event.token1,
             address: event.pair.clone(),
         })
+    }
+
+    Ok(pairs)
+}
+
+#[substreams::handlers::map]
+fn map_erc721(transfers: erc721::Transfers) -> Result<uniswap_v2::Pairs, substreams::errors::Error> {
+    let mut pairs = uniswap_v2::Pairs { items: vec![] };
+
+    for transfer in transfers.transfers {
+        log::info!("Found a transfer in");
     }
 
     Ok(pairs)

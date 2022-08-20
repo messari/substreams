@@ -8,4 +8,4 @@ build:
 
 .PHONY: stream
 stream:
-	substreams run -e api-dev.streamingfast.io:443 substreams.yaml map_transfers -s 12292922 -t +10
+	substreams run -e api-dev.streamingfast.io:443 substreams.yaml block_to_transfers -s 12292922 -t +10
