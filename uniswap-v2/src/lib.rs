@@ -10,6 +10,7 @@ use pb::uniswap_v2;
 use abi::factory;
 use substreams::{log, proto, store};
 use substreams_ethereum::{pb::eth::v1 as eth, Event as EventTrait};
+use substreams_helper::main;
 
 use pb::erc721;
 
@@ -73,6 +74,8 @@ fn store_pair_created_event(pair_created_events: uniswap_v2::PairCreatedEvents, 
 fn map_pair(pair_created_events: uniswap_v2::PairCreatedEvents) -> Result<uniswap_v2::Pairs, substreams::errors::Error> {
     let mut pairs = uniswap_v2::Pairs { items: vec![] };
 
+    main();
+
     for event in pair_created_events.items {
         match rpc::create_uniswap_token(&event.token0) {
             None => {
@@ -89,17 +92,6 @@ fn map_pair(pair_created_events: uniswap_v2::PairCreatedEvents) -> Result<uniswa
             token1: event.token1,
             address: event.pair.clone(),
         })
-    }
-
-    Ok(pairs)
-}
-
-#[substreams::handlers::map]
-fn map_erc721(transfers: erc721::Transfers) -> Result<uniswap_v2::Pairs, substreams::errors::Error> {
-    let mut pairs = uniswap_v2::Pairs { items: vec![] };
-
-    for transfer in transfers.transfers {
-        log::info!("Found a transfer in");
     }
 
     Ok(pairs)

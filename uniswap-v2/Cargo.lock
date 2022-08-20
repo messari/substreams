@@ -794,6 +794,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "substreams-helper"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6708c440cc979bfbb5aeeda646a81bc26d1b67dfe42003c8448cdb7f72cd482e"
+
+[[package]]
 name = "substreams-macro"
 version = "0.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -820,6 +826,7 @@ dependencies = [
  "prost",
  "substreams",
  "substreams-ethereum",
+ "substreams-helper",
 ]
 
 [[package]]

@@ -21,33 +21,25 @@ binaries:
     file: ./target/wasm32-unknown-unknown/release/substreams_uniswap_v2.wasm
 
 modules:
-  #  - name: map_pair_created_event
-  #    kind: map
-  #    initialBlock: 10000834
-  #    inputs:
-  #      - source: sf.ethereum.type.v1.Block
-  #    output:
-  #      type: proto:messari.uniswap_v2.PairCreatedEvents
-  #
-  #  - name: store_pair_created_event
-  #    kind: store
-  #    updatePolicy: set
-  #    valueType: proto:messari.uniswap_v2.PairCreatedEvents
-  #    inputs:
-  #      - map: map_pair_created_event
+    - name: map_pair_created_event
+      kind: map
+      initialBlock: 10000834
+      inputs:
+        - source: sf.ethereum.type.v1.Block
+      output:
+        type: proto:messari.uniswap_v2.PairCreatedEvents
 
-#  - name: map_pair
-#    kind: map
-#    initialBlock: 10000834
-#    inputs:
-#      - map: map_pair_created_event
-#    output:
-#      type: proto:messari.uniswap_v2.Pairs
+    - name: store_pair_created_event
+      kind: store
+      updatePolicy: set
+      valueType: proto:messari.uniswap_v2.PairCreatedEvents
+      inputs:
+        - map: map_pair_created_event
 
-  - name: map_erc721
-    kind: map
-    initialBlock: 12287507
-    inputs:
-      - map: erc721:block_to_transfers
-    output:
-      type: proto:messari.uniswap_v2.Pairs
+    - name: map_pair
+      kind: map
+      initialBlock: 10000834
+      inputs:
+        - map: map_pair_created_event
+      output:
+        type: proto:messari.uniswap_v2.Pairs

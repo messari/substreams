@@ -3,7 +3,7 @@ name = "substreams-uniswap-v2"
 version = "0.1.0"
 description = "Messari's standardized substream for Uniswap v2"
 edition = "2021"
-repository = "https://github.com/messari/subgraphs/"
+repository = "https://github.com/messari/substreams/"
 
 [lib]
 crate-type = ["cdylib"]
@@ -21,6 +21,7 @@ pad = "0.1"
 substreams = "0.0.18"
 # Use latest from https://crates.io/crates/substreams-ethereum
 substreams-ethereum = "0.1.9"
+substreams-helper = "0.0.1"
 
 # Required so that ethabi > ethereum-types build correctly under wasm32-unknown-unknown
 getrandom = { version = "0.2", features = ["custom"] }
