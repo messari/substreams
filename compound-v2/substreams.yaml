@@ -1,0 +1,147 @@
+specVersion: v0.1.0
+package:
+  name: "compoundv2_substreams"
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+
+protobuf:
+  files:
+    - compound.proto
+  importPaths:
+    - ./proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: ./target/wasm32-unknown-unknown/release/compoundv2_substreams.wasm
+
+modules:
+  - name: map_accrue_interest
+    kind: map
+    initialBlock: 7710671
+    inputs:
+      - source: sf.ethereum.type.v1.Block
+    output:
+      type: proto:compound.v1.AccrueInterestList
+
+  - name: map_mint
+    kind: map
+    initialBlock: 7710671
+    inputs:
+      - source: sf.ethereum.type.v1.Block
+      - store: store_token
+      - store: store_price
+    output:
+      type: proto:compound.v1.MintList
+
+  - name: map_market_listed
+    kind: map
+    initialBlock: 7710671
+    inputs:
+      - source: sf.ethereum.type.v1.Block
+    output:
+      type: proto:compound.v1.MarketListedList
+
+  - name: map_market_totals
+    kind: map
+    inputs:
+      - map: map_accrue_interest
+      - store: store_token
+      - store: store_price
+    output:
+      type: proto:compound.v1.MarketTotalsList
+
+  - name: map_market_revenue_delta
+    kind: map
+    inputs:
+      - map: map_accrue_interest
+      - store: store_market_reserve_factor
+      - store: store_price
+      - store: store_token
+    output:
+      type: proto:compound.v1.MarketRevenueDeltaList
+
+  - name: store_token
+    kind: store
+    updatePolicy: set
+    valueType: proto:compound.v1.Token
+    inputs:
+      - map: map_market_listed
+
+  - name: store_market_reserve_factor
+    kind: store
+    initialBlock: 7710671
+    updatePolicy: set
+    valueType: string
+    inputs:
+      - source: sf.ethereum.type.v1.Block
+
+  - name: store_market_count
+    kind: store
+    updatePolicy: add
+    valueType: int64
+    inputs:
+      - map: map_market_listed
+
+  - name: store_mint_count
+    kind: store
+    updatePolicy: add
+    valueType: int64
+    inputs:
+      - map: map_mint
+
+  - name: store_oracle
+    kind: store
+    initialBlock: 7710671
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - source: sf.ethereum.type.v1.Block
+
+  - name: store_price
+    kind: store
+    updatePolicy: set
+    valueType: string
+    inputs:
+      - map: map_accrue_interest
+      - store: store_oracle
+      - store: store_token
+
+  - name: store_market_listed
+    kind: store
+    updatePolicy: append
+    valueType: string
+    inputs:
+      - map: map_market_listed
+
+  - name: store_mint
+    kind: store
+    updatePolicy: set
+    valueType: proto:compound.v1.Mint
+    inputs:
+      - map: map_mint
+
+  - name: store_market_totals
+    kind: store
+    updatePolicy: set
+    valueType: string
+    inputs:
+      - map: map_market_totals
+
+  - name: store_protocol_totals
+    kind: store
+    updatePolicy: set
+    valueType: string
+    inputs:
+      - map: map_market_totals
+      - store: store_market_listed
+      - store: store_market_totals
+
+  - name: store_revenue
+    kind: store
+    updatePolicy: add
+    valueType: bigfloat
+    inputs:
+      - map: map_market_revenue_delta
