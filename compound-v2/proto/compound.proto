@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package compound.v1;
+
+message AccrueInterestList {
+  repeated AccrueInterest accrue_interest_list = 1;
+}
+
+message AccrueInterest {
+  string interest_accumulated = 1;
+  string borrow_index = 2;
+  string total_borrows = 3;
+  bytes address = 99;
+  uint64 block_number = 98;
+  int64 timestamp = 97;
+}
+
+message Token {
+  bytes id = 1;
+  string name = 2;
+  string symbol = 3;
+  uint64 decimals = 4;
+}
+
+message MintList {
+  repeated Mint mint_list = 1;
+}
+
+message Mint {
+  bytes id = 1;
+  bytes minter = 2;
+  string mint_amount = 3;
+  string mint_tokens = 4;
+  string mint_amount_usd = 5;
+  int64 timestamp = 99;
+}
+
+message MarketListed {
+  bytes ctoken = 1;
+}
+
+message MarketListedList {
+  repeated MarketListed market_listed_list = 1;
+}
+
+message MarketTotals {
+  bytes market = 1;
+  string totalValueLocked = 2;
+  string totalBorrows = 3;
+}
+
+message MarketTotalsList {
+  repeated MarketTotals market_totals_list = 1;
+}
+
+message MarketRevenueDelta {
+  bytes market = 1;
+  string total_revenue = 2;
+  string protocol_revenue = 3;
+  string supply_revenue = 4;
+  int64 timestamp = 99;
+}
+
+message MarketRevenueDeltaList {
+  repeated MarketRevenueDelta market_revenue_delta_list = 1;
+}
