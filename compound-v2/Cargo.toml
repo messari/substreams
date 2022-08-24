@@ -10,16 +10,16 @@ crate-type = ["cdylib"]
 
 [dependencies]
 ethabi = "17.0"
-prost = "0.10.1"
+prost = "^0.11.0"
 tiny-keccak = { version = "2.0", features = ["keccak"] }
-substreams = { version = "0.0.17" }
-substreams-ethereum = { version = "0.1.7" }
+substreams = "~0.0.20"
+substreams-ethereum = "~0.2.0"
 num-bigint = "0.4"
 bigdecimal = "0.3.0"
 
 [build-dependencies]
 anyhow = "1"
-substreams-ethereum = { version = "0.1.7" }
+substreams-ethereum = "~0.2.0"
 
 [profile.release]
 lto = true

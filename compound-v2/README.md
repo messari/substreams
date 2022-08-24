@@ -7,13 +7,13 @@ Ongoing effort to index Compound V2 using substreams.
 ```mermaid
 graph TD;
   map_accrue_interest[map: map_accrue_interest]
-  sf.ethereum.type.v1.Block[source: sf.ethereum.type.v1.Block] --> map_accrue_interest
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> map_accrue_interest
   map_mint[map: map_mint]
-  sf.ethereum.type.v1.Block[source: sf.ethereum.type.v1.Block] --> map_mint
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> map_mint
   store_token --> map_mint
   store_price --> map_mint
   map_market_listed[map: map_market_listed]
-  sf.ethereum.type.v1.Block[source: sf.ethereum.type.v1.Block] --> map_market_listed
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> map_market_listed
   map_market_totals[map: map_market_totals]
   map_accrue_interest --> map_market_totals
   store_token --> map_market_totals
@@ -26,13 +26,13 @@ graph TD;
   store_token[store: store_token]
   map_market_listed --> store_token
   store_market_reserve_factor[store: store_market_reserve_factor]
-  sf.ethereum.type.v1.Block[source: sf.ethereum.type.v1.Block] --> store_market_reserve_factor
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> store_market_reserve_factor
   store_market_count[store: store_market_count]
   map_market_listed --> store_market_count
   store_mint_count[store: store_mint_count]
   map_mint --> store_mint_count
   store_oracle[store: store_oracle]
-  sf.ethereum.type.v1.Block[source: sf.ethereum.type.v1.Block] --> store_oracle
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> store_oracle
   store_price[store: store_price]
   map_accrue_interest --> store_price
   store_oracle --> store_price
