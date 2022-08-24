@@ -16,6 +16,7 @@ substreams = "~0.0.20"
 substreams-ethereum = "~0.2.0"
 num-bigint = "0.4"
 bigdecimal = "0.3.0"
+price-rs = "0.0.1"
 
 [build-dependencies]
 anyhow = "1"
