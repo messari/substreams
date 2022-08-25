@@ -44,7 +44,7 @@
                 185u8,
                 37u8,
             ];
-            pub fn match_log(log: &substreams_ethereum::pb::eth::v1::Log) -> bool {
+            pub fn match_log(log: &substreams_ethereum::pb::eth::v2::Log) -> bool {
                 if log.topics.len() != 3usize {
                     return false;
                 }
@@ -55,7 +55,7 @@
                     == Self::TOPIC_ID;
             }
             pub fn decode(
-                log: &substreams_ethereum::pb::eth::v1::Log,
+                log: &substreams_ethereum::pb::eth::v2::Log,
             ) -> Result<Self, String> {
                 let mut values = ethabi::decode(
                         &[ethabi::ParamType::Uint(256usize)],
@@ -106,11 +106,11 @@
         }
         impl substreams_ethereum::Event for Approval {
             const NAME: &'static str = "Approval";
-            fn match_log(log: &substreams_ethereum::pb::eth::v1::Log) -> bool {
+            fn match_log(log: &substreams_ethereum::pb::eth::v2::Log) -> bool {
                 Self::match_log(log)
             }
             fn decode(
-                log: &substreams_ethereum::pb::eth::v1::Log,
+                log: &substreams_ethereum::pb::eth::v2::Log,
             ) -> Result<Self, String> {
                 Self::decode(log)
             }
@@ -156,7 +156,7 @@
                 179u8,
                 239u8,
             ];
-            pub fn match_log(log: &substreams_ethereum::pb::eth::v1::Log) -> bool {
+            pub fn match_log(log: &substreams_ethereum::pb::eth::v2::Log) -> bool {
                 if log.topics.len() != 3usize {
                     return false;
                 }
@@ -167,7 +167,7 @@
                     == Self::TOPIC_ID;
             }
             pub fn decode(
-                log: &substreams_ethereum::pb::eth::v1::Log,
+                log: &substreams_ethereum::pb::eth::v2::Log,
             ) -> Result<Self, String> {
                 let mut values = ethabi::decode(
                         &[ethabi::ParamType::Uint(256usize)],
@@ -218,11 +218,11 @@
         }
         impl substreams_ethereum::Event for Transfer {
             const NAME: &'static str = "Transfer";
-            fn match_log(log: &substreams_ethereum::pb::eth::v1::Log) -> bool {
+            fn match_log(log: &substreams_ethereum::pb::eth::v2::Log) -> bool {
                 Self::match_log(log)
             }
             fn decode(
-                log: &substreams_ethereum::pb::eth::v1::Log,
+                log: &substreams_ethereum::pb::eth::v2::Log,
             ) -> Result<Self, String> {
                 Self::decode(log)
             }
