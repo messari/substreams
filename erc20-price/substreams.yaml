@@ -1,0 +1,27 @@
+specVersion: v0.1.0
+package:
+  name: "erc20_price_substreams"
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+
+protobuf:
+  files:
+    - erc20_price.proto
+  importPaths:
+    - ./proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: ./target/wasm32-unknown-unknown/release/erc20_price_substreams.wasm
+
+modules:
+  - name: eth_price
+    kind: map
+    initialBlock: 13000000
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:messari.erc20_price.Erc20Price

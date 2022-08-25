@@ -26,17 +26,12 @@ pub fn decimal_from_hex_be_bytes(price_bytes: &Vec<u8>) -> BigDecimal {
         .with_prec(100);
 }
 
-pub fn exponent_to_big_decimal(decimals: &BigInt) -> BigDecimal {
+pub fn exponent_to_big_decimal(decimals: u8) -> BigDecimal {
     let mut result = BigDecimal::one();
     let big_decimal_ten: &BigDecimal = &BigDecimal::from(10);
-    let big_int_one: &BigInt = &BigInt::one();
-
-    let mut i = BigInt::zero();
-    while i.lt(decimals) {
+    for _i in 0..decimals {
         result = result.mul(big_decimal_ten);
-        i = i.add(big_int_one);
     }
-
     return result;
 }
 

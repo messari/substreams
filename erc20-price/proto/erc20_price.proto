@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package messari.erc20_price;
+
+message ERC20Price {
+  uint64 block_number = 1;
+  string price_usd = 2;
+}

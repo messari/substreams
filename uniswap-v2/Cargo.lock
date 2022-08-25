@@ -857,7 +857,9 @@ dependencies = [
  "num-bigint",
  "pad",
  "prost 0.11.0",
+ "substreams",
  "substreams-ethereum",
+ "tiny-keccak",
 ]
 
 [[package]]
