@@ -76,7 +76,7 @@ pub fn fetch_many(params: Vec<RpcCallParams>) -> Vec<Result<Vec<u8>, String>> {
             .iter()
             .map(|p| eth::rpc::RpcCall {
                 to_addr: p.to.clone(),
-                method_signature: rpc_data(&p.method, &p.args),
+                data: rpc_data(&p.method, &p.args),
             })
             .collect(),
     };

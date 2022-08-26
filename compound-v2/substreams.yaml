@@ -22,7 +22,7 @@ modules:
     kind: map
     initialBlock: 7710671
     inputs:
-      - source: sf.ethereum.type.v1.Block
+      - source: sf.ethereum.type.v2.Block
     output:
       type: proto:compound.v1.AccrueInterestList
 
@@ -30,7 +30,7 @@ modules:
     kind: map
     initialBlock: 7710671
     inputs:
-      - source: sf.ethereum.type.v1.Block
+      - source: sf.ethereum.type.v2.Block
       - store: store_token
       - store: store_price
     output:
@@ -40,7 +40,7 @@ modules:
     kind: map
     initialBlock: 7710671
     inputs:
-      - source: sf.ethereum.type.v1.Block
+      - source: sf.ethereum.type.v2.Block
     output:
       type: proto:compound.v1.MarketListedList
 
@@ -76,7 +76,7 @@ modules:
     updatePolicy: set
     valueType: string
     inputs:
-      - source: sf.ethereum.type.v1.Block
+      - source: sf.ethereum.type.v2.Block
 
   - name: store_market_count
     kind: store
@@ -98,7 +98,7 @@ modules:
     updatePolicy: set
     valueType: bytes
     inputs:
-      - source: sf.ethereum.type.v1.Block
+      - source: sf.ethereum.type.v2.Block
 
   - name: store_price
     kind: store

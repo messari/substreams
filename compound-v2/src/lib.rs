@@ -16,7 +16,7 @@ use substreams_ethereum::{pb::eth as ethpb, Event as EventTrait};
 
 #[substreams::handlers::map]
 fn map_accrue_interest(
-    blk: ethpb::v1::Block,
+    blk: ethpb::v2::Block,
 ) -> Result<compound::AccrueInterestList, substreams::errors::Error> {
     let mut accrue_interest_list: Vec<compound::AccrueInterest> = vec![];
     for log in blk.logs() {
@@ -47,7 +47,7 @@ fn map_accrue_interest(
 
 #[substreams::handlers::map]
 fn map_mint(
-    blk: ethpb::v1::Block,
+    blk: ethpb::v2::Block,
     store_token: store::StoreGet,
     store_price: store::StoreGet,
 ) -> Result<compound::MintList, substreams::errors::Error> {
@@ -99,7 +99,7 @@ fn map_mint(
 
 #[substreams::handlers::map]
 fn map_market_listed(
-    blk: ethpb::v1::Block,
+    blk: ethpb::v2::Block,
 ) -> Result<compound::MarketListedList, substreams::errors::Error> {
     let mut market_listed_list = compound::MarketListedList {
         market_listed_list: vec![],
@@ -231,7 +231,7 @@ fn map_market_revenue_delta(
 }
 
 #[substreams::handlers::store]
-fn store_market_reserve_factor(blk: ethpb::v1::Block, output: store::StoreSet) {
+fn store_market_reserve_factor(blk: ethpb::v2::Block, output: store::StoreSet) {
     for log in blk.logs() {
         if let Some(new_reserve_factor) =
             abi::ctoken::events::NewReserveFactor::match_and_decode(log)
@@ -354,7 +354,7 @@ fn store_market_count(
 }
 
 #[substreams::handlers::store]
-fn store_oracle(blk: ethpb::v1::Block, output: store::StoreSet) {
+fn store_oracle(blk: ethpb::v2::Block, output: store::StoreSet) {
     for log in blk.logs() {
         if let Some(new_price_oracle) =
             abi::comptroller::events::NewPriceOracle::match_and_decode(log)
