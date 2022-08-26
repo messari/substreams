@@ -22,7 +22,7 @@ modules:
     kind: map
     initialBlock: 12287507
     inputs:
-      - source: sf.ethereum.type.v1.Block
+      - source: sf.ethereum.type.v2.Block
     output:
       type: proto:eth.erc721.v1.Transfers
 
