@@ -47,8 +47,8 @@ fn map_pair_created_event(block: eth::Block) -> Result<uniswap_v2::PairCreatedEv
                 token0: hex::encode(event.token0),
                 token1: hex::encode(event.token1),
                 pair: hex::encode(event.pair),
-                block_number: block.number,
-                block_timestamp: block.timestamp(),
+                tx_hash: hex::encode(log.receipt.transaction.hash.clone()),
+                log_index: log.index(),
             })
         }
     }
@@ -58,7 +58,7 @@ fn map_pair_created_event(block: eth::Block) -> Result<uniswap_v2::PairCreatedEv
 
 #[substreams::handlers::store]
 fn store_pair_created_event(pair_created_events: uniswap_v2::PairCreatedEvents, output: store::StoreSet) {
-    log::info!("Stored pairs {}", pair_created_events.items.len());
+    log::info!("Stored events {}", pair_created_events.items.len());
     for event in pair_created_events.items {
         output.set(
             0,
@@ -69,26 +69,36 @@ fn store_pair_created_event(pair_created_events: uniswap_v2::PairCreatedEvents, 
 }
 
 #[substreams::handlers::map]
-fn map_pool(pair_created_events: uniswap_v2::PairCreatedEvents) -> Result<dex_amm::Pools, substreams::errors::Error> {
+fn map_pools(pair_created_events: uniswap_v2::PairCreatedEvents) -> Result<dex_amm::Pools, substreams::errors::Error> {
     let mut pools = dex_amm::Pools { items: vec![] };
 
     for event in pair_created_events.items {
-        match erc20::get_erc20_token(&event.token0) {
-            None => {
-                continue;
-            }
-            Some(token) => {
-                log::info!("token name: {}", token.name);
-            }
-        }
+        let token0 = erc20::get_erc20_token(&event.token0);
+        let token1 = erc20::get_erc20_token(&event.token1);
 
-        pools.items.push(dex_amm::Pool {
-            name: event.pair.clone(),
-            token0: event.token0,
-            token1: event.token1,
-            address: event.pair.clone(),
-        })
+        if let (Some(token0), Some(token1)) = (token0, token1) {
+            pools.items.push(dex_amm::Pool {
+                name: format!("Uniswap LP: {} / {}", token0.symbol, token1.symbol),
+                address: event.pair,
+                input_tokens: vec![],
+                total_value_locked: "0".to_string(),
+            })
+        } else {
+            log::info!("Failed to fetch token for {} {}", &event.token0, &event.token1);
+        }
     }
 
     Ok(pools)
+}
+
+#[substreams::handlers::store]
+fn store_pools(pools: dex_amm::Pools, output: store::StoreSet) {
+    log::info!("Stored pools {}", pools.items.len());
+    for event in pools.items {
+        output.set(
+            0,
+            &event.address,
+            &proto::encode(&event).unwrap(),
+        );
+    }
 }

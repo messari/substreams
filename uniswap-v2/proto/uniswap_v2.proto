@@ -2,15 +2,78 @@ syntax = "proto3";
 
 package messari.uniswap_v2;
 
-message PairCreatedEvents {
-  repeated PairCreatedEvent items = 1;
-}
+// https://github.com/Uniswap/v2-core/blob/master/contracts/UniswapV2Factory.sol
+// https://github.com/Uniswap/v2-core/blob/master/contracts/UniswapV2Pair.sol
 
+// event PairCreated(address indexed token0, address indexed token1, address pair, uint);
 message PairCreatedEvent {
-  uint64 block_number = 1;
-  uint64 block_timestamp = 2;
+  string tx_hash = 1;
+  uint32 log_index = 2;
 
   string token0 = 3;
   string token1 = 4;
   string pair = 5;
+}
+
+message PairCreatedEvents {
+  repeated PairCreatedEvent items = 1;
+}
+
+// event Mint(address indexed sender, uint amount0, uint amount1);
+message MintEvent {
+  string tx_hash = 1;
+  uint32 log_index = 2;
+
+  string sender = 3;
+  uint64 amount0 = 4;
+  uint64 amount1 = 5;
+}
+
+message MintEvents {
+  repeated MintEvent items = 1;
+}
+
+// event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
+message BurnEvent {
+  string tx_hash = 1;
+  uint32 log_index = 2;
+
+  string sender = 3;
+  uint64 amount0 = 4;
+  uint64 amount1 = 5;
+  string to = 6;
+}
+
+message BurnEvents {
+  repeated BurnEvent items = 1;
+}
+
+// event Swap(address indexed sender, uint amount0In, uint amount1In, uint amount0Out, uint amount1Out, address indexed to);
+message SwapEvent {
+  string tx_hash = 1;
+  uint32 log_index = 2;
+
+  string sender = 3;
+  uint64 amount0In = 4;
+  uint64 amount1In = 5;
+  uint64 amount0Out = 6;
+  uint64 amount1Out = 7;
+  string to = 8;
+}
+
+message SwapEvents {
+  repeated SwapEvent items = 1;
+}
+
+// event Sync(uint112 reserve0, uint112 reserve1);
+message SyncEvent {
+  string tx_hash = 1;
+  uint32 log_index = 2;
+
+  string reserve0 = 3;
+  uint64 reserve1 = 4;
+}
+
+message SyncEvents {
+  repeated SyncEvent items = 1;
 }
