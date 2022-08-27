@@ -1,23 +1,16 @@
+use hex;
+use substreams::{log, proto, store};
+use substreams_ethereum::{Event as EventTrait, pb::eth::v2 as eth};
+
+use abi::factory;
+use pb::uniswap_v2;
+use substreams_helper::{erc20, utils};
+
 mod abi;
 mod pb;
-mod rpc;
-mod utils;
-mod uniswap;
-mod math;
-
-use hex;
-use pb::uniswap_v2;
-use abi::factory;
-use substreams::{log, proto, store};
-use substreams_ethereum::{pb::eth::v1 as eth, Event as EventTrait};
-use substreams_helper::main;
-
-use pb::erc721;
-
-substreams_ethereum::init!();
 
 pub const UNISWAP_V2_FACTORY: &str = "5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f";
-pub const UNISWAP_V2_FACTORY_START_BLOCK: u64 = 10000835;
+pub const UNISWAP_V2_FACTORY_START_BLOCK: u64 = 10_000_835;
 
 trait BlockExt {
     fn timestamp(&self) -> u64;
@@ -74,10 +67,8 @@ fn store_pair_created_event(pair_created_events: uniswap_v2::PairCreatedEvents, 
 fn map_pair(pair_created_events: uniswap_v2::PairCreatedEvents) -> Result<uniswap_v2::Pairs, substreams::errors::Error> {
     let mut pairs = uniswap_v2::Pairs { items: vec![] };
 
-    main();
-
     for event in pair_created_events.items {
-        match rpc::create_uniswap_token(&event.token0) {
+        match erc20::get_erc20_token(&event.token0) {
             None => {
                 continue;
             }

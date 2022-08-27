@@ -82,15 +82,15 @@ fn create_rpc_calls(addr: &Vec<u8>) -> ethpb::rpc::RpcCalls {
         calls: vec![
             ethpb::rpc::RpcCall {
                 to_addr: Vec::from(addr.clone()),
-                method_signature: decimals,
+                data: decimals,
             },
             ethpb::rpc::RpcCall {
                 to_addr: Vec::from(addr.clone()),
-                method_signature: name,
+                data: name,
             },
             ethpb::rpc::RpcCall {
                 to_addr: Vec::from(addr.clone()),
-                method_signature: symbol,
+                data: symbol,
             },
         ],
     };

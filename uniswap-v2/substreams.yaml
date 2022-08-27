@@ -5,15 +5,12 @@ package:
 
 imports:
   eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
-  erc721: ../erc721/substreams.yaml
 
 protobuf:
   files:
     - uniswap_v2.proto
-    - erc721.proto
   importPaths:
     - ./proto
-    - ../erc721/proto
 
 binaries:
   default:
@@ -25,7 +22,7 @@ modules:
       kind: map
       initialBlock: 10000834
       inputs:
-        - source: sf.ethereum.type.v1.Block
+        - source: sf.ethereum.type.v2.Block
       output:
         type: proto:messari.uniswap_v2.PairCreatedEvents
 

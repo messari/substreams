@@ -13,13 +13,11 @@ repository = "https://github.com/substreams/substreams-helper"
 ethabi = "17.0"
 hex = "0.4.3"
 hex-literal = "0.3.4"
-prost = "0.10.1"
+prost = "^0.11.0"
 num-bigint = "0.4"
 bigdecimal = "0.3"
 pad = "0.1"
-
-# Use latest from https://crates.io/crates/substreams-ethereum
-substreams-ethereum = "0.1.9"
+substreams-ethereum = "~0.2.0"
 
 # Required so that ethabi > ethereum-types build correctly under wasm32-unknown-unknown
-getrandom = { version = "0.2", features = ["custom"] }
+#getrandom = { version = "0.2", features = ["custom"] }
