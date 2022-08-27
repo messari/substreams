@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package messari.dex_amm;
+
+message Pools {
+  repeated Pool items = 1;
+}
+
+message Pool {
+  string name = 1;
+  string address = 2;
+  string token0 = 3;
+  string token1 = 4;
+}

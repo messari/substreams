@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package messari.common;
+
+message ERC20Tokens {
+  repeated ERC20Token items = 1;
+}
+
+message ERC20Token {
+  string address = 1;
+  string name = 2;
+  string symbol = 3;
+  uint64 decimals = 4;
+}

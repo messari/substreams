@@ -2,28 +2,6 @@ syntax = "proto3";
 
 package messari.uniswap_v2;
 
-message ERC20Tokens {
-  repeated ERC20Token items = 1;
-}
-
-message ERC20Token {
-  string address = 1;
-  string name = 2;
-  string symbol = 3;
-  uint64 decimals = 4;
-}
-
-message Pairs {
-  repeated Pair items = 1;
-}
-
-message Pair {
-  string name = 1;
-  string address = 2;
-  string token0 = 3;
-  string token1 = 4;
-}
-
 message PairCreatedEvents {
   repeated PairCreatedEvent items = 1;
 }
