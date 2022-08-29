@@ -20,7 +20,7 @@ binaries:
 modules:
     - name: map_pair_created_event
       kind: map
-      initialBlock: 10000834
+      initialBlock: 10008355
       inputs:
         - source: sf.ethereum.type.v2.Block
       output:
@@ -35,7 +35,6 @@ modules:
 
     - name: map_pair
       kind: map
-      initialBlock: 10000834
       inputs:
         - map: map_pair_created_event
       output:
