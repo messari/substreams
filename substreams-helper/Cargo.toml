@@ -17,9 +17,13 @@ prost = "^0.11.0"
 num-bigint = "0.4"
 bigdecimal = "0.3"
 pad = "0.1"
-substreams = "~0.0.20"
-substreams-ethereum = "~0.2.0"
 tiny-keccak = { version = "2.0", features = ["keccak"] }
+substreams = "~0.0.20"
+substreams-ethereum = { git = "https://github.com/streamingfast/substreams-ethereum", branch = "feature/functions-encode-decode-call" }
+
+[build-dependencies]
+anyhow = "1"
+substreams-ethereum = { git = "https://github.com/streamingfast/substreams-ethereum", branch = "feature/functions-encode-decode-call" }
 
 # Required so that ethabi > ethereum-types build correctly under wasm32-unknown-unknown
 #getrandom = { version = "0.2", features = ["custom"] }

@@ -1,6 +1,6 @@
 .PHONY: codegen
 codegen:
-	~/go/bin/substreams protogen ./substreams.yaml --exclude-paths="sf/ethereum,sf/substreams,google"
+	substreams protogen ./substreams.yaml --exclude-paths="sf/ethereum,sf/substreams,google"
 
 .PHONY: build
 build:
@@ -8,4 +8,4 @@ build:
 
 .PHONY: example
 example:
-	substreams run -e api-dev.streamingfast.io:443 substreams.yaml map_pair_created_event -s 10008355 -t +200 -o json
+	substreams run -e api-dev.streamingfast.io:443 substreams.yaml map_pair -s 10008355 -t +200 -o json

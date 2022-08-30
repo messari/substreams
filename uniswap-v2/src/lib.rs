@@ -10,7 +10,6 @@ mod abi;
 mod pb;
 
 pub const UNISWAP_V2_FACTORY: &str = "5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f";
-pub const UNISWAP_V2_FACTORY_START_BLOCK: u64 = 10_000_835;
 
 trait BlockExt {
     fn timestamp(&self) -> u64;

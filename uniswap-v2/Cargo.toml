@@ -17,12 +17,12 @@ num-bigint = "0.4"
 bigdecimal = "0.3"
 pad = "0.1"
 substreams = "~0.0.20"
-substreams-ethereum = "~0.2.0"
+substreams-ethereum = { git = "https://github.com/streamingfast/substreams-ethereum", branch = "feature/functions-encode-decode-call" }
 substreams-helper = { path = "../substreams-helper" }
 
 [build-dependencies]
 anyhow = "1"
-substreams-ethereum = "~0.2.0"
+substreams-ethereum = { git = "https://github.com/streamingfast/substreams-ethereum", branch = "feature/functions-encode-decode-call" }
 
 [profile.release]
 lto = true
