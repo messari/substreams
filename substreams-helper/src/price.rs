@@ -4,7 +4,7 @@ use std::str::FromStr;
 use bigdecimal::BigDecimal;
 use hex_literal::hex;
 
-use crate::{math, rpc, types};
+use crate::{abi, math, types};
 
 const CONFIG: Config = Config {
     ethereum: NetworkConfig {
@@ -36,13 +36,8 @@ pub fn get_price(network: types::Network, token_address: Vec<u8>) -> Result<BigD
 fn via_yearn_lens_oracle(
     network_config: &NetworkConfig,
     token_address: Vec<u8>,
-) -> Result<BigDecimal, String> {
-    rpc::fetch(rpc::RpcCallParams {
-        to: network_config.yearn_lens_oracle.to_vec(),
-        method: "getPriceUsdcRecommended(address)".to_string(),
-        args: vec![token_address],
-    }).map(|vu8| {
-        math::decimal_from_hex_be_bytes(vu8.as_ref())
-            .div(math::exponent_to_big_decimal(network_config.usdc_decimals))
-    })
+) -> Option<BigDecimal> {
+    abi::yearn_lens_oracle::functions::GetPriceUsdcRecommended { token_address }
+        .call(network_config.yearn_lens_oracle.to_vec())
+        .map(|price_mantissa| math::decimal_from_str(price_mantissa.to_string().as_str()).div(math::exponent_to_big_decimal(network_config.usdc_decimals)))
 }
