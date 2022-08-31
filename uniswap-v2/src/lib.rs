@@ -1,5 +1,4 @@
-use hex_literal::hex;
-use substreams::{log, proto, store};
+use substreams::{log, proto, store, Hex};
 use substreams_ethereum::{Event as EventTrait, pb::eth::v2 as eth};
 use substreams_helper::{erc20, utils};
 
@@ -44,10 +43,10 @@ fn map_pair_created_event(block: eth::Block) -> Result<uniswap_v2::PairCreatedEv
             }
 
             pair_created_events.items.push(uniswap_v2::PairCreatedEvent {
-                token0: hex::encode(event.token0),
-                token1: hex::encode(event.token1),
-                pair: hex::encode(event.pair),
-                tx_hash: hex::encode(log.receipt.transaction.hash.clone()),
+                token0: event.token0,
+                token1: event.token1,
+                pair: event.pair,
+                tx_hash: log.receipt.transaction.clone().hash,
                 log_index: log.index(),
             })
         }
@@ -62,7 +61,7 @@ fn store_pair_created_event(pair_created_events: uniswap_v2::PairCreatedEvents, 
     for event in pair_created_events.items {
         output.set(
             0,
-            &event.pair,
+            Hex::encode(&event.pair),
             &proto::encode(&event).unwrap(),
         );
     }
@@ -73,8 +72,8 @@ fn map_pools(pair_created_events: uniswap_v2::PairCreatedEvents) -> Result<dex_a
     let mut pools = dex_amm::Pools { items: vec![] };
 
     for event in pair_created_events.items {
-        let token0 = erc20::get_erc20_token(&event.token0);
-        let token1 = erc20::get_erc20_token(&event.token1);
+        let token0 = erc20::get_erc20_token(event.token0.clone());
+        let token1 = erc20::get_erc20_token(event.token1.clone());
 
         if let (Some(token0), Some(token1)) = (token0, token1) {
             pools.items.push(dex_amm::Pool {
@@ -84,7 +83,7 @@ fn map_pools(pair_created_events: uniswap_v2::PairCreatedEvents) -> Result<dex_a
                 total_value_locked: "0".to_string(),
             })
         } else {
-            log::info!("Failed to fetch token for {} {}", &event.token0, &event.token1);
+            log::info!("Failed to fetch token for {} {}", Hex(&event.token0), Hex(&event.token1));
         }
     }
 
@@ -97,7 +96,7 @@ fn store_pools(pools: dex_amm::Pools, output: store::StoreSet) {
     for event in pools.items {
         output.set(
             0,
-            &event.address,
+            Hex::encode(&event.address),
             &proto::encode(&event).unwrap(),
         );
     }
