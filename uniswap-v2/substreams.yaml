@@ -12,6 +12,7 @@ protobuf:
     - dex_amm.proto
     - uniswap_v2.proto
   importPaths:
+    - ../common/proto
     - ./proto
 
 binaries:
