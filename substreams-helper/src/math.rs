@@ -15,7 +15,10 @@ pub fn safe_div(amount0: &BigDecimal, amount1: &BigDecimal) -> BigDecimal {
 
 // converts the string representation (in bytes) of a decimal
 pub fn decimal_from_bytes(price_bytes: &Vec<u8>) -> BigDecimal {
-    let price_str = std::str::from_utf8(price_bytes.as_slice()).unwrap();
+    decimal_from_str(std::str::from_utf8(price_bytes.as_slice()).unwrap())
+}
+
+pub fn decimal_from_str(price_str: &str) -> BigDecimal {
     return BigDecimal::from_str(price_str).unwrap().with_prec(100);
 }
 

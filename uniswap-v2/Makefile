@@ -1,6 +1,6 @@
 .PHONY: codegen
 codegen:
-	~/go/bin/substreams protogen ./substreams.yaml --exclude-paths="sf/ethereum,sf/substreams,google"
+	substreams protogen ./substreams.yaml --exclude-paths="sf/ethereum,sf/substreams,google"
 
 .PHONY: build
 build:
