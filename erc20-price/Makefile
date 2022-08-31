@@ -8,4 +8,4 @@ build:
 
 .PHONY: example
 example:
-	substreams run -e api-dev.streamingfast.io:443 substreams.yaml eth_price -s 13000000 -t +1000 -o json
+	substreams run -e api-dev.streamingfast.io:443 substreams.yaml map_price -s 13000000 -t +10

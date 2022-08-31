@@ -18,10 +18,10 @@ binaries:
     file: ./target/wasm32-unknown-unknown/release/erc20_price_substreams.wasm
 
 modules:
-  - name: eth_price
+  - name: map_price
     kind: map
     initialBlock: 13000000
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:messari.erc20_price.Erc20Price
+      type: proto:messari.erc20_price.Erc20Prices

@@ -6,3 +6,7 @@ message ERC20Price {
   uint64 block_number = 1;
   string price_usd = 2;
 }
+
+message ERC20Prices {
+  repeated ERC20Price items = 1;
+}
