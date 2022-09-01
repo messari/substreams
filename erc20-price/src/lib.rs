@@ -1,20 +1,34 @@
-use substreams::Hex;
-use substreams_ethereum::pb::eth::v2 as eth;
+use std::collections::HashSet;
 
-use pb::erc20_price::Erc20Price;
+use hex_literal::hex;
+use substreams::{Hex, log};
+use substreams_ethereum::{Event as EventTrait, pb::eth::v2 as eth};
+
+use pb::erc20_price::{Erc20Price, Erc20Prices};
 use substreams_helper::price;
 use substreams_helper::types::Network;
 
 mod pb;
-
-const WETH_ADDRESS: &str = "c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+mod abi;
 
 #[substreams::handlers::map]
-fn eth_price(block: eth::Block) -> Result<Erc20Price, substreams::errors::Error> {
-    let eth_price =
-        price::get_price(Network::Ethereum, Hex::decode(WETH_ADDRESS).unwrap()).unwrap();
-    Ok(Erc20Price {
-        block_number: block.number,
-        price_usd: eth_price.to_string(),
-    })
+fn map_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {
+    let mut erc20_tokens = HashSet::new();
+    for log in block.logs() {
+        if let Some(_) = abi::erc20::events::Transfer::match_and_decode(log) {
+            let erc20_token = log.log.clone().address;
+            erc20_tokens.insert(Hex::encode(erc20_token));
+        }
+    };
+    let mut prices = Erc20Prices { items: vec![] };
+    for erc20_token in erc20_tokens {
+        let erc20_token = Hex::decode(erc20_token).unwrap();
+        let token_price = price::get_price(Network::Ethereum, erc20_token.clone()).unwrap();
+        prices.items.push(Erc20Price {
+            block_number: block.number,
+            price_usd: token_price.to_string(),
+        });
+        log::info!("token {} price {}", Hex(erc20_token), token_price);
+    };
+    Ok(prices)
 }

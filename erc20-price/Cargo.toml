@@ -9,7 +9,13 @@ repository = "https://github.com/messari/substreams/erc20-price"
 crate-type = ["cdylib"]
 
 [target.wasm32-unknown-unknown.dependencies]
+ethabi = "17.0"
 prost = "^0.11.0"
+hex-literal = "0.3.4"
 substreams = "~0.0.20"
 substreams-ethereum = "~0.2.0"
 substreams-helper = { path = "../substreams-helper" }
+
+[build-dependencies]
+anyhow = "1"
+substreams-ethereum = "~0.2.0"
