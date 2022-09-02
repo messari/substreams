@@ -153,7 +153,7 @@ dependencies = [
  "hex-literal",
  "prost 0.11.0",
  "substreams",
- "substreams-ethereum 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "substreams-ethereum",
  "substreams-helper",
 ]
 
@@ -803,33 +803,22 @@ dependencies = [
 
 [[package]]
 name = "substreams-ethereum"
-version = "0.2.0"
+version = "0.2.2-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "683630c30ae5eb5fc2025c7dba2e4b8393c67cce7cf33d439df98392fe6a6cb4"
-dependencies = [
- "getrandom",
- "substreams-ethereum-abigen 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "substreams-ethereum-core 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "substreams-ethereum-derive 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "substreams-ethereum"
-version = "0.2.0"
-source = "git+https://github.com/streamingfast/substreams-ethereum?branch=feature/functions-encode-decode-call#863ffd0ec2e9205ee002c8d7b1d9b5815f58e05c"
+checksum = "98a99bade9cba53dc436474fc66b39acfea9e93c81026d22e4dfde69e03cff50"
 dependencies = [
  "getrandom",
  "substreams",
- "substreams-ethereum-abigen 0.2.0 (git+https://github.com/streamingfast/substreams-ethereum?branch=feature/functions-encode-decode-call)",
- "substreams-ethereum-core 0.2.0 (git+https://github.com/streamingfast/substreams-ethereum?branch=feature/functions-encode-decode-call)",
- "substreams-ethereum-derive 0.2.0 (git+https://github.com/streamingfast/substreams-ethereum?branch=feature/functions-encode-decode-call)",
+ "substreams-ethereum-abigen",
+ "substreams-ethereum-core",
+ "substreams-ethereum-derive",
 ]
 
 [[package]]
 name = "substreams-ethereum-abigen"
-version = "0.2.0"
+version = "0.2.2-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a293d2eb80ea76ebbdaad3bf46210d6636d10839d69eb234adc8491fa7c18bea"
+checksum = "d1599da94850954204777c7e5138954895a041430233d77e74c9561cd9ce6ac3"
 dependencies = [
  "anyhow",
  "ethabi",
@@ -838,44 +827,15 @@ dependencies = [
  "prettyplease",
  "proc-macro2",
  "quote",
- "substreams-ethereum-core 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "syn",
-]
-
-[[package]]
-name = "substreams-ethereum-abigen"
-version = "0.2.0"
-source = "git+https://github.com/streamingfast/substreams-ethereum?branch=feature/functions-encode-decode-call#863ffd0ec2e9205ee002c8d7b1d9b5815f58e05c"
-dependencies = [
- "anyhow",
- "ethabi",
- "heck",
- "hex",
- "prettyplease",
- "proc-macro2",
- "quote",
- "substreams-ethereum-core 0.2.0 (git+https://github.com/streamingfast/substreams-ethereum?branch=feature/functions-encode-decode-call)",
+ "substreams-ethereum-core",
  "syn",
 ]
 
 [[package]]
 name = "substreams-ethereum-core"
-version = "0.2.0"
+version = "0.2.2-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2ef5f6081bfa9aec61a0e54aebfde414a73a6d041a1dc5e6e6bb5a3b12d3636"
-dependencies = [
- "ethabi",
- "getrandom",
- "prost 0.11.0",
- "prost-build 0.11.1",
- "prost-types 0.11.1",
- "substreams",
-]
-
-[[package]]
-name = "substreams-ethereum-core"
-version = "0.2.0"
-source = "git+https://github.com/streamingfast/substreams-ethereum?branch=feature/functions-encode-decode-call#863ffd0ec2e9205ee002c8d7b1d9b5815f58e05c"
+checksum = "07e50b1340c938466d6d6c47c4b22afeba5bf26d5b85c63a79fcda3f3dc84382"
 dependencies = [
  "ethabi",
  "getrandom",
@@ -887,30 +847,16 @@ dependencies = [
 
 [[package]]
 name = "substreams-ethereum-derive"
-version = "0.2.0"
+version = "0.2.2-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58ba016068b8843391f26fec8d1ec6db3da95eb6ffaf03a79082672ebf1ee473"
+checksum = "c087a087449f2a5d5bd1cabe1bd7bf1b9bd22413a1c7abc6de88d49bf7efd278"
 dependencies = [
  "ethabi",
  "heck",
  "hex",
  "proc-macro2",
  "quote",
- "substreams-ethereum-abigen 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "syn",
-]
-
-[[package]]
-name = "substreams-ethereum-derive"
-version = "0.2.0"
-source = "git+https://github.com/streamingfast/substreams-ethereum?branch=feature/functions-encode-decode-call#863ffd0ec2e9205ee002c8d7b1d9b5815f58e05c"
-dependencies = [
- "ethabi",
- "heck",
- "hex",
- "proc-macro2",
- "quote",
- "substreams-ethereum-abigen 0.2.0 (git+https://github.com/streamingfast/substreams-ethereum?branch=feature/functions-encode-decode-call)",
+ "substreams-ethereum-abigen",
  "syn",
 ]
 
@@ -927,7 +873,7 @@ dependencies = [
  "pad",
  "prost 0.11.0",
  "substreams",
- "substreams-ethereum 0.2.0 (git+https://github.com/streamingfast/substreams-ethereum?branch=feature/functions-encode-decode-call)",
+ "substreams-ethereum",
  "tiny-keccak",
 ]
 

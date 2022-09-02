@@ -12,10 +12,10 @@ crate-type = ["cdylib"]
 ethabi = "17.0"
 prost = "^0.11.0"
 hex-literal = "0.3.4"
-substreams = "~0.0.20"
-substreams-ethereum = "~0.2.0"
+substreams = "0.0.20"
+substreams-ethereum = "0.2.2-rc.2"
 substreams-helper = { path = "../substreams-helper" }
 
 [build-dependencies]
 anyhow = "1"
-substreams-ethereum = "~0.2.0"
+substreams-ethereum = "0.2.2-rc.2"

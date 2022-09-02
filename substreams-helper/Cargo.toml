@@ -5,9 +5,7 @@ version = "0.0.2"
 edition = "2021"
 license = "MIT"
 homepage = "https://messari.io/"
-repository = "https://github.com/substreams/substreams-helper"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+repository = "https://github.com/messari/substreams/substreams-helper"
 
 [target.wasm32-unknown-unknown.dependencies]
 ethabi = "17.0"
@@ -19,11 +17,8 @@ bigdecimal = "0.3"
 pad = "0.1"
 tiny-keccak = { version = "2.0", features = ["keccak"] }
 substreams = "~0.0.20"
-substreams-ethereum = { git = "https://github.com/streamingfast/substreams-ethereum", branch = "feature/functions-encode-decode-call" }
+substreams-ethereum = "0.2.2-rc.2"
 
 [build-dependencies]
 anyhow = "1"
-substreams-ethereum = { git = "https://github.com/streamingfast/substreams-ethereum", branch = "feature/functions-encode-decode-call" }
-
-# Required so that ethabi > ethereum-types build correctly under wasm32-unknown-unknown
-#getrandom = { version = "0.2", features = ["custom"] }
+substreams-ethereum = "0.2.2-rc.2"
