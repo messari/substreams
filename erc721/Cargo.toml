@@ -3,23 +3,37 @@ name = "substreams-erc721"
 version = "0.1.0"
 description = "Messari's standardized substream for erc721"
 edition = "2021"
+license = "MIT"
 repository = "https://github.com/messari/substreams/erc721"
 
 [lib]
 crate-type = ["cdylib"]
 
-[target.wasm32-unknown-unknown.dependencies]
+#[dependencies]
+#ethabi = "17.0"
+#hex-literal = "0.3.4"
+#prost = "0.11.0"
+#substreams = "0.0.20"
+#substreams-ethereum = "0.2.2-rc.2"
+#
+#[build-dependencies]
+#anyhow = "1"
+#substreams-ethereum = "0.2.2-rc.2"
+
+[dependencies]
 ethabi = "17.0"
+wasm-bindgen = "0.2.79"
+prost = { version = "0.11.0" }
+prost-types = "0.11.0"
+hex = "0.4.3"
 hex-literal = "0.3.4"
-prost = "^0.11.0"
-substreams = "~0.0.20"
-substreams-ethereum = "~0.2.0"
+substreams = { version = "0.0.20" }
+substreams-ethereum = { version = "0.2.2-rc.2" }
+num-bigint = "0.4"
+bigdecimal = "0.3"
+pad = "0.1"
 
 [build-dependencies]
+prost-build = "0.11.0"
 anyhow = "1"
-substreams-ethereum = "~0.2.0"
-
-[profile.release]
-lto = true
-opt-level = 's'
-strip = "debuginfo"
+substreams-ethereum = { version = "0.2.2-rc.2" }

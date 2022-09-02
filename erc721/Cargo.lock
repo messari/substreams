@@ -68,6 +68,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "bumpalo"
+version = "3.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1ad822118d20d2c234f427000d5acc36eabe1e29a348c89b63dd60b13f28e5d"
+
+[[package]]
 name = "byte-slice-cast"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -418,6 +424,15 @@ name = "once_cell"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7709cef83f0c1f58f666e746a08b21e0085f7440fa6a29cc194d68aac97a4225"
+
+[[package]]
+name = "pad"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2ad9b889f1b12e0b9ee24db044b5129150d5eada288edc800f789928dc8c0e3"
+dependencies = [
+ "unicode-width",
+]
 
 [[package]]
 name = "parity-scale-codec"
@@ -783,20 +798,28 @@ name = "substreams-erc721"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bigdecimal",
  "ethabi",
+ "hex",
  "hex-literal",
+ "num-bigint",
+ "pad",
  "prost 0.11.0",
+ "prost-build 0.11.1",
+ "prost-types 0.11.1",
  "substreams",
  "substreams-ethereum",
+ "wasm-bindgen",
 ]
 
 [[package]]
 name = "substreams-ethereum"
-version = "0.2.0"
+version = "0.2.2-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "683630c30ae5eb5fc2025c7dba2e4b8393c67cce7cf33d439df98392fe6a6cb4"
+checksum = "98a99bade9cba53dc436474fc66b39acfea9e93c81026d22e4dfde69e03cff50"
 dependencies = [
  "getrandom",
+ "substreams",
  "substreams-ethereum-abigen",
  "substreams-ethereum-core",
  "substreams-ethereum-derive",
@@ -804,9 +827,9 @@ dependencies = [
 
 [[package]]
 name = "substreams-ethereum-abigen"
-version = "0.2.0"
+version = "0.2.2-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a293d2eb80ea76ebbdaad3bf46210d6636d10839d69eb234adc8491fa7c18bea"
+checksum = "d1599da94850954204777c7e5138954895a041430233d77e74c9561cd9ce6ac3"
 dependencies = [
  "anyhow",
  "ethabi",
@@ -821,9 +844,9 @@ dependencies = [
 
 [[package]]
 name = "substreams-ethereum-core"
-version = "0.2.0"
+version = "0.2.2-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2ef5f6081bfa9aec61a0e54aebfde414a73a6d041a1dc5e6e6bb5a3b12d3636"
+checksum = "07e50b1340c938466d6d6c47c4b22afeba5bf26d5b85c63a79fcda3f3dc84382"
 dependencies = [
  "ethabi",
  "getrandom",
@@ -835,9 +858,9 @@ dependencies = [
 
 [[package]]
 name = "substreams-ethereum-derive"
-version = "0.2.0"
+version = "0.2.2-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58ba016068b8843391f26fec8d1ec6db3da95eb6ffaf03a79082672ebf1ee473"
+checksum = "c087a087449f2a5d5bd1cabe1bd7bf1b9bd22413a1c7abc6de88d49bf7efd278"
 dependencies = [
  "ethabi",
  "heck",
@@ -954,6 +977,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5bd2fe26506023ed7b5e1e315add59d6f584c621d037f9368fea9cfb988f368c"
 
 [[package]]
+name = "unicode-width"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ed742d4ea2bd1176e236172c8429aaf54486e7ac098db29ffe6529e0ce50973"
+
+[[package]]
 name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -964,6 +993,60 @@ name = "wasi"
 version = "0.11.0+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
+
+[[package]]
+name = "wasm-bindgen"
+version = "0.2.82"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc7652e3f6c4706c8d9cd54832c4a4ccb9b5336e2c3bd154d5cccfbf1c1f5f7d"
+dependencies = [
+ "cfg-if 1.0.0",
+ "wasm-bindgen-macro",
+]
+
+[[package]]
+name = "wasm-bindgen-backend"
+version = "0.2.82"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "662cd44805586bd52971b9586b1df85cdbbd9112e4ef4d8f41559c334dc6ac3f"
+dependencies = [
+ "bumpalo",
+ "log",
+ "once_cell",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "wasm-bindgen-shared",
+]
+
+[[package]]
+name = "wasm-bindgen-macro"
+version = "0.2.82"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b260f13d3012071dfb1512849c033b1925038373aea48ced3012c09df952c602"
+dependencies = [
+ "quote",
+ "wasm-bindgen-macro-support",
+]
+
+[[package]]
+name = "wasm-bindgen-macro-support"
+version = "0.2.82"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5be8e654bdd9b79216c2929ab90721aa82faf65c48cdf08bdc4e7f51357b80da"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+ "wasm-bindgen-backend",
+ "wasm-bindgen-shared",
+]
+
+[[package]]
+name = "wasm-bindgen-shared"
+version = "0.2.82"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6598dd0bd3c7d51095ff6531a5b23e02acdc81804e30d8f07afb77b7215a140a"
 
 [[package]]
 name = "wee_alloc"
