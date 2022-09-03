@@ -1,6 +1,7 @@
 use substreams::{log, proto, store, Hex};
 use substreams_ethereum::{Event as EventTrait, pb::eth::v2 as eth};
 use substreams_helper::{erc20, utils};
+use hex_literal::hex;
 
 use abi::factory;
 
