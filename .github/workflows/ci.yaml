@@ -9,6 +9,20 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: install substreams cli
+        uses: jaxxstorm/action-install-gh-release@v1.7.1
+        with:
+          repo: streamingfast/substreams
+          cache: enable
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: install buf
+        uses: jaxxstorm/action-install-gh-release@v1.7.1
+        with:
+          repo: bufbuild/buf
+          cache: enable
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: checkout repo
         uses: actions/checkout@v2
       - name: build all
