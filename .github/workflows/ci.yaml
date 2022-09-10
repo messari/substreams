@@ -17,12 +17,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: install buf
-        uses: jaxxstorm/action-install-gh-release@v1.7.1
-        with:
-          repo: bufbuild/buf
-          cache: enable
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: bufbuild/buf-setup-action@v1.7.0
       - name: checkout repo
         uses: actions/checkout@v2
       - name: build all
