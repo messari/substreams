@@ -1,9 +1,10 @@
+#[rustfmt::skip]
 pub mod pb;
 
 use substreams::{log, Hex};
 
-use pb::erc20_market_cap::{Erc20MarketCap, Erc20MarketCaps};
-use pb::erc20_price::{Erc20Price, Erc20Prices};
+use pb::erc20_market_cap::v1::{Erc20MarketCap, Erc20MarketCaps};
+use pb::erc20_price::v1::{Erc20Price, Erc20Prices};
 use substreams_helper::erc20::{self, Erc20Token};
 use substreams_helper::math;
 

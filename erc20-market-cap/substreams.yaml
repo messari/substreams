@@ -11,19 +11,18 @@ protobuf:
   files:
     - erc20_market_cap.proto
   importPaths:
-    - ./proto
+    - ./proto/v1
 
 binaries:
   default:
     type: wasm/rust-v1
-    file: ./target/wasm32-unknown-unknown/release/erc20_market_cap_substreams.wasm
+    file: ../target/wasm32-unknown-unknown/release/erc20_market_cap_substreams.wasm
 
 modules:
   - name: map_market_cap
     kind: map
     initialBlock: 13000700
     inputs:
-      # - source: sf.ethereum.type.v2.Block
       - map: erc20Price:map_price
     output:
-      type: proto:messari.erc20_market_cap.Erc20MarketCaps
+      type: proto:messari.erc20_market_cap.v1.Erc20MarketCaps

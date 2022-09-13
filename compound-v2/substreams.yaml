@@ -10,12 +10,12 @@ protobuf:
   files:
     - compound.proto
   importPaths:
-    - ./proto
+    - ./proto/v1
 
 binaries:
   default:
     type: wasm/rust-v1
-    file: ./target/wasm32-unknown-unknown/release/compoundv2_substreams.wasm
+    file: ../target/wasm32-unknown-unknown/release/compoundv2_substreams.wasm
 
 modules:
   - name: map_accrue_interest

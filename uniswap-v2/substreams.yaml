@@ -10,15 +10,16 @@ protobuf:
   files:
     - common.proto
     - dex_amm.proto
-    - uniswap_v2.proto
+    - uniswap.proto
   importPaths:
     - ../common/proto
-    - ./proto
+    - ./proto/v1
+    - ./proto/v2
 
 binaries:
   default:
     type: wasm/rust-v1
-    file: ./target/wasm32-unknown-unknown/release/substreams_uniswap_v2.wasm
+    file: ../target/wasm32-unknown-unknown/release/substreams_uniswap_v2.wasm
 
 modules:
   - name: map_pair_created_event
@@ -27,12 +28,12 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:messari.uniswap_v2.PairCreatedEvents
+      type: proto:messari.uniswap.v2.PairCreatedEvents
 
   - name: store_pair_created_event
     kind: store
     updatePolicy: set
-    valueType: proto:messari.uniswap_v2.PairCreatedEvents
+    valueType: proto:messari.uniswap.v2.PairCreatedEvents
     inputs:
       - map: map_pair_created_event
 
@@ -41,12 +42,12 @@ modules:
     inputs:
       - map: map_pair_created_event
     output:
-      type: proto:messari.dex_amm.Pools
+      type: proto:messari.dex_amm.v1.Pools
 
   - name: store_pools
     kind: store
     updatePolicy: set
-    valueType: proto:messari.dex_amm.Pools
+    valueType: proto:messari.dex_amm.v1.Pools
     inputs:
       - map: map_pools
 
@@ -56,4 +57,4 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:messari.dex_amm.MintEvents
+      type: proto:messari.dex_amm.v1.MintEvents

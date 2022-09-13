@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "common",
     "compound-v2",
     "erc20",
     "erc20-price",

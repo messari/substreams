@@ -1,10 +1,10 @@
 use anyhow::{Ok, Result};
-use substreams_ethereum::Abigen;
+use substreams_common::codegen;
 
 fn main() -> Result<(), anyhow::Error> {
-    Abigen::new("ERC721", "abi/erc721.json")?
-        .generate()?
-        .write_to_file("src/abi/erc721.rs")?;
+    // println!("cargo:rerun-if-changed=proto");
+    // println!("cargo:rerun-if-changed=abi");
+    codegen::generate(None)?;
 
     Ok(())
 }

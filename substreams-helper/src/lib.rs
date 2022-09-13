@@ -1,4 +1,3 @@
-#[rustfmt::skip]
 pub mod abi;
 pub mod erc20;
 pub mod math;
