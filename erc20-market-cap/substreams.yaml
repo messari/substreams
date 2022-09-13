@@ -21,7 +21,7 @@ binaries:
 modules:
   - name: map_market_cap
     kind: map
-    initialBlock: 13000700
+    initialBlock: 13000000
     inputs:
       - map: erc20Price:map_price
     output:

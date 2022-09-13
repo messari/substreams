@@ -1,6 +1,6 @@
 [package]
 name = "erc20-price-substreams"
-version = "0.0.1"
+version = "0.1.0"
 description = "Price all ERC20 tokens."
 edition = "2021"
 repository = "https://github.com/messari/substreams/erc20-price"

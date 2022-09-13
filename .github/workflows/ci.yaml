@@ -20,7 +20,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: install buf
         uses: bufbuild/buf-setup-action@v1.7.0
-      - name: install rust-toolchain
+      - name: rust-toolchain
         uses: actions-rs/toolchain@v1.0.6
         with:
             toolchain: stable
@@ -40,9 +40,11 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
+            **/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: make erc20-price spkg
         run: make -C erc20-price build && make erc20-price-spkg
       - name: build all
         run: make build-all
+      - name: Integrations
+        run: make integrations-linux

@@ -6,6 +6,7 @@ members = [
     "erc20-price",
     "erc20-market-cap",
     "erc721",
+    "integrations",
     "substreams-helper",
     "uniswap-v2"
 ]
