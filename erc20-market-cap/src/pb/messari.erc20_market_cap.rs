@@ -1,18 +1,18 @@
 // @generated
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Erc20MarketCap {
-    #[prost(string, tag="1")]
+    #[prost(string, tag = "1")]
     pub price: ::prost::alloc::string::String,
-    #[prost(string, tag="2")]
+    #[prost(string, tag = "2")]
     pub total_supply: ::prost::alloc::string::String,
-    #[prost(string, tag="3")]
+    #[prost(string, tag = "3")]
     pub market_cap: ::prost::alloc::string::String,
-    #[prost(string, tag="4")]
+    #[prost(string, tag = "4")]
     pub token_address: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Erc20MarketCaps {
-    #[prost(message, repeated, tag="1")]
+    #[prost(message, repeated, tag = "1")]
     pub items: ::prost::alloc::vec::Vec<Erc20MarketCap>,
 }
 /// Encoded file descriptor set for the `messari.erc20_market_cap` package
