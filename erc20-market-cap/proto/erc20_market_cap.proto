@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package messari.erc20_market_cap;
+
+message ERC20MarketCap {
+  double price = 1;
+  uint64 total_supply = 2;
+  double market_cap = 3;
+}
+
+message ERC20MarketCaps {
+  repeated ERC20MarketCap items = 1;
+}
