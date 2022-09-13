@@ -12,7 +12,7 @@ mod abi;
 mod pb;
 
 #[substreams::handlers::map]
-fn map_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {
+pub fn map_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {
     let mut erc20_tokens = HashSet::new();
     for log in block.logs() {
         if let Some(_) = abi::erc20::events::Transfer::match_and_decode(log) {
