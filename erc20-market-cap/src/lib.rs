@@ -1,5 +1,6 @@
 mod pb;
 
+use substreams::{log, Hex};
 use substreams_ethereum::pb::eth::v2 as eth;
 
 use pb::erc20_market_cap::{Erc20MarketCap, Erc20MarketCaps};
@@ -9,7 +10,9 @@ use substreams_helper::types::Network;
 
 #[substreams::handlers::map]
 fn map_market_cap(prices: Erc20Prices) -> Result<Erc20MarketCaps, substreams::errors::Error> {
-    let mut market_caps = vec![];
+    let mut items = vec![];
+
+    log::info!("prices: {:?}", prices);
 
     for Erc20Price {
         price_usd,
@@ -28,12 +31,20 @@ fn map_market_cap(prices: Erc20Prices) -> Result<Erc20MarketCaps, substreams::er
 
         let market_cap = price * (total_supply as f64);
 
-        market_caps.push(Erc20MarketCap {
+        let item = Erc20MarketCap {
             price,
             total_supply,
             market_cap,
-        });
+        };
+
+        log::info!(
+            "token {} market cap {}",
+            Hex(token_address.to_vec()),
+            market_cap
+        );
+
+        items.push(item);
     }
 
-    Ok(Erc20MarketCaps { items: market_caps })
+    Ok(Erc20MarketCaps { items })
 }

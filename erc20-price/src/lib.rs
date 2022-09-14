@@ -12,7 +12,7 @@ mod abi;
 mod pb;
 
 #[substreams::handlers::map]
-pub fn map_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {
+fn map_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {
     let mut erc20_tokens = HashSet::new();
     for log in block.logs() {
         if let Some(_) = abi::erc20::events::Transfer::match_and_decode(log) {
@@ -22,8 +22,13 @@ pub fn map_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::E
     }
     let mut prices = Erc20Prices { items: vec![] };
     for erc20_token in erc20_tokens {
-        let erc20_token = Hex::decode(erc20_token).unwrap();
-        let token_price = price::get_price(Network::Ethereum, erc20_token.clone()).unwrap();
+        let erc20_token = Hex::decode(erc20_token).map_err(|e| {
+            substreams::errors::Error::Unexpected(format!("Failed to decode erc20 token: {}", e))
+        })?;
+        let token_price =
+            price::get_price(Network::Ethereum, erc20_token.clone()).map_err(|e| {
+                substreams::errors::Error::Unexpected(format!("Failed to get price: {}", e))
+            })?;
         prices.items.push(Erc20Price {
             block_number: block.number,
             price_usd: token_price.to_string(),
