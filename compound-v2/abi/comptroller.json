@@ -468,33 +468,23 @@
     "type": "function"
   },
   {
-    "constant": true,
-    "inputs": [],
-    "name": "_borrowGuardianPaused",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "recipient", "type": "address" },
-      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
     ],
     "name": "_grantComp",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "_mintGuardianPaused",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "payable": false,
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -520,10 +510,20 @@
         "name": "cToken",
         "type": "address"
       },
-      { "internalType": "bool", "name": "state", "type": "bool" }
+      {
+        "internalType": "bool",
+        "name": "state",
+        "type": "bool"
+      }
     ],
     "name": "_setBorrowPaused",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -538,7 +538,13 @@
       }
     ],
     "name": "_setCloseFactor",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -558,7 +564,13 @@
       }
     ],
     "name": "_setCollateralFactor",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -591,8 +603,16 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "contributor", "type": "address" },
-      { "internalType": "uint256", "name": "compSpeed", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "contributor",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "compSpeed",
+        "type": "uint256"
+      }
     ],
     "name": "_setContributorCompSpeed",
     "outputs": [],
@@ -610,7 +630,13 @@
       }
     ],
     "name": "_setLiquidationIncentive",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -643,10 +669,20 @@
         "name": "cToken",
         "type": "address"
       },
-      { "internalType": "bool", "name": "state", "type": "bool" }
+      {
+        "internalType": "bool",
+        "name": "state",
+        "type": "bool"
+      }
     ],
     "name": "_setMintPaused",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -661,7 +697,13 @@
       }
     ],
     "name": "_setPauseGuardian",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -676,25 +718,13 @@
       }
     ],
     "name": "_setPriceOracle",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [{ "internalType": "bool", "name": "state", "type": "bool" }],
-    "name": "_setSeizePaused",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [{ "internalType": "bool", "name": "state", "type": "bool" }],
-    "name": "_setTransferPaused",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -702,10 +732,62 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "contract CToken", "name": "cToken", "type": "address" }
+      {
+        "internalType": "bool",
+        "name": "state",
+        "type": "bool"
+      }
+    ],
+    "name": "_setSeizePaused",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "state",
+        "type": "bool"
+      }
+    ],
+    "name": "_setTransferPaused",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "internalType": "contract CToken",
+        "name": "cToken",
+        "type": "address"
+      }
     ],
     "name": "_supportMarket",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -713,12 +795,24 @@
   {
     "constant": true,
     "inputs": [
-      { "internalType": "address", "name": "", "type": "address" },
-      { "internalType": "uint256", "name": "", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
     "name": "accountAssets",
     "outputs": [
-      { "internalType": "contract CToken", "name": "", "type": "address" }
+      {
+        "internalType": "contract CToken",
+        "name": "",
+        "type": "address"
+      }
     ],
     "payable": false,
     "stateMutability": "view",
@@ -728,17 +822,33 @@
     "constant": true,
     "inputs": [],
     "name": "admin",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
     "constant": true,
-    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "name": "allMarkets",
     "outputs": [
-      { "internalType": "contract CToken", "name": "", "type": "address" }
+      {
+        "internalType": "contract CToken",
+        "name": "",
+        "type": "address"
+      }
     ],
     "payable": false,
     "stateMutability": "view",
@@ -747,12 +857,30 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "cToken", "type": "address" },
-      { "internalType": "address", "name": "borrower", "type": "address" },
-      { "internalType": "uint256", "name": "borrowAmount", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "cToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "borrowAmount",
+        "type": "uint256"
+      }
     ],
     "name": "borrowAllowed",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -761,25 +889,55 @@
     "constant": true,
     "inputs": [],
     "name": "borrowCapGuardian",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
     "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "borrowCaps",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
     "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "borrowGuardianPaused",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -787,9 +945,21 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "cToken", "type": "address" },
-      { "internalType": "address", "name": "borrower", "type": "address" },
-      { "internalType": "uint256", "name": "borrowAmount", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "cToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "borrowAmount",
+        "type": "uint256"
+      }
     ],
     "name": "borrowVerify",
     "outputs": [],
@@ -800,11 +970,25 @@
   {
     "constant": true,
     "inputs": [
-      { "internalType": "address", "name": "account", "type": "address" },
-      { "internalType": "contract CToken", "name": "cToken", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "contract CToken",
+        "name": "cToken",
+        "type": "address"
+      }
     ],
     "name": "checkMembership",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -812,7 +996,11 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "holder", "type": "address" },
+      {
+        "internalType": "address",
+        "name": "holder",
+        "type": "address"
+      },
       {
         "internalType": "contract CToken[]",
         "name": "cTokens",
@@ -828,14 +1016,26 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address[]", "name": "holders", "type": "address[]" },
+      {
+        "internalType": "address[]",
+        "name": "holders",
+        "type": "address[]"
+      },
       {
         "internalType": "contract CToken[]",
         "name": "cTokens",
         "type": "address[]"
       },
-      { "internalType": "bool", "name": "borrowers", "type": "bool" },
-      { "internalType": "bool", "name": "suppliers", "type": "bool" }
+      {
+        "internalType": "bool",
+        "name": "borrowers",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "suppliers",
+        "type": "bool"
+      }
     ],
     "name": "claimComp",
     "outputs": [],
@@ -846,7 +1046,11 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "holder", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "holder",
+        "type": "address"
+      }
     ],
     "name": "claimComp",
     "outputs": [],
@@ -858,36 +1062,12 @@
     "constant": true,
     "inputs": [],
     "name": "closeFactorMantissa",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "name": "compAccrued",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "name": "compBorrowSpeeds",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "name": "compBorrowState",
     "outputs": [
-      { "internalType": "uint224", "name": "index", "type": "uint224" },
-      { "internalType": "uint32", "name": "block", "type": "uint32" }
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
     "payable": false,
     "stateMutability": "view",
@@ -896,20 +1076,114 @@
   {
     "constant": true,
     "inputs": [
-      { "internalType": "address", "name": "", "type": "address" },
-      { "internalType": "address", "name": "", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
     ],
-    "name": "compBorrowerIndex",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "compAccrued",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
     "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "compBorrowSpeeds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "compBorrowState",
+    "outputs": [
+      {
+        "internalType": "uint224",
+        "name": "index",
+        "type": "uint224"
+      },
+      {
+        "internalType": "uint32",
+        "name": "block",
+        "type": "uint32"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "compBorrowerIndex",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "compContributorSpeeds",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -918,7 +1192,13 @@
     "constant": true,
     "inputs": [],
     "name": "compInitialIndex",
-    "outputs": [{ "internalType": "uint224", "name": "", "type": "uint224" }],
+    "outputs": [
+      {
+        "internalType": "uint224",
+        "name": "",
+        "type": "uint224"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -927,25 +1207,13 @@
     "constant": true,
     "inputs": [],
     "name": "compRate",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "name": "compReceivable",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "name": "compSpeeds",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -953,31 +1221,113 @@
   {
     "constant": true,
     "inputs": [
-      { "internalType": "address", "name": "", "type": "address" },
-      { "internalType": "address", "name": "", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "compReceivable",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "compSpeeds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
     ],
     "name": "compSupplierIndex",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
     "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "compSupplySpeeds",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
     "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "compSupplyState",
     "outputs": [
-      { "internalType": "uint224", "name": "index", "type": "uint224" },
-      { "internalType": "uint32", "name": "block", "type": "uint32" }
+      {
+        "internalType": "uint224",
+        "name": "index",
+        "type": "uint224"
+      },
+      {
+        "internalType": "uint32",
+        "name": "block",
+        "type": "uint32"
+      }
     ],
     "payable": false,
     "stateMutability": "view",
@@ -987,7 +1337,13 @@
     "constant": true,
     "inputs": [],
     "name": "comptrollerImplementation",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -995,11 +1351,19 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address[]", "name": "cTokens", "type": "address[]" }
+      {
+        "internalType": "address[]",
+        "name": "cTokens",
+        "type": "address[]"
+      }
     ],
     "name": "enterMarkets",
     "outputs": [
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" }
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
     ],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -1008,10 +1372,20 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "cTokenAddress", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "cTokenAddress",
+        "type": "address"
+      }
     ],
     "name": "exitMarket",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1024,7 +1398,11 @@
         "name": "affectedUsers",
         "type": "address[]"
       },
-      { "internalType": "uint256[]", "name": "amounts", "type": "uint256[]" }
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      }
     ],
     "name": "fixBadAccruals",
     "outputs": [],
@@ -1035,13 +1413,29 @@
   {
     "constant": true,
     "inputs": [
-      { "internalType": "address", "name": "account", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
     ],
     "name": "getAccountLiquidity",
     "outputs": [
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "uint256", "name": "", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
     "payable": false,
     "stateMutability": "view",
@@ -1052,7 +1446,11 @@
     "inputs": [],
     "name": "getAllMarkets",
     "outputs": [
-      { "internalType": "contract CToken[]", "name": "", "type": "address[]" }
+      {
+        "internalType": "contract CToken[]",
+        "name": "",
+        "type": "address[]"
+      }
     ],
     "payable": false,
     "stateMutability": "view",
@@ -1061,11 +1459,19 @@
   {
     "constant": true,
     "inputs": [
-      { "internalType": "address", "name": "account", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
     ],
     "name": "getAssetsIn",
     "outputs": [
-      { "internalType": "contract CToken[]", "name": "", "type": "address[]" }
+      {
+        "internalType": "contract CToken[]",
+        "name": "",
+        "type": "address[]"
+      }
     ],
     "payable": false,
     "stateMutability": "view",
@@ -1075,7 +1481,13 @@
     "constant": true,
     "inputs": [],
     "name": "getBlockNumber",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -1084,7 +1496,13 @@
     "constant": true,
     "inputs": [],
     "name": "getCompAddress",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -1092,16 +1510,44 @@
   {
     "constant": true,
     "inputs": [
-      { "internalType": "address", "name": "account", "type": "address" },
-      { "internalType": "address", "name": "cTokenModify", "type": "address" },
-      { "internalType": "uint256", "name": "redeemTokens", "type": "uint256" },
-      { "internalType": "uint256", "name": "borrowAmount", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "cTokenModify",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "redeemTokens",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "borrowAmount",
+        "type": "uint256"
+      }
     ],
     "name": "getHypotheticalAccountLiquidity",
     "outputs": [
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "uint256", "name": "", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
     "payable": false,
     "stateMutability": "view",
@@ -1111,7 +1557,13 @@
     "constant": true,
     "inputs": [],
     "name": "isComptroller",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -1119,19 +1571,41 @@
   {
     "constant": true,
     "inputs": [
-      { "internalType": "contract CToken", "name": "cToken", "type": "address" }
+      {
+        "internalType": "contract CToken",
+        "name": "cToken",
+        "type": "address"
+      }
     ],
     "name": "isDeprecated",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
     "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "lastContributorBlock",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -1149,12 +1623,30 @@
         "name": "cTokenCollateral",
         "type": "address"
       },
-      { "internalType": "address", "name": "liquidator", "type": "address" },
-      { "internalType": "address", "name": "borrower", "type": "address" },
-      { "internalType": "uint256", "name": "repayAmount", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "liquidator",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "repayAmount",
+        "type": "uint256"
+      }
     ],
     "name": "liquidateBorrowAllowed",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1172,14 +1664,26 @@
         "name": "cTokenCollateral",
         "type": "address"
       },
-      { "internalType": "address", "name": "liquidator", "type": "address" },
-      { "internalType": "address", "name": "borrower", "type": "address" },
+      {
+        "internalType": "address",
+        "name": "liquidator",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "actualRepayAmount",
         "type": "uint256"
       },
-      { "internalType": "uint256", "name": "seizeTokens", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "seizeTokens",
+        "type": "uint256"
+      }
     ],
     "name": "liquidateBorrowVerify",
     "outputs": [],
@@ -1208,8 +1712,16 @@
     ],
     "name": "liquidateCalculateSeizeTokens",
     "outputs": [
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "uint256", "name": "", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
     "payable": false,
     "stateMutability": "view",
@@ -1219,23 +1731,43 @@
     "constant": true,
     "inputs": [],
     "name": "liquidationIncentiveMantissa",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
     "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "markets",
     "outputs": [
-      { "internalType": "bool", "name": "isListed", "type": "bool" },
+      {
+        "internalType": "bool",
+        "name": "isListed",
+        "type": "bool"
+      },
       {
         "internalType": "uint256",
         "name": "collateralFactorMantissa",
         "type": "uint256"
       },
-      { "internalType": "bool", "name": "isComped", "type": "bool" }
+      {
+        "internalType": "bool",
+        "name": "isComped",
+        "type": "bool"
+      }
     ],
     "payable": false,
     "stateMutability": "view",
@@ -1245,7 +1777,13 @@
     "constant": true,
     "inputs": [],
     "name": "maxAssets",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -1253,21 +1791,51 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "cToken", "type": "address" },
-      { "internalType": "address", "name": "minter", "type": "address" },
-      { "internalType": "uint256", "name": "mintAmount", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "cToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "minter",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "mintAmount",
+        "type": "uint256"
+      }
     ],
     "name": "mintAllowed",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "constant": true,
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "mintGuardianPaused",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -1275,14 +1843,26 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "cToken", "type": "address" },
-      { "internalType": "address", "name": "minter", "type": "address" },
+      {
+        "internalType": "address",
+        "name": "cToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "minter",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "actualMintAmount",
         "type": "uint256"
       },
-      { "internalType": "uint256", "name": "mintTokens", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "mintTokens",
+        "type": "uint256"
+      }
     ],
     "name": "mintVerify",
     "outputs": [],
@@ -1295,7 +1875,11 @@
     "inputs": [],
     "name": "oracle",
     "outputs": [
-      { "internalType": "contract PriceOracle", "name": "", "type": "address" }
+      {
+        "internalType": "contract PriceOracle",
+        "name": "",
+        "type": "address"
+      }
     ],
     "payable": false,
     "stateMutability": "view",
@@ -1305,7 +1889,13 @@
     "constant": true,
     "inputs": [],
     "name": "pauseGuardian",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -1314,7 +1904,13 @@
     "constant": true,
     "inputs": [],
     "name": "pendingAdmin",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -1323,7 +1919,13 @@
     "constant": true,
     "inputs": [],
     "name": "pendingComptrollerImplementation",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -1332,7 +1934,13 @@
     "constant": true,
     "inputs": [],
     "name": "proposal65FixExecuted",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -1340,12 +1948,30 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "cToken", "type": "address" },
-      { "internalType": "address", "name": "redeemer", "type": "address" },
-      { "internalType": "uint256", "name": "redeemTokens", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "cToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "redeemer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "redeemTokens",
+        "type": "uint256"
+      }
     ],
     "name": "redeemAllowed",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1353,10 +1979,26 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "cToken", "type": "address" },
-      { "internalType": "address", "name": "redeemer", "type": "address" },
-      { "internalType": "uint256", "name": "redeemAmount", "type": "uint256" },
-      { "internalType": "uint256", "name": "redeemTokens", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "cToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "redeemer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "redeemAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "redeemTokens",
+        "type": "uint256"
+      }
     ],
     "name": "redeemVerify",
     "outputs": [],
@@ -1367,13 +2009,35 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "cToken", "type": "address" },
-      { "internalType": "address", "name": "payer", "type": "address" },
-      { "internalType": "address", "name": "borrower", "type": "address" },
-      { "internalType": "uint256", "name": "repayAmount", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "cToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "payer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "repayAmount",
+        "type": "uint256"
+      }
     ],
     "name": "repayBorrowAllowed",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1381,15 +2045,31 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "cToken", "type": "address" },
-      { "internalType": "address", "name": "payer", "type": "address" },
-      { "internalType": "address", "name": "borrower", "type": "address" },
+      {
+        "internalType": "address",
+        "name": "cToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "payer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "actualRepayAmount",
         "type": "uint256"
       },
-      { "internalType": "uint256", "name": "borrowerIndex", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "borrowerIndex",
+        "type": "uint256"
+      }
     ],
     "name": "repayBorrowVerify",
     "outputs": [],
@@ -1410,12 +2090,30 @@
         "name": "cTokenBorrowed",
         "type": "address"
       },
-      { "internalType": "address", "name": "liquidator", "type": "address" },
-      { "internalType": "address", "name": "borrower", "type": "address" },
-      { "internalType": "uint256", "name": "seizeTokens", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "liquidator",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "seizeTokens",
+        "type": "uint256"
+      }
     ],
     "name": "seizeAllowed",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1424,7 +2122,13 @@
     "constant": true,
     "inputs": [],
     "name": "seizeGuardianPaused",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -1442,9 +2146,21 @@
         "name": "cTokenBorrowed",
         "type": "address"
       },
-      { "internalType": "address", "name": "liquidator", "type": "address" },
-      { "internalType": "address", "name": "borrower", "type": "address" },
-      { "internalType": "uint256", "name": "seizeTokens", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "liquidator",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "seizeTokens",
+        "type": "uint256"
+      }
     ],
     "name": "seizeVerify",
     "outputs": [],
@@ -1455,13 +2171,35 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "cToken", "type": "address" },
-      { "internalType": "address", "name": "src", "type": "address" },
-      { "internalType": "address", "name": "dst", "type": "address" },
-      { "internalType": "uint256", "name": "transferTokens", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "cToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "src",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "dst",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "transferTokens",
+        "type": "uint256"
+      }
     ],
     "name": "transferAllowed",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1470,7 +2208,13 @@
     "constant": true,
     "inputs": [],
     "name": "transferGuardianPaused",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
@@ -1478,10 +2222,26 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "cToken", "type": "address" },
-      { "internalType": "address", "name": "src", "type": "address" },
-      { "internalType": "address", "name": "dst", "type": "address" },
-      { "internalType": "uint256", "name": "transferTokens", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "cToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "src",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "dst",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "transferTokens",
+        "type": "uint256"
+      }
     ],
     "name": "transferVerify",
     "outputs": [],
@@ -1492,7 +2252,11 @@
   {
     "constant": false,
     "inputs": [
-      { "internalType": "address", "name": "contributor", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "contributor",
+        "type": "address"
+      }
     ],
     "name": "updateContributorRewards",
     "outputs": [],

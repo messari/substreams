@@ -1500,10 +1500,12 @@
                             &[ethabi::ParamType::Address],
                             log.topics[1usize].as_ref(),
                         )
-                        .map_err(|e| format!(
-                            "unable to decode param 'owner' from topic of type 'address': {}",
-                            e
-                        ))?
+                        .map_err(|e| {
+                            format!(
+                                "unable to decode param 'owner' from topic of type 'address': {}",
+                                e
+                            )
+                        })?
                         .pop()
                         .expect(INTERNAL_ERR)
                         .into_address()
@@ -1514,10 +1516,12 @@
                             &[ethabi::ParamType::Address],
                             log.topics[2usize].as_ref(),
                         )
-                        .map_err(|e| format!(
-                            "unable to decode param 'approved' from topic of type 'address': {}",
-                            e
-                        ))?
+                        .map_err(|e| {
+                            format!(
+                                "unable to decode param 'approved' from topic of type 'address': {}",
+                                e
+                            )
+                        })?
                         .pop()
                         .expect(INTERNAL_ERR)
                         .into_address()
@@ -1528,10 +1532,12 @@
                             &[ethabi::ParamType::Uint(256usize)],
                             log.topics[3usize].as_ref(),
                         )
-                        .map_err(|e| format!(
-                            "unable to decode param 'token_id' from topic of type 'uint256': {}",
-                            e
-                        ))?
+                        .map_err(|e| {
+                            format!(
+                                "unable to decode param 'token_id' from topic of type 'uint256': {}",
+                                e
+                            )
+                        })?
                         .pop()
                         .expect(INTERNAL_ERR)
                         .into_uint()
@@ -1615,10 +1621,12 @@
                             &[ethabi::ParamType::Address],
                             log.topics[1usize].as_ref(),
                         )
-                        .map_err(|e| format!(
-                            "unable to decode param 'owner' from topic of type 'address': {}",
-                            e
-                        ))?
+                        .map_err(|e| {
+                            format!(
+                                "unable to decode param 'owner' from topic of type 'address': {}",
+                                e
+                            )
+                        })?
                         .pop()
                         .expect(INTERNAL_ERR)
                         .into_address()
@@ -1629,10 +1637,12 @@
                             &[ethabi::ParamType::Address],
                             log.topics[2usize].as_ref(),
                         )
-                        .map_err(|e| format!(
-                            "unable to decode param 'operator' from topic of type 'address': {}",
-                            e
-                        ))?
+                        .map_err(|e| {
+                            format!(
+                                "unable to decode param 'operator' from topic of type 'address': {}",
+                                e
+                            )
+                        })?
                         .pop()
                         .expect(INTERNAL_ERR)
                         .into_address()
@@ -1717,10 +1727,12 @@
                             &[ethabi::ParamType::Address],
                             log.topics[1usize].as_ref(),
                         )
-                        .map_err(|e| format!(
-                            "unable to decode param 'from' from topic of type 'address': {}",
-                            e
-                        ))?
+                        .map_err(|e| {
+                            format!(
+                                "unable to decode param 'from' from topic of type 'address': {}",
+                                e
+                            )
+                        })?
                         .pop()
                         .expect(INTERNAL_ERR)
                         .into_address()
@@ -1731,10 +1743,12 @@
                             &[ethabi::ParamType::Address],
                             log.topics[2usize].as_ref(),
                         )
-                        .map_err(|e| format!(
-                            "unable to decode param 'to' from topic of type 'address': {}",
-                            e
-                        ))?
+                        .map_err(|e| {
+                            format!(
+                                "unable to decode param 'to' from topic of type 'address': {}",
+                                e
+                            )
+                        })?
                         .pop()
                         .expect(INTERNAL_ERR)
                         .into_address()
@@ -1745,10 +1759,12 @@
                             &[ethabi::ParamType::Uint(256usize)],
                             log.topics[3usize].as_ref(),
                         )
-                        .map_err(|e| format!(
-                            "unable to decode param 'token_id' from topic of type 'uint256': {}",
-                            e
-                        ))?
+                        .map_err(|e| {
+                            format!(
+                                "unable to decode param 'token_id' from topic of type 'uint256': {}",
+                                e
+                            )
+                        })?
                         .pop()
                         .expect(INTERNAL_ERR)
                         .into_uint()
