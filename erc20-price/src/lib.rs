@@ -1,5 +1,6 @@
 #[rustfmt::skip]
 pub mod abi;
+#[rustfmt::skip]
 pub mod pb;
 
 use std::collections::HashSet;
