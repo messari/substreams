@@ -7,8 +7,8 @@ fn main() -> Result<(), anyhow::Error> {
         .write_to_file("src/abi/erc20.rs")?;
 
     Abigen::new("Pair", "abi/pair.json")?
-    .generate()?
-    .write_to_file("src/abi/pair.rs")?;
+        .generate()?
+        .write_to_file("src/abi/pair.rs")?;
 
     Abigen::new("Factory", "abi/factory.json")?
         .generate()?

@@ -5,10 +5,40 @@ on:
     branches:
       - master
 jobs:
+  # TODO: Add rust toolchain
+  # TODO: Add `cargo fmt --check`
+  # TODO: Add caching support https://github.com/actions/cache
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: rust-toolchain
+        uses: actions-rs/toolchain@v1.0.6
+        with:
+            toolchain: stable
+            target: wasm32-unknown-unknown
+            override: true
+            components: rustfmt, clippy
+      - name: Run cargo fmt check
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt --check
+      - name: Run cargo check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check --workspace
+      - name: Used cached Rust build artifacts
+        uses: actions/cache@v3
+          with:
+            path: |
+              ~/.cargo/bin/
+              ~/.cargo/registry/index/
+              ~/.cargo/registry/cache/
+              ~/.cargo/git/db/
+              target/
+            key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: install substreams cli
         uses: jaxxstorm/action-install-gh-release@v1.7.1
         with:
@@ -18,7 +48,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: install buf
         uses: bufbuild/buf-setup-action@v1.7.0
-      - name: checkout repo
-        uses: actions/checkout@v2
       - name: build all
         run: make build-all
