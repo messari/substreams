@@ -8,3 +8,8 @@ members = [
     "substreams-helper",
     "uniswap-v2"
 ]
+
+[profile.release]
+lto = true
+opt-level = 's'
+strip = "debuginfo"

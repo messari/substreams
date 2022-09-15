@@ -1,6 +1,6 @@
+use std::fs;
 use std::process::Command;
 use std::string::ToString;
-use std::{env, fs, path::Path};
 
 use anyhow::{Ok, Result};
 use substreams_ethereum::Abigen;

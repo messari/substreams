@@ -1,12 +1,9 @@
 use std::ops::Div;
 
-use bigdecimal::{BigDecimal, Num};
 use ethabi::ethereum_types::U256;
-use num_bigint::BigInt;
-use substreams::{log, Hex};
-use substreams_ethereum::pb::eth as ethpb;
+use substreams::Hex;
 
-use crate::{abi, math, utils};
+use crate::abi;
 
 pub struct Erc20Token {
     pub address: String,

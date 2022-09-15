@@ -1,7 +1,7 @@
 use bigdecimal::{BigDecimal, One, Zero};
-use num_bigint::{BigInt, BigUint};
+use num_bigint::BigUint;
 use pad::PadStr;
-use std::ops::{Add, Div, Mul};
+use std::ops::{Div, Mul};
 use std::str::FromStr;
 
 pub fn safe_div(amount0: &BigDecimal, amount1: &BigDecimal) -> BigDecimal {

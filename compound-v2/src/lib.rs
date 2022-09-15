@@ -1,9 +1,9 @@
 #[rustfmt::skip]
 mod abi;
 #[rustfmt::skip]
-mod pb;
-mod rpc;
-mod utils;
+pub mod pb;
+pub mod rpc;
+pub mod utils;
 
 use crate::utils::{exponent_to_big_decimal, MANTISSA_FACTOR};
 use bigdecimal::{BigDecimal, Zero};

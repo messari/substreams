@@ -1,16 +1,15 @@
+pub mod abi;
+pub mod pb;
+
 use hex_literal::hex;
 use substreams::{log, proto, store, Hex};
 use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
-use substreams_helper::{erc20, utils};
+use substreams_helper::erc20;
 
 use abi::factory;
 
-use pb::common;
 use pb::dex_amm;
 use pb::uniswap_v2;
-
-mod abi;
-mod pb;
 
 type Address = [u8; 20];
 

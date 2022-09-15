@@ -1,5 +1,4 @@
 use std::ops::Div;
-use std::str::FromStr;
 
 use bigdecimal::BigDecimal;
 use hex_literal::hex;
