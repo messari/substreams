@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "compound-v2",
+    "erc20",
+    "erc20-price",
+    "erc721",
+    "substreams-helper",
+    "uniswap-v2"
+]

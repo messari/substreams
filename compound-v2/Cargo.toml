@@ -13,13 +13,13 @@ ethabi = "17.0"
 prost = "^0.11.0"
 tiny-keccak = { version = "2.0", features = ["keccak"] }
 substreams = "~0.0.20"
-substreams-ethereum = "~0.2.0"
+substreams-ethereum = "0.2.2-rc.2"
 num-bigint = "0.4"
 bigdecimal = "0.3.0"
 
 [build-dependencies]
 anyhow = "1"
-substreams-ethereum = "~0.2.0"
+substreams-ethereum = "0.2.2-rc.2"
 
 [profile.release]
 lto = true
