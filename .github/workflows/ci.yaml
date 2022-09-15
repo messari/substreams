@@ -14,6 +14,15 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v2
+      - name: install substreams cli
+        uses: jaxxstorm/action-install-gh-release@v1.7.1
+        with:
+          repo: streamingfast/substreams
+          cache: enable
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: install buf
+        uses: bufbuild/buf-setup-action@v1.7.0
       - name: rust-toolchain
         uses: actions-rs/toolchain@v1.0.6
         with:
@@ -41,14 +50,5 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: install substreams cli
-        uses: jaxxstorm/action-install-gh-release@v1.7.1
-        with:
-          repo: streamingfast/substreams
-          cache: enable
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: install buf
-        uses: bufbuild/buf-setup-action@v1.7.0
       - name: build all
         run: make build-all
