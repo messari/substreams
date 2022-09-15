@@ -1,3 +1,4 @@
+#[rustfmt::skip]
 pub mod abi;
 pub mod pb;
 
