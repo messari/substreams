@@ -21,7 +21,7 @@ binaries:
 modules:
   - name: map_market_cap
     kind: map
-    initialBlock: 13000400
+    initialBlock: 13000700
     inputs:
       # - source: sf.ethereum.type.v2.Block
       - map: erc20Price:map_price

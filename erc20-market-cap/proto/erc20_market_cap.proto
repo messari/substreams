@@ -6,6 +6,7 @@ message ERC20MarketCap {
   string price = 1;
   string total_supply = 2;
   string market_cap = 3;
+  string token_address = 4;
 }
 
 message ERC20MarketCaps {

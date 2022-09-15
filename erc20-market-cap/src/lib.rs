@@ -19,11 +19,12 @@ fn map_market_cap(prices: Erc20Prices) -> Result<Erc20MarketCaps, substreams::er
     } in prices.items.iter()
     {
         let price = math::decimal_from_str(price_usd);
+        let token_address_hex = format!("0x{}", Hex::encode(token_address));
 
         let Erc20Token { total_supply, .. } = erc20::get_erc20_token(token_address.to_vec())
             .ok_or(substreams::errors::Error::Unexpected(format!(
-                "Failed to get token info for address: 0x{}",
-                Hex::encode(token_address)
+                "Failed to get token info for address: {}",
+                token_address_hex
             )))?;
 
         let market_cap = price.clone() * math::decimal_from_str(&total_supply.to_string());
@@ -32,6 +33,7 @@ fn map_market_cap(prices: Erc20Prices) -> Result<Erc20MarketCaps, substreams::er
             price: format!("{:.7}", price),
             total_supply: total_supply.to_string(),
             market_cap: format!("{:.7}", market_cap),
+            token_address: token_address_hex,
         };
 
         items.push(item);
