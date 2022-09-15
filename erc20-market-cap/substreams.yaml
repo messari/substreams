@@ -19,16 +19,9 @@ binaries:
     file: ./target/wasm32-unknown-unknown/release/erc20_market_cap_substreams.wasm
 
 modules:
-  - name: map_price
-    kind: map
-    initialBlock: 13000000
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-    output:
-      type: proto:messari.erc20_price.Erc20Prices
   - name: map_market_cap
     kind: map
-    initialBlock: 13000000
+    initialBlock: 13000400
     inputs:
       # - source: sf.ethereum.type.v2.Block
       - map: erc20Price:map_price
