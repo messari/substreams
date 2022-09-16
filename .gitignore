@@ -7,9 +7,5 @@
 
 **/target/
 **/*.spkg
-<<<<<<< HEAD
 **/buf.gen.yaml
 Cargo.lock
-=======
-**/buf.gen.yaml
->>>>>>> 1edf18f (ci: add cargo fmt --check and run cargo fmt on workspace)
