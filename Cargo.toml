@@ -3,6 +3,7 @@ members = [
     "compound-v2",
     "erc20",
     "erc20-price",
+    "erc20-market-cap",
     "erc721",
     "substreams-helper",
     "uniswap-v2"

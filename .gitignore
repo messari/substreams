@@ -8,3 +8,4 @@
 **/target/
 **/*.spkg
 **/buf.gen.yaml
+Cargo.lock

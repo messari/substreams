@@ -1,0 +1,29 @@
+specVersion: v0.1.0
+package:
+  name: "erc20_market_cap_substreams"
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+  erc20Price: ./erc20-price-substreams-v0.1.0.spkg
+
+protobuf:
+  files:
+    - erc20_market_cap.proto
+  importPaths:
+    - ./proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: ./target/wasm32-unknown-unknown/release/erc20_market_cap_substreams.wasm
+
+modules:
+  - name: map_market_cap
+    kind: map
+    initialBlock: 13000700
+    inputs:
+      # - source: sf.ethereum.type.v2.Block
+      - map: erc20Price:map_price
+    output:
+      type: proto:messari.erc20_market_cap.Erc20MarketCaps
