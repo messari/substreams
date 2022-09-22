@@ -1,7 +1,7 @@
 use bigdecimal::{BigDecimal, One, Zero};
-use num_bigint::{BigInt, BigUint};
+use num_bigint::BigUint;
 use pad::PadStr;
-use std::ops::{Add, Div, Mul};
+use std::ops::{Div, Mul};
 use std::str::FromStr;
 
 pub fn safe_div(amount0: &BigDecimal, amount1: &BigDecimal) -> BigDecimal {
@@ -43,7 +43,7 @@ pub fn divide_by_decimals(big_float_amount: BigDecimal, decimals: u64) -> BigDec
         "1".pad_to_width_with_char((decimals + 1) as usize, '0')
             .as_str(),
     )
-        .unwrap()
-        .with_prec(100);
+    .unwrap()
+    .with_prec(100);
     return big_float_amount.div(bd).with_prec(100);
 }

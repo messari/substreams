@@ -1,11 +1,12 @@
+#[rustfmt::skip]
+pub mod abi;
+pub mod pb;
+
 use hex_literal::hex;
 use substreams::{log, store, Hex};
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
 
 use pb::erc721;
-
-mod abi;
-mod pb;
 
 // Bored Ape Yacht Club Contract
 const TRACKED_CONTRACT: [u8; 20] = hex!("bc4ca0eda7647a8ab7c2061c2e118a18a936f13d");

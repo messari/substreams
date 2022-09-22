@@ -1,16 +1,16 @@
-use substreams::{log, proto, store, Hex};
-use substreams_ethereum::{Event as EventTrait, pb::eth::v2 as eth};
-use substreams_helper::{erc20, utils};
+#[rustfmt::skip]
+pub mod abi;
+pub mod pb;
+
 use hex_literal::hex;
+use substreams::{log, proto, store, Hex};
+use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
+use substreams_helper::erc20;
 
 use abi::factory;
 
-use pb::common;
 use pb::dex_amm;
 use pb::uniswap_v2;
-
-mod abi;
-mod pb;
 
 type Address = [u8; 20];
 
@@ -34,7 +34,9 @@ impl BlockExt for eth::Block {
 }
 
 #[substreams::handlers::map]
-fn map_pair_created_event(block: eth::Block) -> Result<uniswap_v2::PairCreatedEvents, substreams::errors::Error> {
+fn map_pair_created_event(
+    block: eth::Block,
+) -> Result<uniswap_v2::PairCreatedEvents, substreams::errors::Error> {
     let mut pair_created_events = uniswap_v2::PairCreatedEvents { items: vec![] };
 
     for log in block.logs() {
@@ -43,13 +45,15 @@ fn map_pair_created_event(block: eth::Block) -> Result<uniswap_v2::PairCreatedEv
                 continue;
             }
 
-            pair_created_events.items.push(uniswap_v2::PairCreatedEvent {
-                token0: event.token0,
-                token1: event.token1,
-                pair: event.pair,
-                tx_hash: log.receipt.transaction.clone().hash,
-                log_index: log.index(),
-            })
+            pair_created_events
+                .items
+                .push(uniswap_v2::PairCreatedEvent {
+                    token0: event.token0,
+                    token1: event.token1,
+                    pair: event.pair,
+                    tx_hash: log.receipt.transaction.clone().hash,
+                    log_index: log.index(),
+                })
         }
     }
 
@@ -57,19 +61,20 @@ fn map_pair_created_event(block: eth::Block) -> Result<uniswap_v2::PairCreatedEv
 }
 
 #[substreams::handlers::store]
-fn store_pair_created_event(pair_created_events: uniswap_v2::PairCreatedEvents, output: store::StoreSet) {
+fn store_pair_created_event(
+    pair_created_events: uniswap_v2::PairCreatedEvents,
+    output: store::StoreSet,
+) {
     log::info!("Stored events {}", pair_created_events.items.len());
     for event in pair_created_events.items {
-        output.set(
-            0,
-            Hex::encode(&event.pair),
-            &proto::encode(&event).unwrap(),
-        );
+        output.set(0, Hex::encode(&event.pair), &proto::encode(&event).unwrap());
     }
 }
 
 #[substreams::handlers::map]
-fn map_pools(pair_created_events: uniswap_v2::PairCreatedEvents) -> Result<dex_amm::Pools, substreams::errors::Error> {
+fn map_pools(
+    pair_created_events: uniswap_v2::PairCreatedEvents,
+) -> Result<dex_amm::Pools, substreams::errors::Error> {
     let mut pools = dex_amm::Pools { items: vec![] };
 
     for event in pair_created_events.items {
@@ -84,7 +89,11 @@ fn map_pools(pair_created_events: uniswap_v2::PairCreatedEvents) -> Result<dex_a
                 total_value_locked: "0".to_string(),
             })
         } else {
-            log::info!("Failed to fetch token for {} {}", Hex(&event.token0), Hex(&event.token1));
+            log::info!(
+                "Failed to fetch token for {} {}",
+                Hex(&event.token0),
+                Hex(&event.token1)
+            );
         }
     }
 

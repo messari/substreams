@@ -1,15 +1,16 @@
+#[rustfmt::skip]
+pub mod abi;
+#[rustfmt::skip]
+pub mod pb;
+
 use std::collections::HashSet;
 
-use hex_literal::hex;
 use substreams::{log, Hex};
 use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
 
 use pb::erc20_price::{Erc20Price, Erc20Prices};
 use substreams_helper::price;
 use substreams_helper::types::Network;
-
-mod abi;
-mod pb;
 
 #[substreams::handlers::map]
 fn map_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {

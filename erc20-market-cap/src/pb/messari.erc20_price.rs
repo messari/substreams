@@ -1,16 +1,16 @@
 // @generated
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Erc20Price {
-    #[prost(uint64, tag="1")]
+    #[prost(uint64, tag = "1")]
     pub block_number: u64,
-    #[prost(string, tag="2")]
+    #[prost(string, tag = "2")]
     pub price_usd: ::prost::alloc::string::String,
-    #[prost(bytes="vec", tag="3")]
+    #[prost(bytes = "vec", tag = "3")]
     pub token_address: ::prost::alloc::vec::Vec<u8>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Erc20Prices {
-    #[prost(message, repeated, tag="1")]
+    #[prost(message, repeated, tag = "1")]
     pub items: ::prost::alloc::vec::Vec<Erc20Price>,
 }
 /// Encoded file descriptor set for the `messari.erc20_price` package
