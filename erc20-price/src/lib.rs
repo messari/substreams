@@ -13,7 +13,7 @@ use substreams_helper::price;
 use substreams_helper::types::Network;
 
 #[substreams::handlers::map]
-fn map_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {
+fn map_eth_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {
     let mut erc20_tokens = HashSet::new();
     for log in block.logs() {
         if let Some(_) = abi::erc20::events::Transfer::match_and_decode(log) {
