@@ -1,4 +1,8 @@
 #[rustfmt::skip]
+#[path = "../target/abi/sushiswap_calculations.rs"]
+pub mod sushiswap_calculations;
+
+#[rustfmt::skip]
 #[path = "../target/abi/chainlink_feed_registry.rs"]
 pub mod chainlink_feed_registry;
 
