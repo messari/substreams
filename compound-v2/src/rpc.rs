@@ -3,7 +3,7 @@ use substreams_ethereum::{pb::eth, rpc};
 
 use crate::utils::rpc_data;
 use crate::{
-    pb::compound::Token,
+    pb::compound::v1::Token,
     utils::{read_string, read_uint32},
 };
 

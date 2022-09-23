@@ -21,4 +21,4 @@ substreams-ethereum = "0.2.2-rc.2"
 
 [build-dependencies]
 anyhow = "1"
-substreams-ethereum = "0.2.2-rc.2"
+substreams-common = { path = "../common" }

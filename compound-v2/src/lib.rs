@@ -1,4 +1,3 @@
-#[rustfmt::skip]
 mod abi;
 #[rustfmt::skip]
 pub mod pb;
@@ -7,7 +6,7 @@ pub mod utils;
 
 use crate::utils::{exponent_to_big_decimal, MANTISSA_FACTOR};
 use bigdecimal::{BigDecimal, Zero};
-use pb::compound;
+use pb::compound::v1 as compound;
 use std::ops::{Add, Div, Mul, Sub};
 use std::str::FromStr;
 use substreams::{proto, store, Hex};

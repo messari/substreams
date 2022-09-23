@@ -10,12 +10,12 @@ protobuf:
   files:
     - erc721.proto
   importPaths:
-    - ./proto
+    - ./proto/v1
 
 binaries:
   default:
     type: wasm/rust-v1
-    file: ./target/wasm32-unknown-unknown/release/substreams_erc721.wasm
+    file: ../target/wasm32-unknown-unknown/release/substreams_erc721.wasm
 
 modules:
   - name: block_to_transfers
@@ -24,7 +24,7 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:eth.erc721.v1.Transfers
+      type: proto:messari.erc721.v1.Transfers
 
   - name: nft_state
     kind: store

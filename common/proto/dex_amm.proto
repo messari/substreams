@@ -2,12 +2,12 @@ syntax = "proto3";
 
 import "common.proto";
 
-package messari.dex_amm;
+package messari.dex_amm.v1;
 
 message Pool {
   string name = 1;
   bytes address = 2; // bytes: Address
-  repeated messari.common.ERC20Token input_tokens = 3;
+  repeated messari.common.v1.ERC20Token input_tokens = 3;
 
   // Metrics
   string total_value_locked = 100; // string: BigDecimal

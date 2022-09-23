@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package messari.common;
+package messari.common.v1;
 
 message ERC20Tokens {
   repeated ERC20Token items = 1;

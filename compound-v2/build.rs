@@ -1,12 +1,9 @@
 use anyhow::{Ok, Result};
-use substreams_ethereum::Abigen;
+use substreams_common::codegen;
 
 fn main() -> Result<(), anyhow::Error> {
-    Abigen::new("Comptroller", "abi/comptroller.json")?
-        .generate()?
-        .write_to_file("src/abi/comptroller.rs")?;
-    Abigen::new("CToken", "abi/ctoken.json")?
-        .generate()?
-        .write_to_file("src/abi/ctoken.rs")?;
+    println!("cargo:rerun-if-changed=proto");
+    println!("cargo:rerun-if-changed=abi");
+    codegen::generate(None)?;
     Ok(())
 }

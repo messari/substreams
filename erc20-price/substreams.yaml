@@ -10,12 +10,12 @@ protobuf:
   files:
     - erc20_price.proto
   importPaths:
-    - ./proto
+    - ./proto/v1
 
 binaries:
   default:
     type: wasm/rust-v1
-    file: ./target/wasm32-unknown-unknown/release/erc20_price_substreams.wasm
+    file: ../target/wasm32-unknown-unknown/release/erc20_price_substreams.wasm
 
 modules:
   - name: map_price
@@ -24,4 +24,4 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:messari.erc20_price.Erc20Prices
+      type: proto:messari.erc20_price.v1.Erc20Prices
