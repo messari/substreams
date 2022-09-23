@@ -6,7 +6,6 @@ build-all:
 	$(MAKE) -C erc20-market-cap build
 	$(MAKE) -C erc721 build
 	$(MAKE) -C compound-v2 build
-	$(MAKE) -C integrations build
 
 .PHONY: erc20-price-spkg
 erc20-price-spkg:
