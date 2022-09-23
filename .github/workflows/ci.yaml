@@ -8,6 +8,8 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    env:
+      PROTOC: /usr/local/bin/protoc
     steps:
       - name: checkout repo
         uses: actions/checkout@v2
@@ -20,6 +22,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: install buf
         uses: bufbuild/buf-setup-action@v1.7.0
+      - name: install protoc
+        env:
+          PROTOC_ZIP: protoc-3.14.0-linux-x86_64.zip
+        run: |
+          curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/$PROTOC_ZIP
+          sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
+          sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
+          rm -f $PROTOC_ZIP
+          sudo chmod +x /usr/local/bin/protoc
       - name: rust-toolchain
         uses: actions-rs/toolchain@v1.0.6
         with:
