@@ -55,27 +55,27 @@ fn test_uniswap_v2_module_store_pools() -> Result<(), Box<dyn std::error::Error>
 // May be due to improper API key;
 // TODO: Contact SF to understand how to use the gRPC `blocks`
 // endpoint.
-#[ignore]
-#[tokio::test]
-async fn test_substreams_client() -> Result<(), Box<dyn std::error::Error>> {
-    use crate::substreams_client::{stream_client::StreamClient, Request};
-    use tokio_stream::StreamExt;
+// #[ignore]
+// #[tokio::test]
+// async fn test_substreams_client() -> Result<(), Box<dyn std::error::Error>> {
+//     use crate::substreams_client::{stream_client::StreamClient, Request};
+//     use tokio_stream::StreamExt;
 
-    const DEFAULT_SUBSTREAMS_ENDPOINT: &str = "https://api-dev.streamingfast.io:443";
+//     const DEFAULT_SUBSTREAMS_ENDPOINT: &str = "https://api-dev.streamingfast.io:443";
 
-    let mut client = StreamClient::connect(DEFAULT_SUBSTREAMS_ENDPOINT).await?;
-    let mut request = Request::default();
-    request.start_block_num = 13e5 as i64;
-    request.stop_block_num = (request.start_block_num + 10) as u64;
-    request.output_modules = vec!["sf.ethereum.v1".to_string()];
-    let mut stream = client
-        .blocks(tonic::Request::new(request))
-        .await?
-        .into_inner();
+//     let mut client = StreamClient::connect(DEFAULT_SUBSTREAMS_ENDPOINT).await?;
+//     let mut request = Request::default();
+//     request.start_block_num = 13e5 as i64;
+//     request.stop_block_num = (request.start_block_num + 10) as u64;
+//     request.output_modules = vec!["sf.ethereum.v1".to_string()];
+//     let mut stream = client
+//         .blocks(tonic::Request::new(request))
+//         .await?
+//         .into_inner();
 
-    while let Some(output) = stream.next().await {
-        println!("{:?}", output?);
-    }
+//     while let Some(output) = stream.next().await {
+//         println!("{:?}", output?);
+//     }
 
-    Ok(())
-}
+//     Ok(())
+// }
