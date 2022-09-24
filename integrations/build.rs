@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 fn main() {
-    download_and_compile_substream_v1();
+    // download_and_compile_substream_v1();
 }
 
 fn download_and_compile_substream_v1() {
