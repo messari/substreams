@@ -6,7 +6,7 @@ package messari.dex_amm.v1;
 
 message Pool {
   string name = 1;
-  bytes address = 2; // bytes: Address
+  string address = 2; // bytes: Address
   repeated messari.common.v1.ERC20Token input_tokens = 3;
 
   // Metrics
@@ -14,7 +14,7 @@ message Pool {
 }
 
 message PoolToken {
-  bytes address = 1; // bytes: Address
+  string address = 1; // bytes: Address
   // Balance of input token in native amounts
   string balance = 2; // string: BigInt
   // Weights of input token in the liquidity pool in percentage values. For example, 0.5/0.5 for Uniswap pools, 0.482/0.518 for a Curve pool, 0.1/0.1/0.8 for a Balancer pool

@@ -13,13 +13,14 @@ pub struct Erc20Token {
     pub total_supply: U256,
 }
 
-pub fn get_erc20_token(token_address: Vec<u8>) -> Option<Erc20Token> {
+pub fn get_erc20_token(token_address: String) -> Option<Erc20Token> {
     use abi::erc20::functions;
 
-    let name_res = functions::Name {}.call(token_address.clone());
-    let symbol_res = functions::Symbol {}.call(token_address.clone());
-    let decimals_res = functions::Decimals {}.call(token_address.clone());
-    let total_supply_res = functions::TotalSupply {}.call(token_address.clone());
+    let token_address_bytes = Hex::decode(token_address.clone()).unwrap();
+    let name_res = functions::Name {}.call(token_address_bytes.clone());
+    let symbol_res = functions::Symbol {}.call(token_address_bytes.clone());
+    let decimals_res = functions::Decimals {}.call(token_address_bytes.clone());
+    let total_supply_res = functions::TotalSupply {}.call(token_address_bytes.clone());
 
     if let (Some(name), Some(symbol), Some(decimals), Some(total_supply)) =
         (name_res, symbol_res, decimals_res, total_supply_res)
@@ -27,7 +28,7 @@ pub fn get_erc20_token(token_address: Vec<u8>) -> Option<Erc20Token> {
         let total_supply = total_supply.div(U256::from(10 as i32).pow(decimals.into()));
 
         Some(Erc20Token {
-            address: Hex::encode(token_address),
+            address: token_address.clone(),
             name,
             symbol,
             decimals: decimals.as_u64(),

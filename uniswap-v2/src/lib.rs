@@ -47,10 +47,10 @@ fn map_pair_created_event(
             }
 
             pair_created_events.items.push(uniswap::PairCreatedEvent {
-                token0: event.token0,
-                token1: event.token1,
-                pair: event.pair,
-                tx_hash: log.receipt.transaction.clone().hash,
+                token0: Hex(event.token0).to_string(),
+                token1: Hex(event.token1).to_string(),
+                pair: Hex(event.pair).to_string(),
+                tx_hash: Hex(log.receipt.transaction.clone().hash).to_string(),
                 log_index: log.index(),
             })
         }
@@ -103,10 +103,6 @@ fn map_pools(
 fn store_pools(pools: dex_amm::Pools, output: store::StoreSet) {
     log::info!("Stored pools {}", pools.items.len());
     for event in pools.items {
-        output.set(
-            0,
-            Hex::encode(&event.address),
-            &proto::encode(&event).unwrap(),
-        );
+        output.set(0, &event.address, &proto::encode(&event).unwrap());
     }
 }
