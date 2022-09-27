@@ -12,12 +12,12 @@ crate-type = ["cdylib"]
 ethabi = "17.0"
 hex-literal = "0.3.4"
 prost = "0.10.1"
-substreams = "~0.0.20"
-substreams-ethereum = "0.2.2-rc.2"
+substreams.workspace = true
+substreams-ethereum.workspace = true
 
 # Required so that ethabi > ethereum-types build correctly under wasm32-unknown-unknown
 getrandom = { version = "0.2", features = ["custom"] }
 
 [build-dependencies]
 anyhow = "1"
-substreams-ethereum = "0.2.2-rc.2"
+substreams-common = { path = "../common" }
