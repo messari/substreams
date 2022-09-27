@@ -25,8 +25,8 @@ fn map_price_for_tokens(
     let mut prices = Erc20Prices { items: vec![] };
 
     for erc20_token in erc20_tokens {
-        let token_price =
-            price::get_price(Network::Ethereum, erc20_token.clone()).map_err(|e| {
+        let token_price = price::get_price(Network::Ethereum, block_number, erc20_token.clone())
+            .map_err(|e| {
                 substreams::errors::Error::Unexpected(format!("Failed to get price: {}", e))
             })?;
         prices.items.push(Erc20Price {
