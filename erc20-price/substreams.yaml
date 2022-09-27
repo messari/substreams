@@ -18,7 +18,7 @@ binaries:
     file: ../target/wasm32-unknown-unknown/release/erc20_price_substreams.wasm
 
 modules:
-  - name: map_price
+  - name: map_eth_price
     kind: map
     initialBlock: 13000000
     inputs:

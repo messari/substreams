@@ -11,7 +11,7 @@ use substreams_helper::price;
 use substreams_helper::types::Network;
 
 #[substreams::handlers::map]
-fn map_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {
+fn map_eth_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {
     map_price_for_tokens(
         block.number,
         vec![hex!("c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2").to_vec()],

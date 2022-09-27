@@ -23,6 +23,6 @@ modules:
     kind: map
     initialBlock: 13000700
     inputs:
-      - map: erc20Price:map_price
+      - map: erc20Price:map_eth_price
     output:
       type: proto:messari.erc20_market_cap.v1.Erc20MarketCaps
