@@ -12,5 +12,9 @@ pub mod chainlink_feed_registry;
 pub mod yearn_lens_oracle;
 
 #[rustfmt::skip]
+#[path = "../target/abi/curve_calculations.rs"]
+pub mod curve_calculations;
+
+#[rustfmt::skip]
 #[path = "../target/abi/erc20.rs"]
 pub mod erc20;
