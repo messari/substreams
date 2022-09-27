@@ -20,17 +20,16 @@ jobs:
           cache: enable
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: request streaming fast authentication token
+        run: |
+          FIREHOSE_API_TOKEN=$(curl https://auth.dfuse.io/v1/auth/issue -s --data-binary '{"api_key":"${{secrets.STREAMING_FAST}}"}' | jq -r .token)
+          echo "SUBSTREAMS_API_TOKEN=$FIREHOSE_API_TOKEN" >> $GITHUB_ENV
       - name: install buf
         uses: bufbuild/buf-setup-action@v1.7.0
       - name: install protoc
-        env:
-          PROTOC_ZIP: protoc-3.14.0-linux-x86_64.zip
-        run: |
-          curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/$PROTOC_ZIP
-          sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
-          sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
-          rm -f $PROTOC_ZIP
-          sudo chmod +x /usr/local/bin/protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.14.0'
       - name: rust-toolchain
         uses: actions-rs/toolchain@v1.0.6
         with:
