@@ -7,7 +7,7 @@ use hex_literal::hex;
 use pb::erc20_price::v1::{Erc20Price, Erc20Prices};
 use substreams::{log, Hex};
 use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
-use substreams_helper::price;
+use substreams_helper::erc20_price;
 use substreams_helper::types::Network;
 
 #[substreams::handlers::map]
@@ -25,8 +25,8 @@ fn map_price_for_tokens(
     let mut prices = Erc20Prices { items: vec![] };
 
     for erc20_token in erc20_tokens {
-        let token_price =
-            price::get_price(Network::Ethereum, erc20_token.clone()).map_err(|e| {
+        let token_price = erc20_price::get_erc20_price(Network::Ethereum, erc20_token.clone())
+            .map_err(|e| {
                 substreams::errors::Error::Unexpected(format!("Failed to get price: {}", e))
             })?;
         prices.items.push(Erc20Price {

@@ -29,7 +29,10 @@ struct NetworkConfig {
     usd_denominations: [u8; 20],
 }
 
-pub fn get_price(network: types::Network, token_address: Vec<u8>) -> Result<BigDecimal, String> {
+pub fn get_erc20_price(
+    network: types::Network,
+    token_address: Vec<u8>,
+) -> Result<BigDecimal, String> {
     let network_config = match network {
         types::Network::Ethereum => CONFIG.ethereum,
     };
