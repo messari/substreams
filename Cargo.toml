@@ -10,6 +10,10 @@ members = [
     "uniswap-v2"
 ]
 
+[workspace.dependencies]
+substreams = "~0.0.20"
+substreams-ethereum = "0.2.2-rc.2"
+
 [profile.release]
 lto = true
 opt-level = 's'
