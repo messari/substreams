@@ -47,10 +47,10 @@ fn map_pair_created_event(
             }
 
             pair_created_events.items.push(uniswap::PairCreatedEvent {
-                token0: Hex(event.token0).to_string(),
-                token1: Hex(event.token1).to_string(),
-                pair: Hex(event.pair).to_string(),
-                tx_hash: Hex(log.receipt.transaction.clone().hash).to_string(),
+                token0: hex::encode(event.token0.clone()),
+                token1: hex::encode(event.token1.clone()),
+                pair: hex::encode(event.pair.clone()),
+                tx_hash: hex::encode(log.receipt.transaction.clone().hash),
                 log_index: log.index(),
             })
         }
