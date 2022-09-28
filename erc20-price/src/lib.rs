@@ -32,7 +32,7 @@ fn map_price_for_tokens(
         prices.items.push(Erc20Price {
             block_number,
             price_usd: token_price.to_string(),
-            token_address: erc20_token.clone(),
+            token_address: Hex(erc20_token.clone()).to_string(),
         });
         log::info!("token {} price {}", Hex(erc20_token), token_price);
     }
