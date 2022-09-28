@@ -1,0 +1,18 @@
+[package]
+name = "substreams-integrations"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+prost = "0.11.0"
+prost-types = "0.11.1"
+substreams = "0.0.20"
+thiserror = "1.0.35"
+tokio = { version = "1", features = ["macros", "rt"] }
+tokio-stream = "0.1.10"
+tonic = "0.8.1"
+
+[build-dependencies]
+reqwest = { version = "0.11", features = ["json", "blocking"] }
+tokio = { version = "1", features = ["macros", "rt"] }
+tonic-build = "0.8.0"

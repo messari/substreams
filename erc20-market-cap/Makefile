@@ -10,4 +10,4 @@ build:
 
 .PHONY: example
 example:
-	substreams run -e api-dev.streamingfast.io:443 substreams.yaml map_market_cap -s 13000700 -t +1
+	substreams run -e api-dev.streamingfast.io:443 substreams.yaml map_market_cap -s 13000000 -t +1
