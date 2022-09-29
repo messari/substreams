@@ -1,0 +1,27 @@
+specVersion: v0.1.0
+package:
+  name: "substreams_erc20_holdings"
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+
+protobuf:
+  files:
+    - erc20.proto
+  importPaths:
+    - ../common/proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: ../target/wasm32-unknown-unknown/release/substreams_erc20_holdings.wasm
+
+modules:
+  - name: map_block_to_transfers
+    kind: map
+    initialBlock: 1
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:messari.erc20.v1.Transfers

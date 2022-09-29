@@ -844,7 +844,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "substreams-erc20"
+name = "substreams-erc20-holdings"
 version = "0.1.0"
 dependencies = [
  "anyhow",

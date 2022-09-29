@@ -1,9 +1,9 @@
 [package]
-name = "substreams-erc20"
+name = "substreams-erc20-holdings"
 version = "0.1.0"
-description = "Messari's standardized substream for erc20"
+description = "Messari's standardized substream for erc20 account holdings"
 edition = "2021"
-repository = "https://github.com/messari/subgraphs/"
+repository = "https://github.com/messari/substreams/"
 
 [lib]
 crate-type = ["cdylib"]

@@ -2,17 +2,6 @@ syntax = "proto3";
 
 package messari.common.v1;
 
-message ERC20Tokens {
-  repeated ERC20Token items = 1;
-}
-
-message ERC20Token {
-  string address = 1; // bytes: Address
-  string name = 2;
-  string symbol = 3;
-  uint64 decimals = 4;
-}
-
 message Transaction {
   string hash = 1; // bytes: Hash
   uint64 nonce = 2;
