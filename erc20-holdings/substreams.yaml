@@ -9,8 +9,10 @@ imports:
 protobuf:
   files:
     - erc20.proto
+    - erc721.proto
   importPaths:
     - ../common/proto
+    - ../erc721/proto/v1
 
 binaries:
   default:
