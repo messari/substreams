@@ -6,6 +6,6 @@ codegen:
 build:
 	cargo build --target wasm32-unknown-unknown --release
 
-.PHONY: example
-example:
-	substreams run -e api-dev.streamingfast.io:443 substreams.yaml map_pair_created_event,map_pools,store_pools -s 10008355 -t +200
+.PHONY: run
+run:
+	substreams run -e api-dev.streamingfast.io:443 substreams.yaml store_mint_events -s 10008555 -t +10
