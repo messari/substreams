@@ -7,13 +7,12 @@ use hex_literal::hex;
 use substreams::{log, proto, store, Hex};
 use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
 use substreams_helper::erc20;
+use substreams_helper::types::Address;
 
 use abi::factory;
 
 use pb::dex_amm::v1 as dex_amm;
 use pb::uniswap::v2 as uniswap;
-
-type Address = [u8; 20];
 
 pub const UNISWAP_V2_FACTORY: Address = hex!("5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f");
 pub const UNISWAP_V2_FACTORY_START_BLOCK: u64 = 10_000_835;

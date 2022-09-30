@@ -855,6 +855,7 @@ dependencies = [
  "substreams",
  "substreams-common",
  "substreams-ethereum",
+ "substreams-helper",
 ]
 
 [[package]]

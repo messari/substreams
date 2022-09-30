@@ -9,10 +9,8 @@ imports:
 protobuf:
   files:
     - erc20.proto
-    - erc721.proto
   importPaths:
     - ../common/proto
-    - ../erc721/proto/v1
 
 binaries:
   default:
@@ -26,4 +24,4 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:messari.erc20.v1.Transfers
+      type: proto:messari.erc20.v1.TransferEvents
