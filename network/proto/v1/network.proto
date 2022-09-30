@@ -25,28 +25,28 @@ message Network {
     int64 block_height = 6;
   
     // Total difficulty to reach the current block
-    int64 cumulative_difficulty= 7;
+    int64 cumulative_difficulty = 7;
     
     // Total gas used
-    int64 cumulative_gas_used= 8;
+    int64 cumulative_gas_used = 8;
   
     // Current gas limit
-    int64 gas_limit= 9;
+    int64 gas_limit = 9;
   
     // Total burnt fees on the network in native asset
-    int64 cumulative_burnt_fees= 10;
+    int64 cumulative_burnt_fees = 10;
   
     // Total rewards emitted on the network in native asset
-    int64 cumulative_rewards= 11;
+    int64 cumulative_rewards = 11;
   
     // Total number of transactions that have occured on this network
-    int64 cumulative_transactions= 12;
+    int64 cumulative_transactions = 12;
   
     // Total size of the network in native units (e.g. Bytes in Arweave and Ethereum)
-    int64 cumulative_size= 13;
+    int64 cumulative_size = 13;
   
     // Current supply of the native asset
-    int64 total_supply= 14;
+    int64 total_supply = 14;
   
     // Statistical analysis of blocks/day from daily snapshots
     Stats daily_blocks = 15;
@@ -54,10 +54,10 @@ message Network {
     // #### Snapshots ####
   
     // Daily metrics for this blockchain
-    repeated DailySnapshot daily_snapshots = 16;
+    DailySnapshots daily_snapshots = 16;
   
     // Hourly metrics for this blockchain
-    repeated HourlySnapshot hourly_snapshots = 17;
+    HourlySnapshots hourly_snapshots = 17;
   }
 
   message Stats {
@@ -113,7 +113,7 @@ message Network {
     uint64 timestamp = 5;
 
     // Number of cumulative unique authors (see type Author for explanation)
-    uint64 cumulativ_unique_authors = 6;
+    uint64 cumulative_unique_authors = 6;
 
     // Statistical analysis of unique daily active authors
     Stats daily_unique_authors = 7;
@@ -127,10 +127,10 @@ message Network {
     // Total gas used up until this day
     uint64 cumulative_gas_used = 10;
 
-    // Statistical analysis of gas used during this da
+    // Statistical analysis of gas used during this day
     Stats daily_gas_used = 11;
 
-    // Statistical analysis of gas limit across blocks this da
+    // Statistical analysis of gas limit across blocks this day
     Stats daily_gas_limit = 12;
 
     // Total amount of fees burned
@@ -256,4 +256,12 @@ message Network {
 
     // Statistical analysis of the gas price during this hour
     Stats hourly_gas_price = 26;
+  }
+
+  message DailySnapshots {
+    repeated DailySnapshot snapshots = 1;
+  }
+
+  message HourlySnapshots {
+    repeated HourlySnapshot snapshots = 1;
   }

@@ -7,10 +7,15 @@ use substreams_ethereum::pb::eth::v2 as eth;
 use crate::pb::network::v1::Network;
 
 #[substreams::handlers::store]
-fn store_network_stats(block: eth::Block, output: store::StoreSet) {
+fn map_network(
+    block: eth::Block,
+    daily_snapshots: store::StoreGet,
+    hourly_snapshots: store::StoreGet,
+    network: store::StoreSet,
+) {
     let network = Network {
         ..Default::default()
     };
 
-    output.set(0, block.number.to_string(), &network.encode_to_vec());
+    // daily_snapshots.set(0, block.number.to_string(), &network.encode_to_vec());
 }
