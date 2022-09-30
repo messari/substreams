@@ -3,7 +3,7 @@ pub mod abi;
 #[rustfmt::skip]
 pub mod pb;
 
-use substreams::{hex, log, store, Hex};
+use substreams::{hex, log, proto, store, Hex};
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
 
 use substreams_helper::types::Address;
@@ -38,4 +38,16 @@ fn map_block_to_transfers(
     }
 
     Ok(transfer_events)
+}
+
+#[substreams::handlers::store]
+fn store_transfers(transfers: erc20::TransferEvents, output: store::StoreSet) {
+    log::info!("Stored events {}", transfers.items.len());
+    for event in transfers.items {
+        output.set(
+            0,
+            Hex::encode(&event.token_address),
+            &proto::encode(&event).unwrap(),
+        );
+    }
 }

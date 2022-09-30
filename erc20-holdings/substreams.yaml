@@ -25,3 +25,10 @@ modules:
       - source: sf.ethereum.type.v2.Block
     output:
       type: proto:messari.erc20.v1.TransferEvents
+
+  - name: store_transfers
+    kind: store
+    updatePolicy: set
+    valueType: proto:messari.erc20.v1.TransferEvents
+    inputs:
+      - map: map_block_to_transfers
