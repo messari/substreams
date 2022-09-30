@@ -844,17 +844,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "substreams-erc20"
+name = "substreams-erc20-holdings"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "ethabi",
  "getrandom",
  "hex-literal",
- "prost 0.10.4",
+ "prost 0.11.0",
  "substreams",
  "substreams-common",
  "substreams-ethereum",
+ "substreams-helper",
 ]
 
 [[package]]
