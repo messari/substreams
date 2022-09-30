@@ -4,6 +4,7 @@ pub mod abi;
 pub mod pb;
 
 use hex_literal::hex;
+use prost;
 use substreams::{log, store, Hex};
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
 
@@ -14,6 +15,9 @@ use pb::erc721::v1 as erc721;
 fn block_to_transfers(
     blk: pbeth::v2::Block,
 ) -> Result<erc721::Transfers, substreams::errors::Error> {
+    // NOTE: Update TRACKED_CONTRACT to the address of the contract you want to track
+    let TRACKED_CONTRACT: Vec<u8> = vec![];
+
     let mut transfers: Vec<erc721::Transfer> = vec![];
     for trx in blk.transaction_traces {
         transfers.extend(trx.receipt.unwrap().logs.iter().filter_map(|log| {
