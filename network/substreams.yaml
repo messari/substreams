@@ -1,0 +1,33 @@
+specVersion: v0.1.0
+package:
+  name: "messari_networks_substreams"
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+
+protobuf:
+  files:
+    - network.proto
+  importPaths:
+    - ./proto/v1
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: ../target/wasm32-unknown-unknown/release/eth_network_substreams.wasm
+
+modules:
+  - name: store_network_stats
+    kind: store
+    updatePolicy: set
+    valueType: proto:messari.network.v1.Network
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+  - name: map_network
+    kind: map
+    initialBlock: 13000000
+    inputs:
+      - store: store_network_stats
+    output:
+      type: proto:messari.network.v1.Network

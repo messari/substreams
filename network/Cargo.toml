@@ -1,7 +1,7 @@
 [package]
-name = "erc20_market_cap_substreams"
+name = "messari_networks_substreams"
 version = "0.0.1"
-description = "Market cap of all ERC20 tokens."
+description = "Substreams for Messari tracked networks"
 edition = "2021"
 # repository = "https://github.com/messari/substreams/erc20-market-cap"
 
