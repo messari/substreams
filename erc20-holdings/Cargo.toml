@@ -22,4 +22,3 @@ getrandom = { version = "0.2", features = ["custom"] }
 [build-dependencies]
 anyhow = "1"
 substreams-common = { path = "../common" }
-prost = "0.11.0"
