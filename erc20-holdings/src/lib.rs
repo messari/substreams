@@ -3,6 +3,11 @@ pub mod abi;
 #[rustfmt::skip]
 pub mod pb;
 
+mod keyer;
+
+use num_bigint::BigInt;
+use std::str::FromStr;
+use std::ops::Neg;
 use substreams::{hex, log, proto, store, Hex};
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
 
@@ -16,7 +21,7 @@ fn map_block_to_transfers(
     block: pbeth::v2::Block,
 ) -> Result<erc20::TransferEvents, substreams::errors::Error> {
     // NOTE: Update TRACKED_CONTRACT to the address of the contract you want to track
-    const TRACKED_CONTRACT: Address = hex!("5a98fcbea516cf06857215779fd812ca3bef1b32"); // LDO
+    const TRACKED_CONTRACT: Address = hex!("0c10bf8fcb7bf5412187a595ab97a3609160b5c6"); // USDD
 
     let mut transfer_events = erc20::TransferEvents { items: vec![] };
 
@@ -43,11 +48,33 @@ fn map_block_to_transfers(
 #[substreams::handlers::store]
 fn store_transfers(transfers: erc20::TransferEvents, output: store::StoreSet) {
     log::info!("Stored events {}", transfers.items.len());
-    for event in transfers.items {
+    for transfer in transfers.items {
         output.set(
-            0,
-            Hex::encode(&event.token_address),
-            &proto::encode(&event).unwrap(),
+            transfer.log_index as u64,
+            Hex::encode(&transfer.token_address),
+            &proto::encode(&transfer).unwrap(),
         );
+    }
+}
+
+#[substreams::handlers::store]
+fn store_balance(transfers: erc20::TransferEvents, output: store::StoreAddBigInt) {
+    log::info!("Stored events {}", transfers.items.len());
+    for transfer in transfers.items {
+        log::info!("log index {}", transfer.log_index);
+
+        output.add(
+            transfer.log_index as u64,
+            keyer::account_balance_key(&transfer.to),
+            &BigInt::from_str(transfer.amount.as_str()).unwrap(),
+        );
+
+        if Hex::decode(transfer.from.clone()).unwrap() != NULL_ADDRESS {
+            output.add(
+                transfer.log_index as u64,
+                keyer::account_balance_key(&transfer.from),
+                &BigInt::from_str((transfer.amount).as_str()).unwrap().neg(),
+            );
+        }
     }
 }

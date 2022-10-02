@@ -20,7 +20,7 @@ binaries:
 modules:
   - name: map_block_to_transfers
     kind: map
-    initialBlock: 1
+    initialBlock: 14690152
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
@@ -30,5 +30,12 @@ modules:
     kind: store
     updatePolicy: set
     valueType: proto:messari.erc20.v1.TransferEvents
+    inputs:
+      - map: map_block_to_transfers
+
+  - name: store_balance
+    kind: store
+    updatePolicy: add
+    valueType: bigint
     inputs:
       - map: map_block_to_transfers

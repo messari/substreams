@@ -848,9 +848,11 @@ name = "substreams-erc20-holdings"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bigdecimal",
  "ethabi",
  "getrandom",
  "hex-literal",
+ "num-bigint",
  "prost 0.11.0",
  "substreams",
  "substreams-common",

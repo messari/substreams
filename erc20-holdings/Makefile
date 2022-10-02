@@ -8,4 +8,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e api-dev.streamingfast.io:443 substreams.yaml store_transfers -s 15244465 -t +1
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_block_to_transfers,store_balance -s 14690152 -t +10
