@@ -10,6 +10,7 @@ use substreams_helper::erc20;
 use substreams_helper::types::Address;
 
 use abi::factory;
+use abi::pair;
 
 use pb::dex_amm::v1 as dex_amm;
 use pb::uniswap::v2 as uniswap;
@@ -34,7 +35,7 @@ impl BlockExt for eth::Block {
 }
 
 #[substreams::handlers::map]
-fn map_pair_created_event(
+fn map_pair_created_events(
     block: eth::Block,
 ) -> Result<uniswap::PairCreatedEvents, substreams::errors::Error> {
     let mut pair_created_events = uniswap::PairCreatedEvents { items: vec![] };
@@ -46,11 +47,12 @@ fn map_pair_created_event(
             }
 
             pair_created_events.items.push(uniswap::PairCreatedEvent {
+                tx_hash: hex::encode(log.receipt.transaction.clone().hash),
+                log_index: log.index(),
+                log_ordinal: log.ordinal(),
                 token0: hex::encode(event.token0.clone()),
                 token1: hex::encode(event.token1.clone()),
                 pair: hex::encode(event.pair.clone()),
-                tx_hash: hex::encode(log.receipt.transaction.clone().hash),
-                log_index: log.index(),
             })
         }
     }
@@ -59,7 +61,7 @@ fn map_pair_created_event(
 }
 
 #[substreams::handlers::store]
-fn store_pair_created_event(
+fn store_pair_created_events(
     pair_created_events: uniswap::PairCreatedEvents,
     output: store::StoreSet,
 ) {
@@ -67,6 +69,28 @@ fn store_pair_created_event(
     for event in pair_created_events.items {
         output.set(0, Hex::encode(&event.pair), &proto::encode(&event).unwrap());
     }
+}
+
+#[substreams::handlers::map]
+fn map_mint_events(
+    block: eth::Block,
+) -> Result<uniswap::MintEvents, substreams::errors::Error> {
+    let mut mint_events = uniswap::MintEvents { items: vec![] };
+
+    for log in block.logs() {
+        if let Some(event) = pair::events::Mint::match_and_decode(log) {
+            mint_events.items.push(uniswap::MintEvent {
+                tx_hash: hex::encode(log.receipt.transaction.clone().hash),
+                log_index: log.index(),
+                log_ordinal: log.ordinal(),
+                sender: hex::encode(event.sender.clone()),
+                amount0: event.amount0.to_string(),
+                amount1: event.amount1.to_string(),
+            })
+        }
+    }
+
+    Ok(mint_events)
 }
 
 #[substreams::handlers::map]
