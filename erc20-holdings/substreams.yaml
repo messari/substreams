@@ -9,6 +9,7 @@ imports:
 protobuf:
   files:
     - erc20.proto
+    - common.proto
   importPaths:
     - ../common/proto
 
@@ -18,9 +19,17 @@ binaries:
     file: ../target/wasm32-unknown-unknown/release/substreams_erc20_holdings.wasm
 
 modules:
+  - name: map_block_to_erc20_contracts
+    kind: map
+    initialBlock: 15657000
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:messari.common.v1.Addresses
+
   - name: map_block_to_transfers
     kind: map
-    initialBlock: 15657324
+    initialBlock: 14690152
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:

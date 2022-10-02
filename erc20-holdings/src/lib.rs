@@ -14,14 +14,56 @@ use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
 use substreams_helper::types::Address;
 
 use pb::erc20::v1 as erc20;
+use pb::common::v1 as common;
 
-/// Extracts transfer events from the contract
+fn code_len(call: &pbeth::v2::Call) -> usize {
+    let mut len = 0;
+    for code_change in &call.code_changes {
+        len += code_change.new_code.len()
+    }
+
+    len
+}
+
+/// Extracts erc20 contract deployments from the blocks
+#[substreams::handlers::map]
+fn map_block_to_erc20_contracts(
+    block: pbeth::v2::Block,
+) -> Result<common::Addresses, substreams::errors::Error> {
+    let mut erc20_contracts = common::Addresses { items: vec![] };
+
+    for call_view in block.calls() {
+        let call = call_view.call;
+        if call.call_type == pbeth::v2::CallType::Create as i32 {
+            // skipping contracts that are too short to be an erc20 token
+            if code_len(call) < 150 {
+                continue;
+            }
+
+            let address = Hex(call.address.clone()).to_string();
+
+            // check if contract is an erc20 token
+            if substreams_helper::erc20::get_erc20_token(address.clone()).is_none() {
+                continue;
+            }
+
+            log::info!("Create {}, len {}", address, code_len(call));
+            erc20_contracts.items.push(common::Address {
+                address
+            });
+        }
+    }
+
+    Ok(erc20_contracts)
+}
+
+/// Extracts transfer events from the blocks
 #[substreams::handlers::map]
 fn map_block_to_transfers(
     block: pbeth::v2::Block,
 ) -> Result<erc20::TransferEvents, substreams::errors::Error> {
     // NOTE: Update TRACKED_CONTRACT to the address of the contract you want to track
-    const TRACKED_CONTRACT: Address = hex!("a702beefe6d05c4587990b228d739700e9ade2cd"); // Anzen
+    const TRACKED_CONTRACT: Address = hex!("0c10bf8fcb7bf5412187a595ab97a3609160b5c6"); // USDD
 
     let mut transfer_events = erc20::TransferEvents { items: vec![] };
 
