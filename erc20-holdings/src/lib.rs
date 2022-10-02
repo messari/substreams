@@ -21,7 +21,7 @@ fn map_block_to_transfers(
     block: pbeth::v2::Block,
 ) -> Result<erc20::TransferEvents, substreams::errors::Error> {
     // NOTE: Update TRACKED_CONTRACT to the address of the contract you want to track
-    const TRACKED_CONTRACT: Address = hex!("0c10bf8fcb7bf5412187a595ab97a3609160b5c6"); // USDD
+    const TRACKED_CONTRACT: Address = hex!("a702beefe6d05c4587990b228d739700e9ade2cd"); // Anzen
 
     let mut transfer_events = erc20::TransferEvents { items: vec![] };
 
@@ -34,6 +34,7 @@ fn map_block_to_transfers(
             transfer_events.items.push(erc20::TransferEvent {
                 tx_hash: Hex(log.receipt.transaction.clone().hash).to_string(),
                 log_index: log.index(),
+                log_ordinal: log.ordinal(),
                 token_address: Hex(log.address()).to_string(),
                 from: Hex(event.from).to_string(),
                 to: Hex(event.to).to_string(),
@@ -50,7 +51,7 @@ fn store_transfers(transfers: erc20::TransferEvents, output: store::StoreSet) {
     log::info!("Stored events {}", transfers.items.len());
     for transfer in transfers.items {
         output.set(
-            transfer.log_index as u64,
+            transfer.log_ordinal,
             Hex::encode(&transfer.token_address),
             &proto::encode(&transfer).unwrap(),
         );
@@ -61,17 +62,15 @@ fn store_transfers(transfers: erc20::TransferEvents, output: store::StoreSet) {
 fn store_balance(transfers: erc20::TransferEvents, output: store::StoreAddBigInt) {
     log::info!("Stored events {}", transfers.items.len());
     for transfer in transfers.items {
-        log::info!("log index {}", transfer.log_index);
-
         output.add(
-            transfer.log_index as u64,
+            transfer.log_ordinal,
             keyer::account_balance_key(&transfer.to),
             &BigInt::from_str(transfer.amount.as_str()).unwrap(),
         );
 
         if Hex::decode(transfer.from.clone()).unwrap() != NULL_ADDRESS {
             output.add(
-                transfer.log_index as u64,
+                transfer.log_ordinal,
                 keyer::account_balance_key(&transfer.from),
                 &BigInt::from_str((transfer.amount).as_str()).unwrap().neg(),
             );
