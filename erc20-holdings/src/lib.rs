@@ -6,15 +6,15 @@ pub mod pb;
 mod keyer;
 
 use num_bigint::BigInt;
-use std::str::FromStr;
 use std::ops::Neg;
+use std::str::FromStr;
 use substreams::{hex, log, proto, store, Hex};
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
 
 use substreams_helper::types::Address;
 
-use pb::erc20::v1 as erc20;
 use pb::common::v1 as common;
+use pb::erc20::v1 as erc20;
 
 fn code_len(call: &pbeth::v2::Call) -> usize {
     let mut len = 0;
@@ -48,9 +48,7 @@ fn map_block_to_erc20_contracts(
             }
 
             log::info!("Create {}, len {}", address, code_len(call));
-            erc20_contracts.items.push(common::Address {
-                address
-            });
+            erc20_contracts.items.push(common::Address { address });
         }
     }
 
