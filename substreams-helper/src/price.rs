@@ -71,6 +71,7 @@ fn via_yearn_lens_oracle(
             .call(network_config.yearn_lens_oracle.to_vec())
             .map(|price_mantissa| {
                 math::decimal_from_str(price_mantissa.to_string().as_str())
+                    .unwrap_or_default()
                     .div(math::exponent_to_big_decimal(network_config.usdc_decimals))
             })
     }
@@ -121,6 +122,7 @@ fn via_curve_calculations(
         .call(network_config.curve_calculations.to_vec())
         .map(|price_mantissa| {
             math::decimal_from_str(price_mantissa.to_string().as_str())
+                .unwrap_or_default()
                 .div(math::exponent_to_big_decimal(network_config.usdc_decimals))
         })
     }
@@ -138,6 +140,7 @@ fn via_sushiswap_calculations(
             .call(network_config.sushiswap_calculations.to_vec())
             .map(|price_mantissa| {
                 math::decimal_from_str(price_mantissa.to_string().as_str())
+                    .unwrap_or_default()
                     .div(math::exponent_to_big_decimal(network_config.usdc_decimals))
             })
     }

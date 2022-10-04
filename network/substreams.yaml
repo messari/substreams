@@ -25,52 +25,17 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
 
-  - name: store_cumulative_unique_authors
+  - name: store_cumulative_values
     kind: store
     updatePolicy: add
     valueType: bigint
     inputs:
       - source: sf.ethereum.type.v2.Block
 
-  - name: store_cumulative_difficulty
+  - name: store_known_block_authors
     kind: store
-    updatePolicy: add
-    valueType: bigint
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-
-  - name: store_cumulative_gas_used
-    kind: store
-    updatePolicy: add
-    valueType: bigint
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-
-  - name: store_cumulative_burnt_fees
-    kind: store
-    updatePolicy: add
-    valueType: bigint
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-
-  - name: store_cumulative_rewards
-    kind: store
-    updatePolicy: add
-    valueType: bigint
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-
-  - name: store_cumulative_transactions
-    kind: store
-    updatePolicy: add
-    valueType: bigint
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-
-  - name: store_cumulative_size
-    kind: store
-    updatePolicy: add
-    valueType: bigint
+    updatePolicy: set_if_not_exists
+    valueType: bytes
     inputs:
       - source: sf.ethereum.type.v2.Block
 
@@ -83,11 +48,13 @@ modules:
 
   - name: map_network
     kind: map
-    initialBlock: 13000000
+    initialBlock: 0
     inputs:
       - source: sf.ethereum.type.v2.Block
       - store: store_daily_snapshots
       - store: store_hourly_snapshots
+      - store: store_cumulative_values
+      - store: store_known_block_authors
     output:
       type: proto:messari.network.v1.Network
 
