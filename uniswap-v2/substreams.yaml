@@ -57,5 +57,20 @@ modules:
     initialBlock: 10000834
     inputs:
       - source: sf.ethereum.type.v2.Block
+      - store: store_pools
     output:
       type: proto:messari.uniswap.v2.MintEvents
+
+  - name: map_block_to_transfers
+    kind: map
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:messari.erc20.v1.TransferEvents
+
+  - name: store_transfers
+    kind: store
+    updatePolicy: set
+    valueType: proto:messari.erc20.v1.TransferEvents
+    inputs:
+      - map: map_block_to_transfers
