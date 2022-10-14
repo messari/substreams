@@ -12,4 +12,4 @@ example:
 
 .PHONY: pack
 pack:
-	substreams pack ./substreams.yaml
+	substreams pack ./substreams.yaml --output-dir ./target

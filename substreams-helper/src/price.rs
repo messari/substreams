@@ -98,7 +98,7 @@ fn via_chainlink_feed_registry(
 
         if let (Some(price_mantissa), Some(decimals)) = (price_mantissa_res, decimals_res) {
             Some(
-                BigDecimal::from(price_mantissa.1)
+                BigDecimal::from(price_mantissa.1.get_big_int().to_u64())
                     .div(math::exponent_to_big_decimal(decimals.as_u64() as u8)),
             )
         } else {

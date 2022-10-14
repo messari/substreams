@@ -4,7 +4,7 @@ pub mod abi;
 pub mod pb;
 
 use hex_literal::hex;
-use substreams::{log, store, Hex};
+use substreams::{log, store::{StoreAddInt64, self}, Hex};
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
 
 use pb::erc721::v1 as erc721;

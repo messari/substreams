@@ -6,6 +6,8 @@ codegen:
 
 .PHONY: build
 build:
+	$(MAKE) -C ../erc20-price build
+	$(MAKE) -C ../erc20-price pack
 	cargo build --target wasm32-unknown-unknown --release
 
 .PHONY: example

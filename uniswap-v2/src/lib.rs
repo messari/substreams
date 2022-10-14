@@ -5,9 +5,11 @@ pub mod pb;
 
 use hex_literal::hex;
 use substreams::{log, proto, store, Hex};
+use substreams::store::StoreSet;
 use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
 use substreams_helper::erc20;
 use substreams_helper::types::Address;
+use substreams::store::StoreSetRaw;
 
 use abi::factory;
 
@@ -61,7 +63,7 @@ fn map_pair_created_event(
 #[substreams::handlers::store]
 fn store_pair_created_event(
     pair_created_events: uniswap::PairCreatedEvents,
-    output: store::StoreSet,
+    output: store::StoreSetRaw,
 ) {
     log::info!("Stored events {}", pair_created_events.items.len());
     for event in pair_created_events.items {
@@ -99,7 +101,7 @@ fn map_pools(
 }
 
 #[substreams::handlers::store]
-fn store_pools(pools: dex_amm::Pools, output: store::StoreSet) {
+fn store_pools(pools: dex_amm::Pools, output: store::StoreSetRaw) {
     log::info!("Stored pools {}", pools.items.len());
     for event in pools.items {
         output.set(0, &event.address, &proto::encode(&event).unwrap());
