@@ -5,18 +5,18 @@ pub mod rpc;
 pub mod utils;
 
 use crate::utils::{exponent_to_big_decimal, MANTISSA_FACTOR};
-use substreams::scalar::BigDecimal;
 use pb::compound::v1 as compound;
 use std::ops::{Add, Div, Mul, Sub};
 use std::str::FromStr;
+use substreams::scalar::BigDecimal;
+use substreams::store::StoreAddBigFloat;
+use substreams::store::StoreAddInt64;
+use substreams::store::StoreGetRaw;
+use substreams::store::StoreSetRaw;
+use substreams::store::{Appender, StoreAppend, StoreGet, StoreSet};
 use substreams::{proto, store, Hex};
 use substreams_ethereum::NULL_ADDRESS;
 use substreams_ethereum::{pb::eth as ethpb, Event as EventTrait};
-use substreams::store::{Appender, StoreAppend, StoreGet, StoreSet};
-use substreams::store::StoreAddInt64;
-use substreams::store::StoreAddBigFloat;
-use substreams::store::StoreSetRaw;
-use substreams::store::StoreGetRaw;
 
 #[substreams::handlers::map]
 fn map_accrue_interest(
@@ -261,7 +261,10 @@ fn store_market_reserve_factor(blk: ethpb::v2::Block, output: store::StoreSetRaw
 
 // TODO: use append_bytes
 #[substreams::handlers::store]
-fn store_market_listed(market_listed_list: compound::MarketListedList, output: store::StoreAppend<String>) {
+fn store_market_listed(
+    market_listed_list: compound::MarketListedList,
+    output: store::StoreAppend<String>,
+) {
     for market_listed in market_listed_list.market_listed_list {
         output.append(
             0,

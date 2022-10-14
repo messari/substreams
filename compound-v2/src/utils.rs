@@ -1,10 +1,10 @@
 use crate::rpc;
 
-use substreams::scalar::BigDecimal;
 use num_bigint::BigUint;
 use std::ops::{Div, Mul};
 use std::str;
 use std::str::FromStr;
+use substreams::scalar::BigDecimal;
 use substreams::Hex;
 use tiny_keccak::{Hasher, Keccak};
 

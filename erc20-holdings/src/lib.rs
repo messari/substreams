@@ -5,13 +5,13 @@ pub mod pb;
 
 mod keyer;
 
-use substreams::scalar::BigInt;
 use std::str::FromStr;
-use substreams::{hex, log, proto, store, Hex};
-use substreams::store::StoreSet;
-use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
-use substreams::store::StoreSetRaw;
+use substreams::scalar::BigInt;
 use substreams::store::StoreAddBigInt;
+use substreams::store::StoreSet;
+use substreams::store::StoreSetRaw;
+use substreams::{hex, log, proto, store, Hex};
+use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
 use substreams_helper::types::Address;
 
 use pb::common::v1 as common;
