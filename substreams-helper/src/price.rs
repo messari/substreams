@@ -1,6 +1,6 @@
-use std::ops::Div;
 use bigdecimal::BigDecimal;
 use hex_literal::hex;
+use std::ops::Div;
 
 use crate::{abi, math, types};
 
