@@ -16,6 +16,7 @@ jobs:
         with:
           repo: robinbernon/substreams-messari
           path: fixAndRefactor
+          branch: fixAndRefactor
           cache: enable
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
