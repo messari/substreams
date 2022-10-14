@@ -39,7 +39,7 @@ pub fn generate_abi(out_dir: Option<&str>) -> Result<(), Error> {
                 .iter()
                 .map(|contract| {
                     format!(
-                        "#[rustfmt::skip]\n#[path = \"../{}/abi/{}.rs\"]\npub mod {};\n",
+                        "#[rustfmt::skip]\n#[allow(unused_imports)]\n#[path = \"../{}/abi/{}.rs\"]\npub mod {};\n",
                         out_dir, contract, contract
                     )
                 })

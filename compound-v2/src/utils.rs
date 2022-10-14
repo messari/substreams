@@ -1,7 +1,6 @@
 use crate::rpc;
 
 use substreams::scalar::BigDecimal;
-use bigdecimal::{One, Zero};
 use num_bigint::BigUint;
 use std::ops::{Div, Mul};
 use std::str;

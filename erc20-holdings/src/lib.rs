@@ -6,7 +6,6 @@ pub mod pb;
 mod keyer;
 
 use substreams::scalar::BigInt;
-use std::ops::Neg;
 use std::str::FromStr;
 use substreams::{hex, log, proto, store, Hex};
 use substreams::store::StoreSet;

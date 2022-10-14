@@ -6,7 +6,6 @@ pub mod utils;
 
 use crate::utils::{exponent_to_big_decimal, MANTISSA_FACTOR};
 use substreams::scalar::BigDecimal;
-use bigdecimal::{Zero};
 use pb::compound::v1 as compound;
 use std::ops::{Add, Div, Mul, Sub};
 use std::str::FromStr;
