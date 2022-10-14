@@ -14,9 +14,7 @@ jobs:
       - name: install substreams cli
         uses: jaxxstorm/action-install-gh-release@v1.7.1
         with:
-          repo: robinbernon/substreams-messari
-          path: fixAndRefactor
-          branch: fixAndRefactor
+          repo: robinbernon/substreams-messari/tree/fixAndRefactor
           cache: enable
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
