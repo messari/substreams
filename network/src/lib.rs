@@ -75,17 +75,29 @@ impl<'a> CumulativeValuesStore<'a> {
             .map(|bytes| network::BigInt { bytes })
     }
 
-    pub fn get_daily_snapshot(&self, ordinal: u64, date: &str) -> network::DailySnapshot {
+    pub fn get_network(&self, ordinal: u64) -> Network {
+        Network {
+            // TODO: track known authors
+            cumulative_unique_authors: self.get_value(ordinal, "network:unique_authors"),
+            cumulative_difficulty: self.get_value(ordinal, "network:difficulty"),
+            cumulative_burnt_fees: self.get_value(ordinal, "network:burnt_fees"),
+            cumulative_rewards: self.get_value(ordinal, "network:rewards"),
+            cumulative_transactions: self.get_value(ordinal, "network:transactions"),
+            cumulative_size: self.get_value(ordinal, "network:size"),
+            ..Default::default()
+        }
+    }
+
+    pub fn get_daily_snapshot(&self, ordinal: u64, day: i64) -> network::DailySnapshot {
         network::DailySnapshot {
             cumulative_unique_authors: self
-                .get_value(ordinal, &format!("daily:{}:unique_authors", date)),
-            cumulative_difficulty: self.get_value(ordinal, &format!("daily:{}:difficulty", date)),
-            cumulative_gas_used: self.get_value(ordinal, &format!("daily:{}:gas_used", date)),
-            cumulative_burnt_fees: self.get_value(ordinal, &format!("daily:{}:burnt_fees", date)),
-            cumulative_rewards: self.get_value(ordinal, &format!("daily:{}:rewards", date)),
-            cumulative_size: self.get_value(ordinal, &format!("daily:{}:size", date)),
-            cumulative_transactions: self
-                .get_value(ordinal, &format!("daily:{}:transactions", date)),
+                .get_value(ordinal, &format!("day:{}:unique_authors", day)),
+            cumulative_difficulty: self.get_value(ordinal, &format!("day:{}:difficulty", day)),
+            cumulative_gas_used: self.get_value(ordinal, &format!("day:{}:gas_used", day)),
+            cumulative_burnt_fees: self.get_value(ordinal, &format!("day:{}:burnt_fees", day)),
+            cumulative_rewards: self.get_value(ordinal, &format!("day:{}:rewards", day)),
+            cumulative_size: self.get_value(ordinal, &format!("day:{}:size", day)),
+            cumulative_transactions: self.get_value(ordinal, &format!("day:{}:transactions", day)),
             ..Default::default()
         }
     }
@@ -102,14 +114,11 @@ impl Network {
     }
 }
 
-fn timestamp_date_ymd(timestamp: Option<Timestamp>) -> String {
+fn timestamp_day(timestamp: Option<Timestamp>) -> i64 {
+    let seconds_in_day = 86400 as i64;
     let timestamp = timestamp.map(|t| t.seconds).unwrap_or_default();
 
-    // convert to date string in format YYYY-MM-DD
-    chrono::NaiveDateTime::from_timestamp(timestamp, 0)
-        .date()
-        .format("%Y-%m-%d")
-        .to_string()
+    timestamp / seconds_in_day
 }
 
 #[substreams::handlers::store]
@@ -118,86 +127,108 @@ fn store_cumulative_values(block: eth::Block, output: store::StoreAddBigInt) {
 
     // Network cumulative values
     output.add(
-        block.number,
+        0,
         format!("{}:network:difficulty", CUMULATIVE_KEY),
         &block_handler.difficulty(),
     );
     output.add(
-        block.number,
+        0,
         format!("{}:network:gas_used", CUMULATIVE_KEY),
         &block_handler.gas_used(),
     );
     output.add(
-        block.number,
+        0,
         format!("{}:network:burnt_fees", CUMULATIVE_KEY),
         &block_handler.burnt_fees(),
     );
 
     output.add(
-        block.number,
+        0,
         format!("{}:network:rewards", CUMULATIVE_KEY),
         &block_handler.burnt_fees(),
     );
 
     output.add(
-        block.number,
+        0,
         format!("{}:network:size", CUMULATIVE_KEY),
         &BigInt::from(block.size),
     );
 
     output.add(
-        block.number,
+        0,
         format!("{}:network:transactions", CUMULATIVE_KEY),
         &BigInt::from(block.transaction_traces.len()),
     );
 
     // Daily cumulative values
-    let date = block
+    let day = block
         .header
         .clone()
-        .map(|h| timestamp_date_ymd(h.timestamp))
+        .map(|h| timestamp_day(h.timestamp))
         .unwrap_or_default();
 
     output.add(
-        block.number,
-        format!("{}:daily:{}:unique_authors", CUMULATIVE_KEY, date),
+        0,
+        format!("{}:day:{}:unique_authors", CUMULATIVE_KEY, day),
         &BigInt::zero(),
     );
 
     output.add(
-        block.number,
-        format!("{}:daily:{}:difficulty", CUMULATIVE_KEY, date),
+        0,
+        format!("{}:day:{}:difficulty", CUMULATIVE_KEY, day),
         &block_handler.difficulty(),
     );
 
     output.add(
-        block.number,
-        format!("{}:daily:{}:gas_used", CUMULATIVE_KEY, date),
+        0,
+        format!("{}:day:{}:gas_used", CUMULATIVE_KEY, day),
         &block_handler.gas_used(),
     );
 
     output.add(
-        block.number,
-        format!("{}:daily:{}:burnt_fees", CUMULATIVE_KEY, date),
+        0,
+        format!("{}:day:{}:burnt_fees", CUMULATIVE_KEY, day),
         &block_handler.burnt_fees(),
     );
 
     output.add(
-        block.number,
-        format!("{}:daily:{}:rewards", CUMULATIVE_KEY, date),
+        0,
+        format!("{}:day:{}:rewards", CUMULATIVE_KEY, day),
         &block_handler.burnt_fees(),
     );
 
     output.add(
-        block.number,
-        format!("{}:daily:{}:size", CUMULATIVE_KEY, date),
+        0,
+        format!("{}:day:{}:size", CUMULATIVE_KEY, day),
         &BigInt::from(block.size),
     );
 
     output.add(
-        block.number,
-        format!("{}:daily:{}:transactions", CUMULATIVE_KEY, date),
+        0,
+        format!("{}:day:{}:transactions", CUMULATIVE_KEY, day),
         &BigInt::from(block.transaction_traces.len()),
+    );
+}
+
+#[substreams::handlers::store]
+fn store_daily_snapshots(
+    block: eth::Block,
+    store_cumulative_values: store::StoreGet,
+    output: store::StoreSet,
+) {
+    let cumulative_store = CumulativeValuesStore::new(&store_cumulative_values);
+    let day = block
+        .header
+        .clone()
+        .map(|h| timestamp_day(h.timestamp))
+        .unwrap_or_default();
+
+    let daily_snapshot = cumulative_store.get_daily_snapshot(block.number, day);
+
+    output.set(
+        0,
+        "daily_snapshot".to_string(),
+        &daily_snapshot.encode_to_vec(),
     );
 }
 
@@ -209,36 +240,24 @@ fn store_network(
 ) {
     let cumulative_store = CumulativeValuesStore::new(&store_cumulative_values);
 
-    let date = block
+    let day = block
         .header
         .clone()
-        .map(|h| timestamp_date_ymd(h.timestamp))
+        .map(|h| timestamp_day(h.timestamp))
         .unwrap_or_default();
 
-    let mut daily_snapshot = cumulative_store.get_daily_snapshot(block.number, &date);
+    let mut daily_snapshot = cumulative_store.get_daily_snapshot(block.number, day);
+    let mut network = cumulative_store.get_network(block.number);
 
-    let network = Network {
-        // TODO: determine what the network id should be
-        id: String::from("ethereum.mainnet"),
-        // TODO: track known authors
-        cumulative_unique_authors: cumulative_store
-            .get_value(block.number, "network:unique_authors"),
-        cumulative_difficulty: cumulative_store.get_value(block.number, "network:difficulty"),
-        cumulative_burnt_fees: cumulative_store.get_value(block.number, "network:burnt_fees"),
-        cumulative_rewards: cumulative_store.get_value(block.number, "network:rewards"),
-        cumulative_transactions: cumulative_store.get_value(block.number, "network:transactions"),
-        cumulative_size: cumulative_store.get_value(block.number, "network:size"),
-        gas_limit: block
-            .header
-            .map(|header| header.gas_limit)
-            .unwrap_or_default(),
-        block_height: block.number,
-        daily_snapshots: Some(DailySnapshots {
-            snapshots: vec![daily_snapshot],
-        }),
-        ..Default::default()
-    };
+    // Set network values;
+    network.id = String::from("MAINNET");
+    network.gas_limit = block
+        .header
+        .map(|header| header.gas_limit)
+        .unwrap_or_default();
+    network.block_height = block.number;
 
+    // Finally, store the network state
     output.set(
         block.number,
         "network".to_string(),
@@ -258,7 +277,7 @@ fn map_network(
 
     log::info!("Network: {:?}", network);
 
-    Ok(Network::default())
+    Ok(network)
 }
 
 // fn is_author_known(
@@ -273,63 +292,3 @@ fn map_network(
 //         .unwrap_or_default();
 //     Ok(store_known_block_authors.get_last(author.clone()).is_some())
 // }
-
-// fn get_cumulative_value(
-//     key: &str,
-//     store: &store::StoreGet,
-// ) -> Result<BigInt, substreams::errors::Error> {
-//     let value = store
-//         .get_last(format!("cumulative:{}", key))
-//         .unwrap_or_default();
-
-//     let value_str = String::from_utf8(value)
-//         .map_err(|e| substreams::errors::Error::Unexpected(e.to_string()))?;
-
-//     Ok(BigInt::from_str(&value_str)
-//         .map_err(|e| substreams::errors::Error::Unexpected(e.to_string()))?)
-// }
-
-// let cumulative_unique_authors =
-//     get_cumulative_value("unique_authors", &store_cumulative_values)?
-//         + if is_author_known(&block, &store_known_block_authors)? {
-//             BigInt::zero()
-//         } else {
-//             BigInt::from(1)
-//         };
-
-// let cumulative_difficulty = store_cumulative_values
-//     .get_last("cumulative:difficulty".to_string())
-//     .map(|v| decimal_from_bytes(&v))
-//     .transpose()
-//     .map_err(|e| substreams::errors::Error::Unexpected(e.to_string()))?
-//     .unwrap_or_default();
-// let cumulative_gas_used = store_cumulative_values
-//     .get_last("cumulative:gas_used".to_string())
-//     .map(|v| decimal_from_bytes(&v))
-//     .transpose()
-//     .map_err(|e| substreams::errors::Error::Unexpected(e.to_string()))?
-//     .unwrap_or_default();
-// let cumulative_burnt_fees = store_cumulative_values
-//     .get_last("cumulative:burnt_fees".to_string())
-//     .map(|v| decimal_from_bytes(&v))
-//     .transpose()
-//     .map_err(|e| substreams::errors::Error::Unexpected(e.to_string()))?
-//     .unwrap_or_default();
-// let cumulative_rewards = store_cumulative_values
-//     .get_last("cumulative:rewards".to_string())
-//     .map(|v| decimal_from_bytes(&v))
-//     .transpose()
-//     .map_err(|e| substreams::errors::Error::Unexpected(e.to_string()))?
-//     .unwrap_or_default();
-// let cumulative_transactions = store_cumulative_values
-//     .get_last("cumulative:transactions".to_string())
-//     .map(|v| decimal_from_bytes(&v))
-//     .transpose()
-//     .map_err(|e| substreams::errors::Error::Unexpected(e.to_string()))?
-//     .unwrap_or_default();
-// let cumulative_size = store_cumulative_values
-//     .get_last("cumulative:size".to_string())
-//     .map(|v| decimal_from_bytes(&v))
-//     .transpose()
-//     .map_err(|e| substreams::errors::Error::Unexpected(e.to_string()))?
-//     .unwrap_or_default();
