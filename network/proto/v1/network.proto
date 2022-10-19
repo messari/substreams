@@ -60,6 +60,104 @@ message Network {
   
     // Hourly metrics for this blockchain
     HourlySnapshots hourly_snapshots = 17;
+
+    NetworkSnapshot network_snapshot = 18;
+  }
+
+  message NetworkSnapshot {
+    // ##########################
+    // #### Authors
+    // ##########################
+    Stats blocksPerAuthor = 1;
+  
+    // # Are we including txn gas in rewards or just block rewards?
+    Stats rewardsPerAuthor = 2;
+    Stats gasPerAuthor = 3;
+    
+    // # May be overkill
+    Stats blockIntervalPerAuthor = 4;
+  
+    // # Current state of all authors is optimal, top 10 is fine
+    repeated Stats authorSnapshot = 5;
+  
+    // # Minimum Authors that published X% of 
+    // # blocks (x varies by blockchain design)
+    BigInt realizedNakamoto = 6;
+  
+    // # In theory all of these should have the same
+    // # Distribution as blocksPerAuthor but perhaps
+    // # Things are different with timezones & such.
+    // # Should be same as blocksPerAuthor but 
+    // # if it isn't then there's really intersting 
+    // # stuff happening
+    Stats usersPerAuthor = 7;
+    Stats contractsPerAuthor = 8;
+    Stats transactionsPerAuthor = 9;
+  
+    // ##########################
+    // #### Users
+    // ##########################
+    // # unique contracts
+    Stats contractsPerUser = 10;
+    // # total calls
+    Stats contractCallsPerUser = 11;
+    // # gas spent on contracts
+    Stats contractGasPerUser = 12;
+  
+    // # Native token transfer volume
+    Stats valuePerUser = 13;
+  
+    Stats transactionsPerUser = 14;
+  
+    Stats gasPerUser = 15;
+  
+    // # Nonce from their last transaction in 
+    // # this snapshot. This is a proxy for age
+    Stats noncePerUser = 16;
+  
+    // ##########################
+    // #### Blocks
+    // ##########################
+  
+    Stats blockInterval = 17;
+  
+    // # May be overkill if this number is fixed
+    Stats blockRewards = 18;
+  
+    Stats blockSize = 19;
+  
+    Stats gasPerBlock = 20;
+  
+    Stats contractsPerBlock = 21;
+    Stats contractCallsPerBlock = 22;
+    Stats transactionsPerBlock = 23;
+  
+    // # Native token transfer volume
+    Stats valuePerBlock = 24;
+  
+    Stats usersPerBlock = 25;
+  
+    // ##########################
+    // #### Transactions
+    // ##########################
+    Stats gasPerTransaction = 26;
+  
+    // # Does this reflect a different 
+    // # kind of complexity than gas?
+    Stats logsPerTransaction = 27;
+    
+    // ##########################
+    // #### Contracts
+    // ##########################
+    Stats usersPerContract = 28;
+  
+    Stats transactionsPerContract = 29;
+  
+    Stats valuePerContract = 30;
+  
+    Stats gasPerContract = 31;
+  
+    Stats blocksPerContract = 32;
   }
 
   message Stats {
@@ -67,33 +165,36 @@ message Network {
     string id = 1;
 
     // Number of times entity has been used in a time data entity
-    int64 count = 2;
+    BigInt count = 2;
 
     // The average of all the values
-    double mean = 3;
+    BigInt mean = 3;
 
     // The maximum value in this entity
-    uint64 max = 4;
+    BigInt max = 4;
 
     // The minimum value in this data set
-    uint64 min = 5;
+    BigInt min = 5;
 
     // List of values in order from smallest to largest
-    repeated uint64 values = 6;
+    repeated BigInt values = 6;
 
     // The sum of all the values
-    uint64 sum = 7;
+    BigInt sum = 7;
 
     // ##### Calculated Statisitcal Fields #####
 
     // The standard deviation of all values within this entity
-    double variance = 8;
+    BigInt variance = 8;
 
     // This is the upper quartile where 75% of the values lie
-    double q3 = 9;
+    BigInt q3 = 9;
 
     // This is the lower quartile where 25% of the values lie
-    double q1 = 10;
+    BigInt q1 = 10;
+
+    // Median of the values
+    BigInt median = 11;
   }
 
   message DailySnapshot {
