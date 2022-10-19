@@ -223,7 +223,7 @@ fn store_daily_snapshots(
         .map(|h| timestamp_day(h.timestamp))
         .unwrap_or_default();
 
-    let daily_snapshot = cumulative_store.get_daily_snapshot(block.number, day);
+    let daily_snapshot = cumulative_store.get_daily_snapshot(0, day);
 
     output.set(
         0,
@@ -246,8 +246,8 @@ fn store_network(
         .map(|h| timestamp_day(h.timestamp))
         .unwrap_or_default();
 
-    let mut daily_snapshot = cumulative_store.get_daily_snapshot(block.number, day);
-    let mut network = cumulative_store.get_network(block.number);
+    let mut daily_snapshot = cumulative_store.get_daily_snapshot(0, day);
+    let mut network = cumulative_store.get_network(0);
 
     // Set network values;
     network.id = String::from("MAINNET");
@@ -258,11 +258,7 @@ fn store_network(
     network.block_height = block.number;
 
     // Finally, store the network state
-    output.set(
-        block.number,
-        "network".to_string(),
-        &network.encode_to_vec(),
-    );
+    output.set(0, "network".to_string(), &network.encode_to_vec());
 }
 
 #[substreams::handlers::map]
