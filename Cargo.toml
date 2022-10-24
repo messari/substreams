@@ -3,6 +3,7 @@ members = [
     "common",
     "compound-v2",
     "erc20-holdings",
+    "network",
     "erc20-price",
     "erc20-market-cap",
     "erc721",
