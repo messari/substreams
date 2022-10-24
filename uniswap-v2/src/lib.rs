@@ -6,8 +6,8 @@ pub mod pb;
 mod keyer;
 
 use hex_literal::hex;
-use substreams::{log, proto, store, Hex};
 use substreams::store::{StoreAddBigFloat, StoreAddBigInt, StoreAppend, StoreGet, StoreSet};
+use substreams::{log, proto, store, Hex};
 use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
 use substreams_helper::erc20;
 use substreams_helper::types::Address;
@@ -114,7 +114,8 @@ fn store_pools(pools: dex_amm::Pools, output: StoreSet) {
 
 #[substreams::handlers::map]
 fn map_mint_events(
-    block: eth::Block, pools_store: StoreGet,
+    block: eth::Block,
+    pools_store: StoreGet,
 ) -> Result<uniswap::MintEvents, substreams::errors::Error> {
     let mut mint_events = uniswap::MintEvents { items: vec![] };
 
@@ -126,10 +127,10 @@ fn map_mint_events(
         // Check if pool has been created
         if pools_store.get_last(pool_key).is_none() {
             log::info!(
-                    "invalid swap. pool does not exist. pool address {} transaction {}",
-                    pool_address,
-                    tx_hash
-                );
+                "invalid swap. pool does not exist. pool address {} transaction {}",
+                pool_address,
+                tx_hash
+            );
             continue;
         }
 
