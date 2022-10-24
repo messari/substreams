@@ -10,3 +10,11 @@ message Transaction {
   string gas_price = 5; // string: BigInt, in wei
   uint64 gas_limit = 6;
 }
+
+message Address {
+  string address = 1;
+}
+
+message Addresses {
+  repeated Address items = 1;
+}

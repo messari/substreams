@@ -20,10 +20,11 @@ message TransferEvents {
 message TransferEvent {
   string tx_hash = 1;
   uint32 log_index = 2;
-  string token_address = 3;
-  string from = 4;
-  string to = 5;
-  string amount = 6; // BigInt, in token's native amount
+  uint64 log_ordinal = 3;
+  string token_address = 4;
+  string from = 5;
+  string to = 6;
+  string amount = 7; // BigInt, in token's native amount
 }
 
 message TokenBalance {
