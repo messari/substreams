@@ -23,7 +23,7 @@ binaries:
     file: ../target/wasm32-unknown-unknown/release/substreams_uniswap_v2.wasm
 
 modules:
-  - name: map_pair_created_event
+  - name: map_pair_created_events
     kind: map
     initialBlock: 10000834
     inputs:
@@ -31,17 +31,17 @@ modules:
     output:
       type: proto:messari.uniswap.v2.PairCreatedEvents
 
-  - name: store_pair_created_event
+  - name: store_pair_created_events
     kind: store
     updatePolicy: set
     valueType: proto:messari.uniswap.v2.PairCreatedEvents
     inputs:
-      - map: map_pair_created_event
+      - map: map_pair_created_events
 
   - name: map_pools
     kind: map
     inputs:
-      - map: map_pair_created_event
+      - map: map_pair_created_events
     output:
       type: proto:messari.dex_amm.v1.Pools
 
@@ -52,10 +52,25 @@ modules:
     inputs:
       - map: map_pools
 
-  - name: map_mint_event
+  - name: map_mint_events
     kind: map
     initialBlock: 10000834
     inputs:
       - source: sf.ethereum.type.v2.Block
+      - store: store_pools
     output:
-      type: proto:messari.dex_amm.v1.MintEvents
+      type: proto:messari.uniswap.v2.MintEvents
+
+  - name: map_block_to_transfers
+    kind: map
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:messari.erc20.v1.TransferEvents
+
+  - name: store_transfers
+    kind: store
+    updatePolicy: set
+    valueType: proto:messari.erc20.v1.TransferEvents
+    inputs:
+      - map: map_block_to_transfers
