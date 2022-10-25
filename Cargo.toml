@@ -7,12 +7,16 @@ members = [
     "erc20-market-cap",
     "erc721",
     "substreams-helper",
-    "uniswap-v2"
+    "uniswap-v2",
 ]
+exclude = ["messari-cli"]
 
 [workspace.dependencies]
 substreams = "~0.0.20"
-substreams-ethereum = "0.2.2-rc.2"
+-substreams-ethereum = "0.2.2-rc.2"
+
+[build]
+target = "wasm32-unknown-unknown"
 
 [profile.release]
 lto = true
