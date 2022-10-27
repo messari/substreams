@@ -9,10 +9,11 @@ package messari.uniswap.v2;
 message PairCreatedEvent {
   string tx_hash = 1; // bytes: Hash
   uint32 log_index = 2;
+  uint64 log_ordinal = 3;
 
-  string token0 = 3; // bytes: Address
-  string token1 = 4; // bytes: Address
-  string pair = 5; // bytes: Address
+  string token0 = 10; // bytes: Address
+  string token1 = 11; // bytes: Address
+  string pair = 12; // bytes: Address
 }
 
 message PairCreatedEvents {
@@ -23,10 +24,11 @@ message PairCreatedEvents {
 message MintEvent {
   string tx_hash = 1; // bytes: Hash
   uint32 log_index = 2;
+  uint64 log_ordinal = 3;
 
-  string sender = 3; // bytes: Address
-  string amount0 = 4; // string: BigInt
-  string amount1 = 5; // string: BigInt
+  string sender = 10; // bytes: Address
+  string amount0 = 11; // string: BigInt
+  string amount1 = 12; // string: BigInt
 }
 
 message MintEvents {
@@ -37,11 +39,12 @@ message MintEvents {
 message BurnEvent {
   string tx_hash = 1; // bytes: Hash
   uint32 log_index = 2;
+  uint64 log_ordinal = 3;
 
-  string sender = 3; // bytes: Address
-  string amount0 = 4; // string: BigInt
-  string amount1 = 5; // string: BigInt
-  string to = 6; // bytes: Address
+  string sender = 10; // bytes: Address
+  string amount0 = 11; // string: BigInt
+  string amount1 = 12; // string: BigInt
+  string to = 13; // bytes: Address
 }
 
 message BurnEvents {
@@ -52,13 +55,14 @@ message BurnEvents {
 message SwapEvent {
   string tx_hash = 1; // bytes: Hash
   uint32 log_index = 2;
+  uint64 log_ordinal = 3;
 
-  string sender = 3; // bytes: Address
-  string amount0In = 4; // string: BigInt
-  string amount1In = 5; // string: BigInt
-  string amount0Out = 6; // string: BigInt
-  string amount1Out = 7; // string: BigInt
-  string to = 8; // bytes: Address
+  string sender = 10; // bytes: Address
+  string amount0In = 11; // string: BigInt
+  string amount1In = 12; // string: BigInt
+  string amount0Out = 13; // string: BigInt
+  string amount1Out = 14; // string: BigInt
+  string to = 15; // bytes: Address
 }
 
 message SwapEvents {
@@ -69,9 +73,10 @@ message SwapEvents {
 message SyncEvent {
   string tx_hash = 1; // bytes: Hash
   uint32 log_index = 2;
+  uint64 log_ordinal = 3;
 
-  string reserve0 = 3; // string: BigInt
-  string reserve1 = 4; // string: BigInt
+  string reserve0 = 10; // string: BigInt
+  string reserve1 = 11; // string: BigInt
 }
 
 message SyncEvents {

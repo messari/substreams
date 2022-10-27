@@ -65,7 +65,7 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     Command::new("make")
         .args(&["codegen"])
         .status()
-        .expect("failed to codegen");
+        .expect("failed to run substreams protogen");
 
     // Create target directories
     fs::create_dir_all(&target_pb_dir).ok();

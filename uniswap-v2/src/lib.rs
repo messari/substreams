@@ -3,15 +3,17 @@ pub mod abi;
 #[rustfmt::skip]
 pub mod pb;
 
+mod keyer;
+
 use hex_literal::hex;
-use substreams::store::StoreSet;
-use substreams::store::StoreSetRaw;
+use substreams::store::{StoreAddBigFloat, StoreAddBigInt, StoreAppend, StoreGet, StoreSet};
 use substreams::{log, proto, store, Hex};
 use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
 use substreams_helper::erc20;
 use substreams_helper::types::Address;
 
 use abi::factory;
+use abi::pair;
 
 use pb::dex_amm::v1 as dex_amm;
 use pb::uniswap::v2 as uniswap;
@@ -36,7 +38,7 @@ impl BlockExt for eth::Block {
 }
 
 #[substreams::handlers::map]
-fn map_pair_created_event(
+fn map_pair_created_events(
     block: eth::Block,
 ) -> Result<uniswap::PairCreatedEvents, substreams::errors::Error> {
     let mut pair_created_events = uniswap::PairCreatedEvents { items: vec![] };
@@ -48,11 +50,12 @@ fn map_pair_created_event(
             }
 
             pair_created_events.items.push(uniswap::PairCreatedEvent {
+                tx_hash: hex::encode(log.receipt.transaction.clone().hash),
+                log_index: log.index(),
+                log_ordinal: log.ordinal(),
                 token0: hex::encode(event.token0.clone()),
                 token1: hex::encode(event.token1.clone()),
                 pair: hex::encode(event.pair.clone()),
-                tx_hash: hex::encode(log.receipt.transaction.clone().hash),
-                log_index: log.index(),
             })
         }
     }
@@ -61,7 +64,7 @@ fn map_pair_created_event(
 }
 
 #[substreams::handlers::store]
-fn store_pair_created_event(
+fn store_pair_created_events(
     pair_created_events: uniswap::PairCreatedEvents,
     output: store::StoreSetRaw,
 ) {
@@ -100,10 +103,47 @@ fn map_pools(
     Ok(pools)
 }
 
-#[substreams::handlers::store]
 fn store_pools(pools: dex_amm::Pools, output: store::StoreSetRaw) {
     log::info!("Stored pools {}", pools.items.len());
     for event in pools.items {
-        output.set(0, &event.address, &proto::encode(&event).unwrap());
+        let pool_key = keyer::pool_key(&event.address);
+        output.set(0, &pool_key, &proto::encode(&event).unwrap());
     }
+}
+
+#[substreams::handlers::map]
+fn map_mint_events(
+    block: eth::Block,
+    pools_store: StoreGet,
+) -> Result<uniswap::MintEvents, substreams::errors::Error> {
+    let mut mint_events = uniswap::MintEvents { items: vec![] };
+
+    for log in block.logs() {
+        let pool_address = Hex(&log.address()).to_string();
+        let pool_key = keyer::pool_key(&pool_address);
+        let tx_hash = Hex(&log.receipt.transaction.hash).to_string();
+
+        // Check if pool has been created
+        if pools_store.get_last(pool_key).is_none() {
+            log::info!(
+                "invalid swap. pool does not exist. pool address {} transaction {}",
+                pool_address,
+                tx_hash
+            );
+            continue;
+        }
+
+        if let Some(event) = pair::events::Mint::match_and_decode(log) {
+            mint_events.items.push(uniswap::MintEvent {
+                tx_hash: tx_hash,
+                log_index: log.index(),
+                log_ordinal: log.ordinal(),
+                sender: hex::encode(event.sender.clone()),
+                amount0: event.amount0.to_string(),
+                amount1: event.amount1.to_string(),
+            })
+        }
+    }
+
+    Ok(mint_events)
 }
