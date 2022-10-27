@@ -7,13 +7,15 @@ build-all:
 	$(MAKE) -C erc20-market-cap build
 	$(MAKE) -C erc721 build
 	$(MAKE) -C compound-v2 build
+	$(MAKE) -C network build
 
-.PHONY: example-all
-example-all:
-	$(MAKE) -C uniswap-v2 example
-	$(MAKE) -C erc20-price example
-	$(MAKE) -C erc20-market-cap example
-	$(MAKE) -C erc721 example
+.PHONY: run-all
+run-all:
+	$(MAKE) -C uniswap-v2 run
+	$(MAKE) -C erc20-price run
+	$(MAKE) -C erc20-market-cap run
+	$(MAKE) -C erc721 run
+	$(MAKE) -C network run
 
 .PHONY: test
 test:

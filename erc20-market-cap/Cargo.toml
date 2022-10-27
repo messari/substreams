@@ -3,7 +3,7 @@ name = "erc20_market_cap_substreams"
 version = "0.0.1"
 description = "Market cap of all ERC20 tokens."
 edition = "2021"
-# repository = "https://github.com/messari/substreams/erc20-market-cap"
+repository = "https://github.com/messari/substreams/erc20-market-cap"
 
 [lib]
 crate-type = ["cdylib"]

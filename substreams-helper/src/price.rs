@@ -1,6 +1,6 @@
 use std::ops::Div;
 
-use bigdecimal::BigDecimal;
+use substreams::scalar::BigDecimal;
 use hex_literal::hex;
 
 use crate::{abi, math, types};
@@ -71,7 +71,7 @@ fn via_yearn_lens_oracle(
             .call(network_config.yearn_lens_oracle.to_vec())
             .map(|price_mantissa| {
                 math::decimal_from_str(price_mantissa.to_string().as_str())
-                    .unwrap_or_default()
+                    .unwrap()
                     .div(math::exponent_to_big_decimal(network_config.usdc_decimals))
             })
     }
@@ -99,8 +99,7 @@ fn via_chainlink_feed_registry(
 
         if let (Some(price_mantissa), Some(decimals)) = (price_mantissa_res, decimals_res) {
             Some(
-                BigDecimal::from(price_mantissa.1.get_big_int().to_u64())
-                    .div(math::exponent_to_big_decimal(decimals.as_u64() as u8)),
+                price_mantissa.1.to_decimal(decimals.to_u64()),
             )
         } else {
             None
@@ -122,7 +121,7 @@ fn via_curve_calculations(
         .call(network_config.curve_calculations.to_vec())
         .map(|price_mantissa| {
             math::decimal_from_str(price_mantissa.to_string().as_str())
-                .unwrap_or_default()
+                .unwrap_or(BigDecimal::zero())
                 .div(math::exponent_to_big_decimal(network_config.usdc_decimals))
         })
     }
@@ -140,7 +139,7 @@ fn via_sushiswap_calculations(
             .call(network_config.sushiswap_calculations.to_vec())
             .map(|price_mantissa| {
                 math::decimal_from_str(price_mantissa.to_string().as_str())
-                    .unwrap_or_default()
+                    .unwrap_or(BigDecimal::zero())
                     .div(math::exponent_to_big_decimal(network_config.usdc_decimals))
             })
     }

@@ -12,8 +12,8 @@ members = [
 ]
 
 [workspace.dependencies]
-substreams = "0.2.0"
-substreams-ethereum = "0.5.0"
+substreams = "0.3.2"
+substreams-ethereum = "0.6.2"
 
 [profile.release]
 lto = true

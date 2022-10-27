@@ -15,7 +15,6 @@ tiny-keccak = { version = "2.0", features = ["keccak"] }
 substreams.workspace = true
 substreams-ethereum.workspace = true
 num-bigint = "0.4"
-bigdecimal = "0.3.0"
 
 [build-dependencies]
 anyhow = "1"

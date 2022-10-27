@@ -13,7 +13,8 @@ use substreams::store::StoreSetRaw;
 use substreams::{hex, log, proto, store, Hex};
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
 use substreams_helper::types::Address;
-
+use substreams::store::StoreNew;
+use substreams::store::StoreAdd;
 use pb::common::v1 as common;
 use pb::erc20::v1 as erc20;
 

@@ -6,11 +6,13 @@ pub mod pb;
 mod keyer;
 
 use hex_literal::hex;
-use substreams::store::{StoreAddBigFloat, StoreAddBigInt, StoreAppend, StoreGet, StoreSet};
+use substreams::store::{StoreGet, StoreGetRaw, StoreSet};
 use substreams::{log, proto, store, Hex};
 use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
 use substreams_helper::erc20;
 use substreams_helper::types::Address;
+use substreams::store::StoreSetRaw;
+use substreams::store::StoreNew;
 
 use abi::factory;
 use abi::pair;
@@ -103,6 +105,7 @@ fn map_pools(
     Ok(pools)
 }
 
+#[substreams::handlers::store]
 fn store_pools(pools: dex_amm::Pools, output: store::StoreSetRaw) {
     log::info!("Stored pools {}", pools.items.len());
     for event in pools.items {
@@ -114,7 +117,7 @@ fn store_pools(pools: dex_amm::Pools, output: store::StoreSetRaw) {
 #[substreams::handlers::map]
 fn map_mint_events(
     block: eth::Block,
-    pools_store: StoreGet,
+    pools_store: StoreGetRaw,
 ) -> Result<uniswap::MintEvents, substreams::errors::Error> {
     let mut mint_events = uniswap::MintEvents { items: vec![] };
 

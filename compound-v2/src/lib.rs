@@ -9,14 +9,16 @@ use pb::compound::v1 as compound;
 use std::ops::{Add, Div, Mul, Sub};
 use std::str::FromStr;
 use substreams::scalar::BigDecimal;
-use substreams::store::StoreAddBigFloat;
+use substreams::store::StoreAdd;
 use substreams::store::StoreAddInt64;
+use substreams::store::StoreAddBigDecimal;
 use substreams::store::StoreGetRaw;
 use substreams::store::StoreSetRaw;
 use substreams::store::{Appender, StoreAppend, StoreGet, StoreSet};
 use substreams::{proto, store, Hex};
 use substreams_ethereum::NULL_ADDRESS;
 use substreams_ethereum::{pb::eth as ethpb, Event as EventTrait};
+use substreams::store::StoreNew;
 
 #[substreams::handlers::map]
 fn map_accrue_interest(
@@ -484,7 +486,7 @@ fn store_protocol_totals(
 #[substreams::handlers::store]
 fn store_revenue(
     market_revenue_delta_list: compound::MarketRevenueDeltaList,
-    output: store::StoreAddBigFloat,
+    output: store::StoreAddBigDecimal,
 ) {
     for market_revenue_delta in market_revenue_delta_list.market_revenue_delta_list {
         let market_address = Hex::encode(market_revenue_delta.market);
