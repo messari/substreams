@@ -1,0 +1,53 @@
+{
+  "@module": "map_pair_created_events",
+  "@block": 10008355,
+  "@type": "messari.uniswap.v2.PairCreatedEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "d07cbde817318492092cc7a27b3064a69bd893c01cb593d6029683ffd290ab3a",
+        "logOrdinal": "861",
+        "token0": "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "token1": "c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "pair": "b4e16d0168e52d35cacd2c6185b44281ec28c9dc"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_pair_created_events",
+  "@block": 10008500,
+  "@type": "messari.uniswap.v2.PairCreatedEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "b0621ca74cee9f540dda6d575f6a7b876133b42684c1259aaeb59c831410ccb2",
+        "logOrdinal": "839",
+        "token0": "8e870d67f660d95d5be530380d0ec0bd388289e1",
+        "token1": "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "pair": "3139ffc91b99aa94da8a2dc13f1fc36f9bdc98ee"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_pair_created_events",
+  "@block": 10014178,
+  "@type": "messari.uniswap.v2.PairCreatedEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "98f92a0b6063b0b581722cecf8ef01131c24c4377e6d3323d9184d1a262fc168",
+        "logIndex": 5,
+        "logOrdinal": "962",
+        "token0": "06af07097c9eeb7fd685c692751d5c66db49c215",
+        "token1": "c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "pair": "12ede161c702d1494612d19f05992f43aa6a26fb"
+      }
+    ]
+  }
+}
+
+all done

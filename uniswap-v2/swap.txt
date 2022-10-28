@@ -1,0 +1,117 @@
+{
+  "@module": "map_swap_events",
+  "@block": 10008566,
+  "@type": "messari.uniswap.v2.SwapEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "932cb88306450d481a0e43365a3ed832625b68f036e9887684ef6da594891366",
+        "logIndex": 4,
+        "logOrdinal": "97",
+        "blockNumber": "10008566",
+        "timestamp": "1588712972",
+        "sender": "f164fc0ec4e93095b804a4795bbe1e041497b92a",
+        "amountsIn": ["0", "4873849709289"],
+        "amountsOut": ["1000", "0"],
+        "pool": "b4e16d0168e52d35cacd2c6185b44281ec28c9dc"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_swap_events",
+  "@block": 10008585,
+  "@type": "messari.uniswap.v2.SwapEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "697b7aaca56a80a8d3a2f560ed7f1ecb97c22b2edd6eddc88ba4e89d96acf3c2",
+        "logIndex": 4,
+        "logOrdinal": "107",
+        "blockNumber": "10008585",
+        "timestamp": "1588713155",
+        "sender": "f164fc0ec4e93095b804a4795bbe1e041497b92a",
+        "amountsIn": ["0", "49280731798118"],
+        "amountsOut": ["10000", "0"],
+        "pool": "b4e16d0168e52d35cacd2c6185b44281ec28c9dc"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_swap_events",
+  "@block": 10013764,
+  "@type": "messari.uniswap.v2.SwapEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "43b6bfd06dde0814fe9c1b63ce98ec4c67c72d96169d73e13bf2b409d0551b58",
+        "logIndex": 4,
+        "logOrdinal": "2165",
+        "blockNumber": "10013764",
+        "timestamp": "1588782295",
+        "sender": "f164fc0ec4e93095b804a4795bbe1e041497b92a",
+        "amountsIn": ["0", "4983090479442"],
+        "amountsOut": ["1000", "0"],
+        "pool": "b4e16d0168e52d35cacd2c6185b44281ec28c9dc"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_swap_events",
+  "@block": 10014418,
+  "@type": "messari.uniswap.v2.SwapEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "735cf98e86a5df67b6a837ae50de1d7a589d9f6baaf0e1ac95e992884a182ce2",
+        "logIndex": 3,
+        "logOrdinal": "1331",
+        "blockNumber": "10014418",
+        "timestamp": "1588791072",
+        "sender": "f164fc0ec4e93095b804a4795bbe1e041497b92a",
+        "amountsIn": ["689", "0"],
+        "amountsOut": ["0", "3412398195916"],
+        "pool": "b4e16d0168e52d35cacd2c6185b44281ec28c9dc"
+      },
+      {
+        "txHash": "735cf98e86a5df67b6a837ae50de1d7a589d9f6baaf0e1ac95e992884a182ce2",
+        "logIndex": 6,
+        "logOrdinal": "1369",
+        "blockNumber": "10014418",
+        "timestamp": "1588791072",
+        "sender": "f164fc0ec4e93095b804a4795bbe1e041497b92a",
+        "amountsIn": ["0", "3412398195916"],
+        "amountsOut": ["700000000000000", "0"],
+        "pool": "12ede161c702d1494612d19f05992f43aa6a26fb"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_swap_events",
+  "@block": 10014425,
+  "@type": "messari.uniswap.v2.SwapEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "f7e7f3b82d8944e0cc89ab16a015cbdcfe7d0806d48946e90801423402aa1362",
+        "logIndex": 3,
+        "logOrdinal": "502",
+        "blockNumber": "10014425",
+        "timestamp": "1588791214",
+        "sender": "f164fc0ec4e93095b804a4795bbe1e041497b92a",
+        "amountsIn": ["700000000000000", "0"],
+        "amountsOut": ["0", "3391967105717"],
+        "pool": "12ede161c702d1494612d19f05992f43aa6a26fb"
+      }
+    ]
+  }
+}
+
+all done

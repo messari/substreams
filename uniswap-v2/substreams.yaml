@@ -61,6 +61,34 @@ modules:
     output:
       type: proto:messari.uniswap.v2.MintEvents
 
+  - name: map_burn_events
+    kind: map
+    initialBlock: 10000834
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pools
+    output:
+      type: proto:messari.uniswap.v2.BurnEvents
+
+  - name: map_swap_events
+    kind: map
+    initialBlock: 10000834
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pools
+    output:
+      type: proto:messari.uniswap.v2.SwapEvents
+
+  - name: event_out
+    kind: map
+    initialBlock: 10000834
+    inputs:
+      - map: map_mint_events
+      - map: map_burn_events
+      - map: map_swap_events
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
   - name: map_block_to_transfers
     kind: map
     inputs:

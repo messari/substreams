@@ -1,0 +1,172 @@
+{
+  "@module": "map_mint_events",
+  "@block": 10008555,
+  "@type": "messari.uniswap.v2.MintEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "2ef96febd1777e0403768e45e46dbd677f21079ba5f88297b500806b6fef23cb",
+        "logIndex": 6,
+        "logOrdinal": "529",
+        "sender": "f164fc0ec4e93095b804a4795bbe1e041497b92a",
+        "amount0": "1000000",
+        "amount1": "4854368932000000",
+        "pool": "b4e16d0168e52d35cacd2c6185b44281ec28c9dc"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_mint_events",
+  "@block": 10014178,
+  "@type": "messari.uniswap.v2.MintEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "98f92a0b6063b0b581722cecf8ef01131c24c4377e6d3323d9184d1a262fc168",
+        "logIndex": 12,
+        "logOrdinal": "1039",
+        "sender": "f164fc0ec4e93095b804a4795bbe1e041497b92a",
+        "amount0": "1133488753977549959",
+        "amount1": "5505613887893552",
+        "pool": "12ede161c702d1494612d19f05992f43aa6a26fb"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_mint_events",
+  "@block": 10019769,
+  "@type": "messari.uniswap.v2.MintEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "641c3f3d088f427cd8479c8ed5940d6c40e3fee3f72e9c527739d6345fb1491e",
+        "logIndex": 4,
+        "logOrdinal": "1107",
+        "sender": "b2a482fe16b642f73afeeb90a519fe2b5901586c",
+        "amount0": "3263",
+        "amount1": "16204931372248",
+        "pool": "b4e16d0168e52d35cacd2c6185b44281ec28c9dc"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_mint_events",
+  "@block": 10022914,
+  "@type": "messari.uniswap.v2.MintEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "62fc148c8a99742fa601d9f59d84fe0beb61be2d000de60a60b10912deea04a2",
+        "logIndex": 4,
+        "logOrdinal": "1215",
+        "sender": "3f6cdd93e4a1c2df9934cb90d09040ccfc155f93",
+        "amount0": "14190",
+        "amount1": "70471266807973",
+        "pool": "b4e16d0168e52d35cacd2c6185b44281ec28c9dc"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_mint_events",
+  "@block": 10027728,
+  "@type": "messari.uniswap.v2.MintEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "ae1f97f892065615dd6564de5b1e5e5c00f3ee343c8f0f97971b3881eec79a0e",
+        "logIndex": 13,
+        "logOrdinal": "3608",
+        "sender": "3f6cdd93e4a1c2df9934cb90d09040ccfc155f93",
+        "amount0": "50000",
+        "amount1": "234858426772527",
+        "pool": "b4e16d0168e52d35cacd2c6185b44281ec28c9dc"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_mint_events",
+  "@block": 10028070,
+  "@type": "messari.uniswap.v2.MintEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "d10ae788260c5f8a3d38ca3db6bc12e726f80372d2fcd1ad57b96dc96997765a",
+        "logIndex": 18,
+        "logOrdinal": "1879",
+        "sender": "3f6cdd93e4a1c2df9934cb90d09040ccfc155f93",
+        "amount0": "524683308238416864",
+        "amount1": "2500000000000000",
+        "pool": "12ede161c702d1494612d19f05992f43aa6a26fb"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_mint_events",
+  "@block": 10028114,
+  "@type": "messari.uniswap.v2.MintEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "682253e25ea7f10f49f6eaa9859550ba1a79955eb2f4efc737173bb56a917883",
+        "logIndex": 7,
+        "logOrdinal": "3543",
+        "sender": "3f6cdd93e4a1c2df9934cb90d09040ccfc155f93",
+        "amount0": "535780",
+        "amount1": "2500000000000000",
+        "pool": "b4e16d0168e52d35cacd2c6185b44281ec28c9dc"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_mint_events",
+  "@block": 10028119,
+  "@type": "messari.uniswap.v2.MintEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "eb54f7c0baf1f24b6f45080839424eb1f5fe1d8347af123f5486cdd8f42f7492",
+        "logIndex": 16,
+        "logOrdinal": "1353",
+        "sender": "3f6cdd93e4a1c2df9934cb90d09040ccfc155f93",
+        "amount0": "5000000",
+        "amount1": "23352575101853290",
+        "pool": "b4e16d0168e52d35cacd2c6185b44281ec28c9dc"
+      }
+    ]
+  }
+}
+
+{
+  "@module": "map_mint_events",
+  "@block": 10028134,
+  "@type": "messari.uniswap.v2.MintEvents",
+  "@data": {
+    "items": [
+      {
+        "txHash": "876d12ecbccbde2eaf8643d56046b8757c1e9bc2d47b301161514cbe5acba965",
+        "logIndex": 33,
+        "logOrdinal": "1740",
+        "sender": "3f6cdd93e4a1c2df9934cb90d09040ccfc155f93",
+        "amount0": "4896930141849283683",
+        "amount1": "23351971111878810",
+        "pool": "12ede161c702d1494612d19f05992f43aa6a26fb"
+      }
+    ]
+  }
+}
+
+all done

@@ -11,8 +11,7 @@ message PairCreatedEvent {
   uint32 log_index = 2;
   uint64 log_ordinal = 3;
 
-  string token0 = 10; // bytes: Address
-  string token1 = 11; // bytes: Address
+  repeated string tokens = 10; // bytes: Address
   string pair = 12; // bytes: Address
 }
 
@@ -25,10 +24,14 @@ message MintEvent {
   string tx_hash = 1; // bytes: Hash
   uint32 log_index = 2;
   uint64 log_ordinal = 3;
+  uint64 block_number = 4;
+  uint64 timestamp = 5;
 
   string sender = 10; // bytes: Address
   string amount0 = 11; // string: BigInt
   string amount1 = 12; // string: BigInt
+
+  string pool = 20; // bytes: Address
 }
 
 message MintEvents {
@@ -40,11 +43,14 @@ message BurnEvent {
   string tx_hash = 1; // bytes: Hash
   uint32 log_index = 2;
   uint64 log_ordinal = 3;
+  uint64 block_number = 4;
+  uint64 timestamp = 5;
 
   string sender = 10; // bytes: Address
   string amount0 = 11; // string: BigInt
   string amount1 = 12; // string: BigInt
-  string to = 13; // bytes: Address
+
+  string pool = 20; // bytes: Address
 }
 
 message BurnEvents {
@@ -56,13 +62,21 @@ message SwapEvent {
   string tx_hash = 1; // bytes: Hash
   uint32 log_index = 2;
   uint64 log_ordinal = 3;
+  uint64 block_number = 4;
+  uint64 timestamp = 5;
 
   string sender = 10; // bytes: Address
-  string amount0In = 11; // string: BigInt
-  string amount1In = 12; // string: BigInt
-  string amount0Out = 13; // string: BigInt
-  string amount1Out = 14; // string: BigInt
-  string to = 15; // bytes: Address
+  repeated string tokens = 11;
+  repeated string amounts_in = 12; // string: BigInt
+  repeated string amounts_out = 13; // string: BigInt
+  // string amount0In = 11; // string: BigInt
+  // string amount1In = 12; // string: BigInt
+  // string amount0Out = 13; // string: BigInt
+  // string amount1Out = 14; // string: BigInt
+  // string to = 15; // bytes: Address
+
+  string pool = 20; // bytes: Address
+
 }
 
 message SwapEvents {

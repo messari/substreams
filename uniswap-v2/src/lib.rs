@@ -53,8 +53,7 @@ fn map_pair_created_events(
                 tx_hash: hex::encode(log.receipt.transaction.clone().hash),
                 log_index: log.index(),
                 log_ordinal: log.ordinal(),
-                token0: hex::encode(event.token0.clone()),
-                token1: hex::encode(event.token1.clone()),
+                tokens: vec![hex::encode(event.token0.clone()), hex::encode(event.token1.clone())],
                 pair: hex::encode(event.pair.clone()),
             })
         }
@@ -124,27 +123,114 @@ fn map_mint_events(
         let pool_key = keyer::pool_key(&pool_address);
         let tx_hash = Hex(&log.receipt.transaction.hash).to_string();
 
-        // Check if pool has been created
-        if pools_store.get_last(pool_key).is_none() {
-            log::info!(
-                "invalid swap. pool does not exist. pool address {} transaction {}",
-                pool_address,
-                tx_hash
-            );
-            continue;
-        }
-
         if let Some(event) = pair::events::Mint::match_and_decode(log) {
+            // Check if pool has been created
+            if pools_store.get_last(pool_key).is_none() {
+                log::info!(
+                    "invalid mint. pool does not exist. pool address {} transaction {}",
+                    pool_address,
+                    tx_hash
+                );
+                continue;
+            }
+
             mint_events.items.push(uniswap::MintEvent {
                 tx_hash: tx_hash,
                 log_index: log.index(),
                 log_ordinal: log.ordinal(),
+                block_number: block.number,
+                timestamp: block.timestamp(),
                 sender: hex::encode(event.sender.clone()),
                 amount0: event.amount0.to_string(),
                 amount1: event.amount1.to_string(),
+                pool: pool_address,
             })
         }
     }
 
     Ok(mint_events)
+}
+
+#[substreams::handlers::map]
+fn map_burn_events(
+    block: eth::Block,
+    pools_store: StoreGet,
+) -> Result<uniswap::BurnEvents, substreams::errors::Error> {
+    let mut burn_events = uniswap::BurnEvents { items: vec![] };
+
+    for log in block.logs() {
+        let pool_address = Hex(&log.address()).to_string();
+        let pool_key = keyer::pool_key(&pool_address);
+        let tx_hash = Hex(&log.receipt.transaction.hash).to_string();
+
+        if let Some(event) = pair::events::Burn::match_and_decode(log) {
+            // Check if pool has been created
+            if pools_store.get_last(pool_key).is_none() {
+                log::info!(
+                    "invalid burn. pool does not exist. pool address {} transaction {}",
+                    pool_address,
+                    tx_hash
+                );
+                continue;
+            }
+
+            burn_events.items.push(uniswap::BurnEvent {
+                tx_hash: tx_hash,
+                log_index: log.index(),
+                log_ordinal: log.ordinal(),
+                block_number: block.number,
+                timestamp: block.timestamp(),
+                sender: hex::encode(event.sender.clone()),
+                amount0: event.amount0.to_string(),
+                amount1: event.amount1.to_string(),
+                pool: pool_address,
+            })
+        }
+    }
+
+    Ok(burn_events)
+}
+
+#[substreams::handlers::map]
+fn map_swap_events(
+    block: eth::Block,
+    pools_store: StoreGet,
+) -> Result<uniswap::SwapEvents, substreams::errors::Error> {
+    let mut swap_events = uniswap::SwapEvents { items: vec![] };
+
+    for log in block.logs() {
+        if let Some(event) = pair::events::Swap::match_and_decode(log) {
+            let pool_address = Hex(&log.address()).to_string();
+            let pool_key = keyer::pool_key(&pool_address);
+            let tx_hash = Hex(&log.receipt.transaction.hash).to_string();
+
+            // Check if pool has been created
+            match pools_store.get_last(pool_key) {
+                None => {
+                    log::info!(
+                        "invalid swap. pool does not exist. pool address {} transaction {}",
+                        pool_address,
+                        tx_hash
+                    );
+                    continue;
+                }
+                Some(pool) => {
+                    swap_events.items.push(uniswap::SwapEvent {
+                        tx_hash: tx_hash,
+                        log_index: log.index(),
+                        log_ordinal: log.ordinal(),
+                        block_number: block.number,
+                        timestamp: block.timestamp(),
+                        sender: hex::encode(event.sender.clone()),
+                        tokens: pool.tokens,
+                        amounts_in: vec![event.amount0_in.to_string(), event.amount1_in.to_string()],
+                        amounts_out: vec![event.amount0_out.to_string(), event.amount1_out.to_string()],
+                        pool: pool_address,
+                    })
+                }
+            }
+        }
+    }
+
+    Ok(swap_events)
 }
