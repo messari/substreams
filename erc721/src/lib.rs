@@ -4,9 +4,14 @@ pub mod abi;
 pub mod pb;
 
 use hex_literal::hex;
-use substreams::{log, store, Hex};
+use substreams::{
+    log,
+    store::{self, StoreAddInt64},
+    Hex,
+};
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
-
+use substreams::store::StoreNew;
+use substreams::store::StoreAdd;
 use pb::erc721::v1 as erc721;
 
 // Bored Ape Yacht Club Contract
@@ -29,7 +34,7 @@ fn block_to_transfers(
                         trx_hash: trx.hash.clone(),
                         from: transfer.from,
                         to: transfer.to,
-                        token_id: transfer.token_id.low_u64(),
+                        token_id: transfer.token_id.to_u64(),
                         ordinal: log.block_index as u64,
                     }
                 })

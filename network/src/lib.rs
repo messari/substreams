@@ -1,16 +1,21 @@
+extern crate core;
+
 pub mod pb;
 
 use prost::Message;
 use prost_types::Timestamp;
-use substreams::{log, proto, store, Hex};
+use substreams::{log, store};
+use substreams::scalar::BigInt;
+use substreams::store::{StoreAdd, StoreGet, StoreSet};
 use substreams_ethereum::pb::eth::v2::{self as eth};
-use substreams_helper::{
-    bigdecimal::{BigDecimal, Zero},
-    math::decimal_from_bytes,
-    num_bigint::{BigInt, Sign},
-};
+use substreams_ethereum::scalar::BigIntSign;
+use substreams::store::StoreAddBigInt;
+use substreams::store::StoreGetBigInt;
+use substreams::store::StoreNew;
+use substreams::store::StoreGetRaw;
+use substreams::store::StoreSetRaw;
 
-use crate::pb::network::v1::{self as network, DailySnapshots, Network};
+use crate::pb::network::v1::{self as network, Network};
 
 const CUMULATIVE_KEY: &str = "cumulative";
 
@@ -24,8 +29,8 @@ pub struct BlockHandler<'a>(&'a eth::Block);
 
 fn from_option_eth_bigint(bigint: Option<eth::BigInt>) -> BigInt {
     bigint
-        .map(|b| BigInt::from_bytes_le(Sign::Plus, b.bytes.as_slice()))
-        .unwrap_or_default()
+        .map(|b| BigInt::from_bytes_le(BigIntSign::Plus, b.bytes.as_slice()))
+        .unwrap_or(BigInt::zero())
 }
 
 impl<'a> BlockHandler<'a> {
@@ -39,7 +44,7 @@ impl<'a> BlockHandler<'a> {
             .header
             .clone()
             .map(|header| from_option_eth_bigint(header.difficulty))
-            .unwrap_or_default()
+            .unwrap_or(BigInt::zero())
     }
 
     // Return gas used from block header as BigInt
@@ -48,7 +53,7 @@ impl<'a> BlockHandler<'a> {
             .header
             .clone()
             .map(|header| BigInt::from(header.gas_used))
-            .unwrap_or_default()
+            .unwrap_or(BigInt::zero())
     }
 
     // Return burnt fees from block header as BigInt
@@ -57,14 +62,14 @@ impl<'a> BlockHandler<'a> {
             .transaction_traces
             .iter()
             .map(|t| from_option_eth_bigint(t.gas_price.clone()) * BigInt::from(t.gas_used))
-            .sum()
+            .fold(BigInt::zero(), |sum, val| sum + val)
     }
 }
 
-pub struct CumulativeValuesStore<'a>(&'a store::StoreGet);
+pub struct CumulativeValuesStore<'a>(&'a store::StoreGetBigInt);
 
 impl<'a> CumulativeValuesStore<'a> {
-    pub fn new(store: &'a store::StoreGet) -> Self {
+    pub fn new(store: &'a store::StoreGetBigInt) -> Self {
         Self(store)
     }
 
@@ -72,7 +77,7 @@ impl<'a> CumulativeValuesStore<'a> {
     pub fn get_value(&self, ordinal: u64, key: &str) -> Option<network::BigInt> {
         self.0
             .get_at(ordinal, format!("{}:{}", CUMULATIVE_KEY, key))
-            .map(|bytes| network::BigInt { bytes })
+            .map(|bigint| network::BigInt { bytes: bigint.to_bytes_le().1 })
     }
 
     pub fn get_network(&self, ordinal: u64) -> Network {
@@ -104,7 +109,7 @@ impl<'a> CumulativeValuesStore<'a> {
 }
 
 impl Network {
-    fn from_store(store: &store::StoreGet) -> Result<Self, Error> {
+    fn from_store(store: &store::StoreGetRaw) -> Result<Self, Error> {
         let network = store
             .get_last("network".to_string())
             .map(|network| Network::decode(network.as_slice()))
@@ -157,7 +162,7 @@ fn store_cumulative_values(block: eth::Block, output: store::StoreAddBigInt) {
     output.add(
         0,
         format!("{}:network:transactions", CUMULATIVE_KEY),
-        &BigInt::from(block.transaction_traces.len()),
+        &BigInt::from(block.transaction_traces.len() as u64),
     );
 
     // Daily cumulative values
@@ -206,15 +211,15 @@ fn store_cumulative_values(block: eth::Block, output: store::StoreAddBigInt) {
     output.add(
         0,
         format!("{}:day:{}:transactions", CUMULATIVE_KEY, day),
-        &BigInt::from(block.transaction_traces.len()),
+        &BigInt::from(block.transaction_traces.len() as u64),
     );
 }
 
 #[substreams::handlers::store]
 fn store_daily_snapshots(
     block: eth::Block,
-    store_cumulative_values: store::StoreGet,
-    output: store::StoreSet,
+    store_cumulative_values: store::StoreGetBigInt,
+    output: store::StoreSetRaw,
 ) {
     let cumulative_store = CumulativeValuesStore::new(&store_cumulative_values);
     let day = block
@@ -235,8 +240,8 @@ fn store_daily_snapshots(
 #[substreams::handlers::store]
 fn store_network(
     block: eth::Block,
-    store_cumulative_values: store::StoreGet,
-    output: store::StoreSet,
+    store_cumulative_values: store::StoreGetBigInt,
+    output: store::StoreSetRaw,
 ) {
     let cumulative_store = CumulativeValuesStore::new(&store_cumulative_values);
 
@@ -246,7 +251,7 @@ fn store_network(
         .map(|h| timestamp_day(h.timestamp))
         .unwrap_or_default();
 
-    let mut daily_snapshot = cumulative_store.get_daily_snapshot(0, day);
+    let _daily_snapshot = cumulative_store.get_daily_snapshot(0, day);
     let mut network = cumulative_store.get_network(0);
 
     // Set network values;
@@ -263,8 +268,8 @@ fn store_network(
 
 #[substreams::handlers::map]
 fn map_network(
-    block: eth::Block,
-    store_network: store::StoreGet,
+    _block: eth::Block,
+    store_network: store::StoreGetRaw,
 ) -> Result<Network, substreams::errors::Error> {
     log::info!("Map Network");
 

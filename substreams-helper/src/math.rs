@@ -1,4 +1,4 @@
-use bigdecimal::{BigDecimal, One, Zero};
+use substreams::scalar::BigDecimal;
 use num_bigint::BigUint;
 use pad::PadStr;
 use std::ops::{Div, Mul};
@@ -18,7 +18,7 @@ pub fn safe_div(amount0: &BigDecimal, amount1: &BigDecimal) -> BigDecimal {
     if amount1.eq(big_decimal_zero) {
         BigDecimal::zero()
     } else {
-        amount0.div(amount1)
+        amount0.clone().div(amount1.clone())
     }
 }
 
@@ -32,7 +32,7 @@ pub fn decimal_from_str(price_str: &str) -> Result<BigDecimal, Error> {
 }
 
 pub fn decimal_from_hex_be_bytes(price_bytes: &Vec<u8>) -> BigDecimal {
-    let big_uint_amount = BigUint::from_bytes_be(price_bytes.as_slice());
+    let big_uint_amount = BigUint::from_bytes_be(price_bytes.as_slice()); // TODO: Get rid of BigUint dependency
     BigDecimal::from_str(big_uint_amount.to_string().as_str())
         .unwrap()
         .with_prec(100)
@@ -42,7 +42,7 @@ pub fn exponent_to_big_decimal(decimals: u8) -> BigDecimal {
     let mut result = BigDecimal::one();
     let big_decimal_ten: &BigDecimal = &BigDecimal::from(10);
     for _i in 0..decimals {
-        result = result.mul(big_decimal_ten);
+        result = result.mul(big_decimal_ten.clone());
     }
 
     result

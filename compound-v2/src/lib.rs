@@ -5,13 +5,20 @@ pub mod rpc;
 pub mod utils;
 
 use crate::utils::{exponent_to_big_decimal, MANTISSA_FACTOR};
-use bigdecimal::{BigDecimal, Zero};
 use pb::compound::v1 as compound;
 use std::ops::{Add, Div, Mul, Sub};
 use std::str::FromStr;
+use substreams::scalar::BigDecimal;
+use substreams::store::StoreAdd;
+use substreams::store::StoreAddInt64;
+use substreams::store::StoreAddBigDecimal;
+use substreams::store::StoreGetRaw;
+use substreams::store::StoreSetRaw;
+use substreams::store::{Appender, StoreAppend, StoreGet, StoreSet};
 use substreams::{proto, store, Hex};
 use substreams_ethereum::NULL_ADDRESS;
 use substreams_ethereum::{pb::eth as ethpb, Event as EventTrait};
+use substreams::store::StoreNew;
 
 #[substreams::handlers::map]
 fn map_accrue_interest(
@@ -47,8 +54,8 @@ fn map_accrue_interest(
 #[substreams::handlers::map]
 fn map_mint(
     blk: ethpb::v2::Block,
-    store_token: store::StoreGet,
-    store_price: store::StoreGet,
+    store_token: store::StoreGetRaw,
+    store_price: store::StoreGetRaw,
 ) -> Result<compound::MintList, substreams::errors::Error> {
     let mut mint_list = compound::MintList { mint_list: vec![] };
     for trx in blk.transaction_traces {
@@ -118,8 +125,8 @@ fn map_market_listed(
 #[substreams::handlers::map]
 fn map_market_totals(
     accrue_interest_list: compound::AccrueInterestList,
-    store_token: store::StoreGet,
-    store_price: store::StoreGet,
+    store_token: store::StoreGetRaw,
+    store_price: store::StoreGetRaw,
 ) -> Result<compound::MarketTotalsList, substreams::errors::Error> {
     let mut market_totals_list = compound::MarketTotalsList {
         market_totals_list: vec![],
@@ -187,9 +194,9 @@ fn map_market_totals(
 #[substreams::handlers::map]
 fn map_market_revenue_delta(
     accrue_interest_list: compound::AccrueInterestList,
-    store_reserve_factor: store::StoreGet,
-    store_price: store::StoreGet,
-    store_token: store::StoreGet,
+    store_reserve_factor: store::StoreGetRaw,
+    store_price: store::StoreGetRaw,
+    store_token: store::StoreGetRaw,
 ) -> Result<compound::MarketRevenueDeltaList, substreams::errors::Error> {
     let mut market_revenue_delta_list = compound::MarketRevenueDeltaList {
         market_revenue_delta_list: vec![],
@@ -230,7 +237,7 @@ fn map_market_revenue_delta(
 }
 
 #[substreams::handlers::store]
-fn store_market_reserve_factor(blk: ethpb::v2::Block, output: store::StoreSet) {
+fn store_market_reserve_factor(blk: ethpb::v2::Block, output: store::StoreSetRaw) {
     for log in blk.logs() {
         if let Some(new_reserve_factor) =
             abi::ctoken::events::NewReserveFactor::match_and_decode(log)
@@ -256,18 +263,21 @@ fn store_market_reserve_factor(blk: ethpb::v2::Block, output: store::StoreSet) {
 
 // TODO: use append_bytes
 #[substreams::handlers::store]
-fn store_market_listed(market_listed_list: compound::MarketListedList, output: store::StoreAppend) {
+fn store_market_listed(
+    market_listed_list: compound::MarketListedList,
+    output: store::StoreAppend<String>,
+) {
     for market_listed in market_listed_list.market_listed_list {
         output.append(
             0,
             "protocol:market_listed".to_string(),
-            &Hex::encode(&market_listed.ctoken),
+            Hex::encode(&market_listed.ctoken),
         )
     }
 }
 
 #[substreams::handlers::store]
-fn store_mint(mint_list: compound::MintList, output: store::StoreSet) {
+fn store_mint(mint_list: compound::MintList, output: store::StoreSetRaw) {
     for mint in mint_list.mint_list {
         output.set(
             0,
@@ -278,7 +288,7 @@ fn store_mint(mint_list: compound::MintList, output: store::StoreSet) {
 }
 
 #[substreams::handlers::store]
-fn store_token(market_listed_list: compound::MarketListedList, output: store::StoreSet) {
+fn store_token(market_listed_list: compound::MarketListedList, output: store::StoreSetRaw) {
     for market_listed in market_listed_list.market_listed_list {
         let ctoken_id = market_listed.ctoken;
         // handle eth and sai differently
@@ -353,7 +363,7 @@ fn store_market_count(
 }
 
 #[substreams::handlers::store]
-fn store_oracle(blk: ethpb::v2::Block, output: store::StoreSet) {
+fn store_oracle(blk: ethpb::v2::Block, output: store::StoreSetRaw) {
     for log in blk.logs() {
         if let Some(new_price_oracle) =
             abi::comptroller::events::NewPriceOracle::match_and_decode(log)
@@ -370,9 +380,9 @@ fn store_oracle(blk: ethpb::v2::Block, output: store::StoreSet) {
 #[substreams::handlers::store]
 fn store_price(
     accrue_interest_list: compound::AccrueInterestList,
-    store_oracle: store::StoreGet,
-    store_token: store::StoreGet,
-    output: store::StoreSet,
+    store_oracle: store::StoreGetRaw,
+    store_token: store::StoreGetRaw,
+    output: store::StoreSetRaw,
 ) {
     for accrue_interest in accrue_interest_list.accrue_interest_list {
         let market_address = accrue_interest.address;
@@ -403,7 +413,7 @@ fn store_price(
 }
 
 #[substreams::handlers::store]
-fn store_market_totals(market_totals_list: compound::MarketTotalsList, output: store::StoreSet) {
+fn store_market_totals(market_totals_list: compound::MarketTotalsList, output: store::StoreSetRaw) {
     for market_totals in market_totals_list.market_totals_list {
         output.set(
             0,
@@ -421,9 +431,9 @@ fn store_market_totals(market_totals_list: compound::MarketTotalsList, output: s
 #[substreams::handlers::store]
 fn store_protocol_totals(
     market_totals_list: compound::MarketTotalsList,
-    store_market_listed: store::StoreGet,
-    store_market_totals: store::StoreGet,
-    output: store::StoreSet,
+    store_market_listed: store::StoreGetRaw,
+    store_market_totals: store::StoreGetRaw,
+    output: store::StoreSetRaw,
 ) {
     for market_totals in market_totals_list.market_totals_list {
         let market_address = market_totals.market;
@@ -476,7 +486,7 @@ fn store_protocol_totals(
 #[substreams::handlers::store]
 fn store_revenue(
     market_revenue_delta_list: compound::MarketRevenueDeltaList,
-    output: store::StoreAddBigFloat,
+    output: store::StoreAddBigDecimal,
 ) {
     for market_revenue_delta in market_revenue_delta_list.market_revenue_delta_list {
         let market_address = Hex::encode(market_revenue_delta.market);

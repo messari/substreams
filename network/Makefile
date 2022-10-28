@@ -8,6 +8,6 @@ codegen:
 build:
 	cargo build --target wasm32-unknown-unknown --release
 
-.PHONY: example
-example:
+.PHONY: run
+run:
 	substreams run -e api-dev.streamingfast.io:443 substreams.yaml map_network -s 13000700 -t +5

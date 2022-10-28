@@ -6,11 +6,13 @@ pub mod pb;
 mod keyer;
 
 use hex_literal::hex;
-use substreams::store::{StoreAddBigFloat, StoreAddBigInt, StoreAppend, StoreGet, StoreSet};
+use substreams::store::{StoreGet, StoreGetRaw, StoreSet};
 use substreams::{log, proto, store, Hex};
 use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
 use substreams_helper::erc20;
 use substreams_helper::types::Address;
+use substreams::store::StoreSetRaw;
+use substreams::store::StoreNew;
 
 use abi::factory;
 use abi::pair;
@@ -66,7 +68,7 @@ fn map_pair_created_events(
 #[substreams::handlers::store]
 fn store_pair_created_events(
     pair_created_events: uniswap::PairCreatedEvents,
-    output: store::StoreSet,
+    output: store::StoreSetRaw,
 ) {
     log::info!("Stored events {}", pair_created_events.items.len());
     for event in pair_created_events.items {
@@ -104,7 +106,7 @@ fn map_pools(
 }
 
 #[substreams::handlers::store]
-fn store_pools(pools: dex_amm::Pools, output: StoreSet) {
+fn store_pools(pools: dex_amm::Pools, output: store::StoreSetRaw) {
     log::info!("Stored pools {}", pools.items.len());
     for event in pools.items {
         let pool_key = keyer::pool_key(&event.address);
@@ -115,7 +117,7 @@ fn store_pools(pools: dex_amm::Pools, output: StoreSet) {
 #[substreams::handlers::map]
 fn map_mint_events(
     block: eth::Block,
-    pools_store: StoreGet,
+    pools_store: StoreGetRaw,
 ) -> Result<uniswap::MintEvents, substreams::errors::Error> {
     let mut mint_events = uniswap::MintEvents { items: vec![] };
 

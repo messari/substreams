@@ -42,7 +42,5 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: make erc20-price spkg
-        run: make -C erc20-price build && make erc20-price-spkg
       - name: build all
         run: make build-all

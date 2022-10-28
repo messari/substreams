@@ -1,8 +1,7 @@
 use std::ops::Div;
 
-use ethabi::ethereum_types::U256;
 use substreams::Hex;
-
+use substreams::scalar::BigInt;
 use crate::abi;
 
 pub struct Erc20Token {
@@ -10,7 +9,7 @@ pub struct Erc20Token {
     pub name: String,
     pub symbol: String,
     pub decimals: u64,
-    pub total_supply: U256,
+    pub total_supply: BigInt,
 }
 
 pub fn get_erc20_token(token_address: String) -> Option<Erc20Token> {
@@ -25,13 +24,14 @@ pub fn get_erc20_token(token_address: String) -> Option<Erc20Token> {
     if let (Some(name), Some(symbol), Some(decimals), Some(total_supply)) =
         (name_res, symbol_res, decimals_res, total_supply_res)
     {
-        let total_supply = total_supply.div(U256::from(10 as i32).pow(decimals.into()));
+        let decimals_u64 = decimals.to_u64();
+        let total_supply = total_supply.div(BigInt::from(10).pow(decimals_u64 as u32));
 
         Some(Erc20Token {
             address: token_address.clone(),
             name,
             symbol,
-            decimals: decimals.as_u64(),
+            decimals: decimals_u64,
             total_supply,
         })
     } else {
