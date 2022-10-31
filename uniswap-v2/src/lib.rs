@@ -6,14 +6,14 @@ pub mod pb;
 mod keyer;
 
 use hex_literal::hex;
-use substreams::store::{StoreGet, StoreGetRaw, StoreSet, StoreAddInt64};
+use substreams::store::StoreAdd;
+use substreams::store::StoreNew;
+use substreams::store::StoreSetRaw;
+use substreams::store::{StoreAddInt64, StoreGet, StoreGetRaw, StoreSet};
 use substreams::{log, proto, store, Hex};
 use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
 use substreams_helper::erc20;
 use substreams_helper::types::Address;
-use substreams::store::StoreSetRaw;
-use substreams::store::StoreAdd;
-use substreams::store::StoreNew;
 
 use abi::factory;
 use abi::pair;
@@ -193,10 +193,7 @@ fn map_swap_events(
 }
 
 #[substreams::handlers::store]
-fn store_swap_events(
-    swap_events: uniswap::SwapEvents,
-    output: store::StoreSetRaw,
-) {
+fn store_swap_events(swap_events: uniswap::SwapEvents, output: store::StoreSetRaw) {
     log::info!("Stored events {}", swap_events.items.len());
     for event in swap_events.items {
         let pool_key = keyer::swap_key(&event.tx_hash, event.log_index);
@@ -205,9 +202,6 @@ fn store_swap_events(
 }
 
 #[substreams::handlers::store]
-fn store_swap_count(
-    swap_events: uniswap::SwapEvents,
-    s: store::StoreAddInt64,
-) {
+fn store_swap_count(swap_events: uniswap::SwapEvents, s: store::StoreAddInt64) {
     s.add(0, "total", swap_events.items.len() as i64);
 }
