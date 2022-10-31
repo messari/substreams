@@ -1,20 +1,23 @@
 [package]
-name = "erc20_market_cap_substreams"
+name = "messari_networks_substreams"
 version = "0.0.1"
-description = "Market cap of all ERC20 tokens."
+description = "Substreams for Messari tracked networks"
 edition = "2021"
-repository = "https://github.com/messari/substreams/erc20-market-cap"
+# repository = "https://github.com/messari/substreams/erc20-market-cap"
 
 [lib]
 crate-type = ["cdylib"]
 
 [target.wasm32-unknown-unknown.dependencies]
+chrono = "0.4.22"
 ethabi = "17.0"
 prost = "^0.11.0"
+prost-types = "0.11.1"
 hex-literal = "0.3.4"
 substreams = { workspace = true }
 substreams-ethereum = { workspace = true }
 substreams-helper = { path = "../substreams-helper" }
+thiserror = "1.0.37"
 
 [build-dependencies]
 anyhow = "1"

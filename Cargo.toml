@@ -3,6 +3,7 @@ members = [
     "common",
     "compound-v2",
     "erc20-holdings",
+    "network",
     "erc20-price",
     "erc20-market-cap",
     "erc721",
@@ -12,8 +13,8 @@ members = [
 exclude = ["messari-cli"]
 
 [workspace.dependencies]
-substreams = "~0.0.20"
--substreams-ethereum = "0.2.2-rc.2"
+substreams = "0.3.2"
+substreams-ethereum = "0.6.2"
 
 [build]
 target = "wasm32-unknown-unknown"

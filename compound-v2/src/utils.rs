@@ -1,9 +1,10 @@
 use crate::rpc;
-use bigdecimal::{BigDecimal, One, Zero};
+
 use num_bigint::BigUint;
 use std::ops::{Div, Mul};
 use std::str;
 use std::str::FromStr;
+use substreams::scalar::BigDecimal;
 use substreams::Hex;
 use tiny_keccak::{Hasher, Keccak};
 
@@ -55,9 +56,9 @@ pub fn bytes_to_bigdecimal(input: &[u8]) -> BigDecimal {
 
 pub fn exponent_to_big_decimal(decimals: u64) -> BigDecimal {
     let mut result = BigDecimal::one();
-    let big_decimal_ten: &BigDecimal = &BigDecimal::from(10 as u64);
+    let big_decimal_ten: BigDecimal = BigDecimal::from(10 as u64);
     for _ in 0..decimals {
-        result = result.mul(big_decimal_ten);
+        result = result.mul(big_decimal_ten.clone());
     }
     return result;
 }

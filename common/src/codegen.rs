@@ -39,7 +39,7 @@ pub fn generate_abi(out_dir: Option<&str>) -> Result<(), Error> {
                 .iter()
                 .map(|contract| {
                     format!(
-                        "#[rustfmt::skip]\n#[path = \"../{}/abi/{}.rs\"]\npub mod {};\n",
+                        "#[rustfmt::skip]\n#[allow(unused_imports)]\n#[path = \"../{}/abi/{}.rs\"]\npub mod {};\n",
                         out_dir, contract, contract
                     )
                 })
@@ -65,11 +65,10 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     Command::new("make")
         .args(&["codegen"])
         .status()
-        .expect("failed to codegen");
+        .expect("failed to run substreams protogen");
 
     // Create target directories
     fs::create_dir_all(&target_pb_dir).ok();
-    fs::create_dir("./src/pb/").ok();
 
     let mut pb_files = HashMap::new();
     let pb_filenames = dir_filenames(&pb_dir);
@@ -96,8 +95,12 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     // Create target directories
     fs::create_dir_all(&target_pb_dir).ok();
 
-    // Move to target folders
-    fs::rename(&pb_dir, &target_pb_dir).ok();
+    // Move all pb files to target folder
+    for file in fs::read_dir(&pb_dir).unwrap().into_iter() {
+        let current_filepath = file.unwrap().path();
+        let target_filepath = target_pb_dir.join(current_filepath.file_name().unwrap());
+        fs::rename(&current_filepath, &target_filepath).ok();
+    }
 
     fs::create_dir(pb_dir.clone()).ok();
 

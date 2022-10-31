@@ -1,3 +1,5 @@
+# NOTE: The erc20-price-substreams-v0.1.0.spkg must be available at the root of this crate.
+
 .PHONY: codegen
 codegen:
 	substreams protogen ./substreams.yaml --exclude-paths="sf/ethereum,sf/substreams,google"
@@ -8,4 +10,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e api-dev.streamingfast.io:443 substreams.yaml block_to_transfers -s 12292922 -t +10
+	substreams run -e api-dev.streamingfast.io:443 substreams.yaml map_network -s 13000700 -t +5

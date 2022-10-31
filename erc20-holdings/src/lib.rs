@@ -5,14 +5,16 @@ pub mod pb;
 
 mod keyer;
 
-use num_bigint::BigInt;
-use std::ops::Neg;
 use std::str::FromStr;
+use substreams::scalar::BigInt;
+use substreams::store::StoreAddBigInt;
+use substreams::store::StoreSet;
+use substreams::store::StoreSetRaw;
 use substreams::{hex, log, proto, store, Hex};
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
-
 use substreams_helper::types::Address;
-
+use substreams::store::StoreNew;
+use substreams::store::StoreAdd;
 use pb::common::v1 as common;
 use pb::erc20::v1 as erc20;
 
@@ -87,7 +89,7 @@ fn map_block_to_transfers(
 }
 
 #[substreams::handlers::store]
-fn store_transfers(transfers: erc20::TransferEvents, output: store::StoreSet) {
+fn store_transfers(transfers: erc20::TransferEvents, output: store::StoreSetRaw) {
     log::info!("Stored events {}", transfers.items.len());
     for transfer in transfers.items {
         output.set(

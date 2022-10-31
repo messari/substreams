@@ -16,9 +16,12 @@ num-bigint = "0.4"
 bigdecimal = "0.3"
 pad = "0.1"
 tiny-keccak = { version = "2.0", features = ["keccak"] }
-substreams.workspace = true
-substreams-ethereum.workspace = true
+substreams = { workspace = true }
+substreams-ethereum = { workspace = true }
 
 [build-dependencies]
 anyhow = "1"
 substreams-common = { path = "../common" }
+
+[dependencies]
+thiserror = "1.0.37"

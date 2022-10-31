@@ -7,7 +7,17 @@ build-all:
 	$(MAKE) -C erc20-market-cap build
 	$(MAKE) -C erc721 build
 	$(MAKE) -C compound-v2 build
+	$(MAKE) -C network build
 
-.PHONY: erc20-price-spkg
-erc20-price-spkg:
-	cd erc20-price && make pack && mv erc20-price-substreams-v0.1.0.spkg ../target
+.PHONY: run-all
+run-all:
+	$(MAKE) -C uniswap-v2 run
+	$(MAKE) -C erc20-price run
+	$(MAKE) -C erc20-market-cap run
+	$(MAKE) -C erc721 run
+	$(MAKE) -C network run
+
+.PHONY: test
+test:
+	$(MAKE) build-all
+	$(MAKE) example-all

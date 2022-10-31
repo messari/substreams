@@ -1,41 +1,51 @@
-use bigdecimal::{BigDecimal, One, Zero};
+use substreams::scalar::BigDecimal;
 use num_bigint::BigUint;
 use pad::PadStr;
 use std::ops::{Div, Mul};
 use std::str::FromStr;
 
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error(transparent)]
+    Utf8(#[from] std::str::Utf8Error),
+
+    #[error(transparent)]
+    ParseBigDecimal(#[from] bigdecimal::ParseBigDecimalError),
+}
+
 pub fn safe_div(amount0: &BigDecimal, amount1: &BigDecimal) -> BigDecimal {
     let big_decimal_zero: &BigDecimal = &BigDecimal::zero();
-    return if amount1.eq(big_decimal_zero) {
+    if amount1.eq(big_decimal_zero) {
         BigDecimal::zero()
     } else {
-        amount0.div(amount1)
-    };
+        amount0.clone().div(amount1.clone())
+    }
 }
 
 // converts the string representation (in bytes) of a decimal
-pub fn decimal_from_bytes(price_bytes: &Vec<u8>) -> BigDecimal {
-    decimal_from_str(std::str::from_utf8(price_bytes.as_slice()).unwrap())
+pub fn decimal_from_bytes(value: &[u8]) -> Result<BigDecimal, Error> {
+    decimal_from_str(std::str::from_utf8(value)?)
 }
 
-pub fn decimal_from_str(price_str: &str) -> BigDecimal {
-    return BigDecimal::from_str(price_str).unwrap().with_prec(100);
+pub fn decimal_from_str(price_str: &str) -> Result<BigDecimal, Error> {
+    Ok(BigDecimal::from_str(price_str)?.with_prec(100))
 }
 
 pub fn decimal_from_hex_be_bytes(price_bytes: &Vec<u8>) -> BigDecimal {
-    let big_uint_amount = BigUint::from_bytes_be(price_bytes.as_slice());
-    return BigDecimal::from_str(big_uint_amount.to_string().as_str())
+    let big_uint_amount = BigUint::from_bytes_be(price_bytes.as_slice()); // TODO: Get rid of BigUint dependency
+    BigDecimal::from_str(big_uint_amount.to_string().as_str())
         .unwrap()
-        .with_prec(100);
+        .with_prec(100)
 }
 
 pub fn exponent_to_big_decimal(decimals: u8) -> BigDecimal {
     let mut result = BigDecimal::one();
     let big_decimal_ten: &BigDecimal = &BigDecimal::from(10);
     for _i in 0..decimals {
-        result = result.mul(big_decimal_ten);
+        result = result.mul(big_decimal_ten.clone());
     }
-    return result;
+
+    result
 }
 
 pub fn divide_by_decimals(big_float_amount: BigDecimal, decimals: u64) -> BigDecimal {
@@ -45,5 +55,6 @@ pub fn divide_by_decimals(big_float_amount: BigDecimal, decimals: u64) -> BigDec
     )
     .unwrap()
     .with_prec(100);
-    return big_float_amount.div(bd).with_prec(100);
+
+    big_float_amount.div(bd).with_prec(100)
 }

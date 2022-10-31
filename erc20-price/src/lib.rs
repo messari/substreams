@@ -6,7 +6,7 @@ pub mod pb;
 use hex_literal::hex;
 use pb::erc20_price::v1::{Erc20Price, Erc20Prices};
 use substreams::{log, Hex};
-use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
+use substreams_ethereum::pb::eth::v2 as eth;
 use substreams_helper::price;
 use substreams_helper::types::Network;
 
