@@ -1,23 +1,22 @@
-use std::collections::HashMap;
-use std::fmt::{Display, Formatter};
-use clap::ValueEnum;
-use strum_macros::{EnumIter, EnumVariantNames, AsRefStr};
+use crate::terminal_interface::{select_from_enum, select_from_values};
 use clap::Parser;
-use crate::cmd_helper::{select_from_enum, select_from_values};
+use clap::ValueEnum;
+use std::fmt::{Display, Formatter};
+use strum_macros::{AsRefStr, EnumIter, EnumVariantNames};
 
 #[derive(ValueEnum, Clone, EnumIter, EnumVariantNames, AsRefStr)]
 pub(crate) enum ProtocolType {
     Arweave,
     Ethereum,
     Near,
-    Cosmos
+    Cosmos,
 }
 
 #[derive(Parser)]
 pub(crate) struct ProtocolAndNetworkArgs {
     #[arg(short, long, value_name = "Protocol")]
     pub(crate) protocol_type: Option<ProtocolType>,
-    #[arg(short='k', long, value_name = "Network")]
+    #[arg(short = 'k', long, value_name = "Network")]
     pub(crate) network: Option<String>,
 }
 
@@ -42,10 +41,7 @@ impl ProtocolAndNetworkArgs {
             network.to_string()
         };
 
-        ProtocolAndNetworkInfo {
-            protocol,
-            network
-        }
+        ProtocolAndNetworkInfo { protocol, network }
     }
 }
 
@@ -57,66 +53,63 @@ pub(crate) struct ProtocolAndNetworkInfo {
 impl ProtocolType {
     pub(crate) fn get_protocol(&self) -> Protocol {
         match self {
-            ProtocolType::Arweave => {
-                Protocol {
-                    protocol_type: ProtocolType::Arweave,
-                    available_networks: vec!["arweave-mainnet"],
-                    supported_abi_addition_methods: SupportedAbiAdditionMethods::CopyFromLocalFilePath
-                }
-            }
-            ProtocolType::Ethereum => {
-                Protocol {
-                    protocol_type: ProtocolType::Ethereum,
-                    available_networks: vec![
-                        "mainnet",
-                        "rinkeby",
-                        "goerli",
-                        "poa-core",
-                        "poa-sokol",
-                        "gnosis",
-                        "matic",
-                        "mumbai",
-                        "fantom",
-                        "fantom-testnet",
-                        "bsc",
-                        "chapel",
-                        "clover",
-                        "avalanche",
-                        "fuji",
-                        "celo",
-                        "celo-alfajores",
-                        "fuse",
-                        "moonbeam",
-                        "moonriver",
-                        "mbase",
-                        "arbitrum-one",
-                        "arbitrum-rinkeby",
-                        "optimism",
-                        "optimism-kovan",
-                        "aurora",
-                        "aurora-testnet",
-                    ],
-                    supported_abi_addition_methods: SupportedAbiAdditionMethods::ByEitherLocalOrDownload
-                }
-            }
-            ProtocolType::Near => {
-                Protocol {
-                    protocol_type: ProtocolType::Near,
-                    available_networks: vec!["near-mainnet", "near-testnet"],
-                    supported_abi_addition_methods: SupportedAbiAdditionMethods::CopyFromLocalFilePath
-                }
-            }
+            ProtocolType::Arweave => Protocol {
+                protocol_type: ProtocolType::Arweave,
+                available_networks: vec!["arweave-mainnet"],
+                supported_abi_addition_methods: SupportedAbiAdditionMethods::CopyFromLocalFilePath,
+            },
+            ProtocolType::Ethereum => Protocol {
+                protocol_type: ProtocolType::Ethereum,
+                available_networks: vec![
+                    "mainnet",
+                    "rinkeby",
+                    "goerli",
+                    "poa-core",
+                    "poa-sokol",
+                    "gnosis",
+                    "matic",
+                    "mumbai",
+                    "fantom",
+                    "fantom-testnet",
+                    "bsc",
+                    "chapel",
+                    "clover",
+                    "avalanche",
+                    "fuji",
+                    "celo",
+                    "celo-alfajores",
+                    "fuse",
+                    "moonbeam",
+                    "moonriver",
+                    "mbase",
+                    "arbitrum-one",
+                    "arbitrum-rinkeby",
+                    "optimism",
+                    "optimism-kovan",
+                    "aurora",
+                    "aurora-testnet",
+                ],
+                supported_abi_addition_methods:
+                    SupportedAbiAdditionMethods::ByEitherLocalOrDownload,
+            },
+            ProtocolType::Near => Protocol {
+                protocol_type: ProtocolType::Near,
+                available_networks: vec!["near-mainnet", "near-testnet"],
+                supported_abi_addition_methods: SupportedAbiAdditionMethods::CopyFromLocalFilePath,
+            },
             ProtocolType::Cosmos => {
                 Protocol {
                     protocol_type: ProtocolType::Cosmos,
-                    available_networks: vec!["cosmoshub-4",
+                    available_networks: vec![
+                        "cosmoshub-4",
                         "theta-testnet-001", // CosmosHub testnet
                         "osmosis-1",
-                        "osmo-test-4",       // Osmosis testnet
+                        "osmo-test-4", // Osmosis testnet
                         "juno-1",
-                        "uni-3"              // Juno testnet
-                        ],
-                    supported_abi_addition_methods: SupportedAbiAdditionMethods::CopyFromLocalFilePath
+                        "uni-3", // Juno testnet
+                    ],
+                    supported_abi_addition_methods:
+                        SupportedAbiAdditionMethods::CopyFromLocalFilePath,
                 }
             }
         }
@@ -126,13 +119,14 @@ impl ProtocolType {
 pub(crate) struct Protocol {
     pub(crate) protocol_type: ProtocolType,
     pub(crate) available_networks: Vec<&'static str>,
-    pub(crate) supported_abi_addition_methods: SupportedAbiAdditionMethods
+    pub(crate) supported_abi_addition_methods: SupportedAbiAdditionMethods,
 }
 
+#[allow(dead_code)]
 pub(crate) enum SupportedAbiAdditionMethods {
     CopyFromLocalFilePath,
     DownloadFromContractAddress,
-    ByEitherLocalOrDownload // when both types of addition can be supported
+    ByEitherLocalOrDownload, // when both types of addition can be supported
 }
 
 impl Display for Protocol {

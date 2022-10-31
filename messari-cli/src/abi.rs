@@ -1,30 +1,40 @@
-use std::{fs, mem};
-use std::io::BufRead;
-use std::path::{Path, PathBuf};
-use serde::Deserialize;
 use clap::Parser;
+use serde::Deserialize;
+use std::fs;
+use std::path::{Path, PathBuf};
+use serde_json::Value;
 
 use crate::automapper::add_block_to_object_mapping_code;
-use crate::cargo::add_build_dependencies;
-use crate::protocols::{Protocol, ProtocolAndNetworkInfo, ProtocolType, SupportedAbiAdditionMethods};
-use crate::cmd_helper::{get_error_message, get_input, get_success_message, Spinner};
-use crate::file_contents_modifier::{File, FileContentsModification, safely_modify_file_contents};
-use crate::utils::StrExt;
+use crate::file_modification::cargo_toml::CargoToml;
+use crate::terminal_interface::{get_input, get_success_message, Spinner};
+use crate::file_modification::file_contents_modifier::{safely_modify_file_contents, File, FileContentsModification};
+use crate::protocols::{
+    Protocol, ProtocolAndNetworkInfo, ProtocolType, SupportedAbiAdditionMethods,
+};
+use crate::utils::{StaticStrExt, StrExt};
 
 #[derive(Parser)]
 pub(crate) struct AbisArg {
-    #[arg(short, long, value_name = "ABIs", help="ABIs can be specified as local file paths or as contract addresses. Multiple can be specified at once with comma separation")]
+    #[arg(
+        short,
+        long,
+        value_name = "ABIs",
+        help = "ABIs can be specified as local file paths or as contract addresses. Multiple can be specified at once with comma separation"
+    )]
     pub(crate) abis: Option<String>,
 }
 
 impl AbisArg {
     pub(crate) fn get_abi_infos(&self, protocol: &Protocol) -> Vec<AbiInfo> {
         if let Some(abis) = &self.abis {
-            abis.split(",").into_iter().map(|abi_string| {
-                let abi_info: AbiInfo = abi_string.into();
-                abi_info.assert_compatible_with_protocol(protocol);
-                abi_info
-            }).collect()
+            abis.split(",")
+                .into_iter()
+                .map(|abi_string| {
+                    let abi_info: AbiInfo = abi_string.into();
+                    abi_info.assert_compatible_with_protocol(protocol);
+                    abi_info
+                })
+                .collect()
         } else {
             Vec::new()
         }
@@ -33,7 +43,7 @@ impl AbisArg {
 
 pub(crate) enum AbiInfo {
     LocalFilePath(PathBuf),
-    ContractAddress(String)
+    ContractAddress(String),
 }
 
 impl AbiInfo {
@@ -55,61 +65,132 @@ impl From<&str> for AbiInfo {
             if abi_path.exists() {
                 AbiInfo::LocalFilePath(abi_path.to_path_buf())
             } else {
-                panic!("Abi arg supplied: {} is neither a contract address nor a local file path!", abi_arg)
+                panic!(
+                    "Abi arg supplied: {} is neither a contract address nor a local file path!",
+                    abi_arg
+                )
             }
         }
     }
 }
 
-pub(crate) fn add_abis(protocol_and_network_info: ProtocolAndNetworkInfo, abis_arg: &AbisArg, project_dir: &PathBuf) {
+pub(crate) fn add_abis(
+    protocol_and_network_info: ProtocolAndNetworkInfo,
+    abis_arg: &AbisArg,
+    project_dir: &PathBuf,
+    is_add_operation: bool,
+) {
     let abi_infos = abis_arg.get_abi_infos(&protocol_and_network_info.protocol);
 
     if abi_infos.is_empty() {
-        let abi_string = get_input("Abi (Leave blank to skip)", Some("Abi"));
+        let abi_string = if is_add_operation {
+            let abi_string = get_input("Abi (Leave blank to skip)", Some("Abi"), true);
+            if abi_string.is_empty() {
+                println!("Skipping to next step");
+                return;
+            }
+            abi_string
+        } else {
+            get_input("Abi", None, false)
+        };
+
         let abi_info: AbiInfo = abi_string.as_str().into();
         abi_info.assert_compatible_with_protocol(&protocol_and_network_info.protocol);
-        let abi_file_contents = get_abi_file_contents(abi_info, &protocol_and_network_info.protocol.protocol_type, &protocol_and_network_info.network);
+        let abi_file_contents = get_abi_file_contents(
+            abi_info,
+            &protocol_and_network_info.protocol.protocol_type,
+            &protocol_and_network_info.network,
+        );
 
-        let contract_name = get_input("Contract Name", None);
-        add_abi_to_project(abi_file_contents, &contract_name, &protocol_and_network_info.protocol.protocol_type);
+        let contract_name = get_input("Contract Name", None, false);
+        add_abi_to_project(
+            abi_file_contents,
+            &contract_name,
+            project_dir,
+        );
         add_block_to_object_mapping_code(contract_name);
     } else {
         for abi_info in abi_infos {
-            let abi_file_contents = get_abi_file_contents(abi_info, &protocol_and_network_info.protocol.protocol_type, &protocol_and_network_info.network);
+            let abi_file_contents = get_abi_file_contents(
+                abi_info,
+                &protocol_and_network_info.protocol.protocol_type,
+                &protocol_and_network_info.network,
+            );
 
-            let contract_name = get_input("Contract Name", None);
-            add_abi_to_project(abi_file_contents, &contract_name, &protocol_and_network_info.protocol.protocol_type);
+            let contract_name = get_input("Contract Name", None, false);
+            add_abi_to_project(
+                abi_file_contents,
+                &contract_name,
+                project_dir,
+            );
             add_block_to_object_mapping_code(contract_name);
         }
     }
 
     loop {
-        let abi_string = get_input("Add another Abi Address (Leave blank to move on to next step)", Some("Abi"));
+        let abi_string = if is_add_operation {
+            get_input(
+                "Add another Abi Address (Leave blank to end program)",
+                Some("Abi"),
+                true,
+            )
+        } else {
+            get_input(
+                "Add another Abi Address (Leave blank to move on to next step)",
+                Some("Abi"),
+                true,
+            )
+        };
+        if abi_string.is_empty() {
+            return;
+        }
         let abi_info: AbiInfo = abi_string.as_str().into();
         abi_info.assert_compatible_with_protocol(&protocol_and_network_info.protocol);
 
-        let abi_file_contents = get_abi_file_contents(abi_info, &protocol_and_network_info.protocol.protocol_type, &protocol_and_network_info.network);
+        let abi_file_contents = get_abi_file_contents(
+            abi_info,
+            &protocol_and_network_info.protocol.protocol_type,
+            &protocol_and_network_info.network,
+        );
 
-        let contract_name = get_input("Contract Name", None);
-        add_abi_to_project(abi_file_contents, &contract_name, &protocol_and_network_info.protocol.protocol_type);
+        let contract_name = get_input("Contract Name", None, false);
+        add_abi_to_project(
+            abi_file_contents,
+            &contract_name,
+            project_dir,
+        );
         add_block_to_object_mapping_code(contract_name);
-    };
+    }
 }
 
-fn get_abi_file_contents(abi_info: AbiInfo, protocol_type: &ProtocolType, network: &String) -> String {
+fn get_abi_file_contents(
+    abi_info: AbiInfo,
+    protocol_type: &ProtocolType,
+    network: &String,
+) -> String {
     match abi_info {
         AbiInfo::LocalFilePath(local_file_path) => {
-            print!("{}", get_success_message(format!("Abi: {}", local_file_path.to_string_lossy())));
+            println!(
+                "{}",
+                get_success_message("Abi retrieved!")
+            );
             fs::read_to_string(local_file_path).unwrap()
-        },
+        }
         AbiInfo::ContractAddress(contract_address) => {
-            print!("{}", get_success_message(format!("Abi: {}", contract_address)));
+            println!(
+                "{}",
+                get_success_message("Abi retrieved!")
+            );
             download_abi(contract_address, protocol_type, network)
         }
     }
 }
 
-pub(crate) fn download_abi(contract_address: String, protocol_type: &ProtocolType, network: &String) -> String {
+fn download_abi(
+    contract_address: String,
+    protocol_type: &ProtocolType,
+    network: &String,
+) -> String {
     let url = match protocol_type {
         ProtocolType::Ethereum => {
             let base_url = match network.as_str() {
@@ -129,39 +210,44 @@ pub(crate) fn download_abi(contract_address: String, protocol_type: &ProtocolTyp
                 "fuji" => "https://api-testnet.snowtrace.io/api".to_string(),
                 "gnosis" => "https://api.gnosisscan.io/api".to_string(),
                 "poa-core" => "`https://blockscout.com/poa/core/api".to_string(),
-                _ => format!("https://api-{}.etherscan.io/api", network)
+                _ => format!("https://api-{}.etherscan.io/api", network),
             };
 
-            format!("{}?module=contract&action=getabi&address={}", base_url, contract_address)
+            format!(
+                "{}?module=contract&action=getabi&address={}",
+                base_url, contract_address
+            )
         }
-        _ => unreachable!()
+        _ => unreachable!(),
     };
 
-    let mut spinner = Spinner::new("Downloading abi..".to_string());
+    let spinner = Spinner::new("Downloading abi..".to_string());
 
-    let response_text = match futures::executor::block_on(reqwest::get(url)) {
-        Ok(response) => {
-            match futures::executor::block_on(response.text()) {
-                Ok(response_text) => response_text,
-                Err(error) => {
-                    spinner.end_with_error_message("Download failed!".to_string());
-                    panic!("Failed to download ABI response text with error: {}", error);
-                }
+    let response_text = match reqwest::blocking::get(url) {
+        Ok(response) => match response.text() {
+            Ok(response_text) => response_text,
+            Err(error) => {
+                spinner.end_with_error_message("Download failed!".to_string());
+                panic!("Failed to download ABI response text with error: {}", error);
             }
-        }
+        },
         Err(error) => {
             spinner.end_with_error_message("Download failed!".to_string());
             panic!("ABI download failed with response error: {}", error);
         }
     };
 
-    let contract_download_response = match serde_json::from_str::<ContractDownloadResponse>(&response_text) {
-        Ok(response) => response,
-        Err(error) => {
-            spinner.end_with_error_message("Download failed!".to_string());
-            panic!("Issue deserializing ABI download response!\nDownload response: {}\nError: {}", response_text, error)
-        }
-    };
+    let contract_download_response =
+        match serde_json::from_str::<ContractDownloadResponse>(&response_text) {
+            Ok(response) => response,
+            Err(error) => {
+                spinner.end_with_error_message("Download failed!".to_string());
+                panic!(
+                    "Issue deserializing ABI download response!\nDownload response: {}\nError: {}",
+                    response_text, error
+                )
+            }
+        };
 
     // According to graph-cli this is a necessary check for validity of the ABI contract
     if contract_download_response.status != "1" {
@@ -171,14 +257,25 @@ pub(crate) fn download_abi(contract_address: String, protocol_type: &ProtocolTyp
 
     spinner.end_with_success_message("Download completed!".to_string());
 
-    contract_download_response.result
+    // Lets make the json look nice
+    let result_json: Value = serde_json::from_str(&contract_download_response.result).expect(&format!("Downloaded contract is not valid json! Contract contents: {}", contract_download_response.result));
+    serde_json::to_string_pretty(&result_json).unwrap()
 }
 
-fn add_abi_to_project(abi_file_contents: String, contract_name: &String, protocol_type: &ProtocolType, project_dir: &PathBuf) {
+fn add_abi_to_project(
+    abi_file_contents: String,
+    contract_name: &String,
+    project_dir: &PathBuf,
+) {
     let abi_dir = project_dir.join("abi");
-    let contract_filepath = abi_dir.join(contract_name);
+    let contract_filepath = if contract_name.ends_with(".json") {
+        abi_dir.join(contract_name)
+    } else {
+        abi_dir.join(format!("{}.json", contract_name))
+    };
     let build_rs_filepath = project_dir.join("build.rs");
-    let cargo_filepath = project_dir.join("Cargo.toml");
+    let cargo_toml_filepath = project_dir.join("Cargo.toml");
+    let mut cargo_toml_contents = CargoToml::load_from_file(&cargo_toml_filepath);
 
     let spinner = Spinner::new(format!("Adding abi boilerplate for {}", contract_name));
 
@@ -191,17 +288,19 @@ fn add_abi_to_project(abi_file_contents: String, contract_name: &String, protoco
     if !build_rs_filepath.exists() {
         operations.push(FileContentsModification::CreateFile(File {
             filepath: build_rs_filepath,
-            file_contents: get_build_rs_default_file_contents()
+            file_contents: get_build_rs_default_file_contents(),
         }));
-        operations.push(FileContentsModification::UpdateFile(File {
-            filepath: cargo_filepath.clone(),
-            file_contents: add_build_dependencies(vec!["anyhow = \"1\"".to_string()], &cargo_filepath)
-        }))
+        if cargo_toml_contents.add_build_dependencies(vec!["anyhow".into_dep(), "substreams-common".dep_with_local_path("common")]) {
+            operations.push(FileContentsModification::UpdateFile(File {
+                filepath: cargo_toml_filepath,
+                file_contents: cargo_toml_contents.get_file_contents(),
+            }))
+        }
     }
 
     operations.push(FileContentsModification::CreateFile(File {
         filepath: contract_filepath,
-        file_contents: abi_file_contents
+        file_contents: abi_file_contents,
     }));
 
     safely_modify_file_contents(operations);
@@ -219,12 +318,13 @@ fn main() -> Result<(), anyhow::Error> {
     codegen::generate(None)?;
 
     Ok(())
-}".to_string()
+}"
+    .to_string()
 }
 
 #[derive(Deserialize)]
 struct ContractDownloadResponse {
-    status:  String,
+    status: String,
     message: String,
-    result: String
+    result: String,
 }
