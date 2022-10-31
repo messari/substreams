@@ -1,8 +1,8 @@
-use substreams::scalar::BigDecimal;
 use num_bigint::BigUint;
 use pad::PadStr;
 use std::ops::{Div, Mul};
 use std::str::FromStr;
+use substreams::scalar::BigDecimal;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

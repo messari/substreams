@@ -10,15 +10,15 @@ use std::ops::{Add, Div, Mul, Sub};
 use std::str::FromStr;
 use substreams::scalar::BigDecimal;
 use substreams::store::StoreAdd;
-use substreams::store::StoreAddInt64;
 use substreams::store::StoreAddBigDecimal;
+use substreams::store::StoreAddInt64;
 use substreams::store::StoreGetRaw;
+use substreams::store::StoreNew;
 use substreams::store::StoreSetRaw;
 use substreams::store::{Appender, StoreAppend, StoreGet, StoreSet};
 use substreams::{proto, store, Hex};
 use substreams_ethereum::NULL_ADDRESS;
 use substreams_ethereum::{pb::eth as ethpb, Event as EventTrait};
-use substreams::store::StoreNew;
 
 #[substreams::handlers::map]
 fn map_accrue_interest(
