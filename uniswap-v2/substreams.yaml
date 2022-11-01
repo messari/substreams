@@ -25,7 +25,7 @@ binaries:
 modules:
   - name: map_pair_created_events
     kind: map
-    initialBlock: 10000834
+    initialBlock: 10000835
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
@@ -54,7 +54,7 @@ modules:
 
   - name: map_mint_events
     kind: map
-    initialBlock: 10000834
+    initialBlock: 10000835
     inputs:
       - source: sf.ethereum.type.v2.Block
       - store: store_pools
@@ -74,3 +74,28 @@ modules:
     valueType: proto:messari.erc20.v1.TransferEvents
     inputs:
       - map: map_block_to_transfers
+
+  - name: map_swap_events
+    kind: map
+    initialBlock: 10000835
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pools
+    output:
+      type: proto:messari.uniswap.v2.SwapEvents
+
+  - name: store_swap_events
+    kind: store
+    initialBlock: 10000835
+    updatePolicy: set
+    valueType: proto:messari.uniswap.v2.SwapEvent
+    inputs:
+      - map: map_swap_events
+
+  - name: store_swap_count
+    kind: store
+    initialBlock: 10000835
+    updatePolicy: add
+    valueType: int64
+    inputs:
+      - map: map_swap_events

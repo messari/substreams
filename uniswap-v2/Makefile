@@ -8,4 +8,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_mint_events -s 10008355 -t +2000
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml store_swap_count -s 15800000

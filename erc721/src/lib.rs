@@ -4,15 +4,15 @@ pub mod abi;
 pub mod pb;
 
 use hex_literal::hex;
+use pb::erc721::v1 as erc721;
+use substreams::store::StoreAdd;
+use substreams::store::StoreNew;
 use substreams::{
     log,
     store::{self, StoreAddInt64},
     Hex,
 };
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
-use substreams::store::StoreNew;
-use substreams::store::StoreAdd;
-use pb::erc721::v1 as erc721;
 
 // Bored Ape Yacht Club Contract
 const TRACKED_CONTRACT: [u8; 20] = hex!("bc4ca0eda7647a8ab7c2061c2e118a18a936f13d");
