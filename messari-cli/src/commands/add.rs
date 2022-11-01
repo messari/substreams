@@ -1,22 +1,27 @@
+use clap::{Parser, ValueEnum};
 use std::mem;
 use std::path::PathBuf;
-use clap::{Parser, ValueEnum};
 use strum_macros::{EnumIter, EnumVariantNames};
 
-use crate::abi::{add_abis, AbisArg};
+use crate::abi::{add_abis, AbisArgs};
 use crate::protocols::ProtocolAndNetworkArgs;
-use crate::utils::{get_current_directory, PathBufExt};
 use crate::terminal_interface::select_from_enum;
+use crate::utils::get_current_directory;
 
 #[derive(Parser)]
 pub(crate) struct Add {
     pub(crate) add_operation_type: Option<AddOperationType>,
-    #[arg(short = 'd', long, value_name = "Project Directory", help="Specify where the project is that you want to ABI to. Leave blank to use the current directory.")]
+    #[arg(
+        short = 'd',
+        long,
+        value_name = "Project Directory",
+        help = "Specify where the project is that you want to add ABI to. Relative paths should start with \"./\" or \"../\". Leave blank to use the current directory."
+    )]
     pub(crate) project_dir: Option<String>,
     #[clap(flatten)]
     pub(crate) protocol_and_network_args: ProtocolAndNetworkArgs,
     #[clap(flatten)]
-    pub(crate) abis_arg: AbisArg,
+    pub(crate) abis_arg: AbisArgs,
 }
 
 impl Add {
@@ -32,15 +37,14 @@ impl Add {
             if project_dir.is_relative() {
                 // If relative it will always be treated as relative to the current directory
                 project_dir = get_current_directory().join(project_dir);
-                project_dir.clean_path(); // Would only fail here if the project does not exist
             } else {
                 if !project_dir.exists() {
                     // Absolute paths have to already exist although relative paths are allowed to be created
-                    panic!("Directory: {} does not exist!", project_dir.to_string_lossy());
+                    panic!(
+                        "Directory: {} does not exist!",
+                        project_dir.to_string_lossy()
+                    );
                 }
-            }
-            if !project_dir.is_dir() {
-                panic!("Input: {}, is not a directory!", project_dir.to_string_lossy());
             }
             project_dir
         } else {
@@ -51,7 +55,10 @@ impl Add {
 
         // We need to make sure that the project selected is actually a substreams project
         if !project_dir.join("Cargo.toml").exists() {
-            panic!("Project supplied: {}, is not a valid project. It contains not Cargo.toml file!", project_dir.to_string_lossy());
+            panic!(
+                "Project supplied: {}, is not a valid project. It contains not Cargo.toml file!",
+                project_dir.to_string_lossy()
+            );
         }
 
         match operation_type {
@@ -64,15 +71,14 @@ impl Add {
 
 #[derive(ValueEnum, EnumIter, EnumVariantNames, Clone)]
 pub(crate) enum AddOperationType {
-    Abi
+    Abi,
 }
 
-fn execute_add_abi(project_dir: PathBuf, protocol_and_network_args: &ProtocolAndNetworkArgs, abis_arg: &AbisArg) {
+fn execute_add_abi(
+    project_dir: PathBuf,
+    protocol_and_network_args: &ProtocolAndNetworkArgs,
+    abis_arg: &AbisArgs,
+) {
     let protocol_and_network_info = protocol_and_network_args.get_info();
-    add_abis(
-        protocol_and_network_info,
-        abis_arg,
-        &project_dir,
-        true,
-    );
+    add_abis(protocol_and_network_info, abis_arg, &project_dir, true);
 }

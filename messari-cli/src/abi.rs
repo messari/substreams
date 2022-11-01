@@ -1,32 +1,42 @@
 use clap::Parser;
 use serde::Deserialize;
+use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
-use serde_json::Value;
 
 use crate::automapper::add_block_to_object_mapping_code;
 use crate::file_modification::cargo_toml::CargoToml;
-use crate::terminal_interface::{get_input, get_success_message, Spinner};
-use crate::file_modification::file_contents_modifier::{safely_modify_file_contents, File, FileContentsModification};
+use crate::file_modification::file_contents_modifier::{
+    safely_modify_file_contents, File, FileContentsModification,
+};
 use crate::protocols::{
     Protocol, ProtocolAndNetworkInfo, ProtocolType, SupportedAbiAdditionMethods,
 };
+use crate::terminal_interface::{get_input, get_success_message, Spinner};
 use crate::utils::{StaticStrExt, StrExt};
 
 #[derive(Parser)]
-pub(crate) struct AbisArg {
+pub(crate) struct AbisArgs {
     #[arg(
         short,
         long,
         value_name = "ABIs",
-        help = "ABIs can be specified as local file paths or as contract addresses. Multiple can be specified at once with comma separation"
+        help = "ABIs can be specified as local file paths or as contract addresses. Multiple abis can be specified at once with comma separation."
     )]
     pub(crate) abis: Option<String>,
+    #[arg(
+        short,
+        long,
+        value_name = "Contract Names",
+        help = "This flag can only be used when the --abis flag is used. Multiple contract names can be specified at once with comma separation. There also has to be a one-to-one naming match, ie. if 3 abis are specified then 3 contracts should be specified also."
+    )]
+    pub(crate) contract_names: Option<String>,
 }
 
-impl AbisArg {
-    pub(crate) fn get_abi_infos(&self, protocol: &Protocol) -> Vec<AbiInfo> {
-        if let Some(abis) = &self.abis {
+impl AbisArgs {
+    /// Returns abis and, if entered, their corresponding contract names
+    pub(crate) fn get_abi_info(&self, protocol: &Protocol) -> (Vec<AbiInfo>, Option<Vec<String>>) {
+        let abi_infos = if let Some(abis) = &self.abis {
             abis.split(",")
                 .into_iter()
                 .map(|abi_string| {
@@ -37,6 +47,24 @@ impl AbisArg {
                 .collect()
         } else {
             Vec::new()
+        };
+
+        if let Some(contract_names_str) = &self.contract_names {
+            if abi_infos.is_empty() {
+                panic!("--contract-names flag was used when the --abis flag was not! --contract-names flag can only be used when the --abis flag is used and the number of contracts \
+                entered has to match the number of abis entered.\n--contract-names=\"{}\"", contract_names_str);
+            }
+            let contract_names = contract_names_str
+                .split(",")
+                .into_iter()
+                .map(|contract_name| contract_name.to_string())
+                .collect::<Vec<_>>();
+            if contract_names.len() != abi_infos.len() {
+                panic!("Number of contract names entered does not match the number of abi entered!\n#contract-names = {}, #abis = {}", contract_names.len(), abi_infos.len());
+            }
+            (abi_infos, Some(contract_names))
+        } else {
+            (abi_infos, None)
         }
     }
 }
@@ -76,22 +104,22 @@ impl From<&str> for AbiInfo {
 
 pub(crate) fn add_abis(
     protocol_and_network_info: ProtocolAndNetworkInfo,
-    abis_arg: &AbisArg,
+    abis_arg: &AbisArgs,
     project_dir: &PathBuf,
     is_add_operation: bool,
 ) {
-    let abi_infos = abis_arg.get_abi_infos(&protocol_and_network_info.protocol);
+    let (abi_infos, contract_names) = abis_arg.get_abi_info(&protocol_and_network_info.protocol);
 
     if abi_infos.is_empty() {
         let abi_string = if is_add_operation {
+            get_input("Abi", None, false)
+        } else {
             let abi_string = get_input("Abi (Leave blank to skip)", Some("Abi"), true);
             if abi_string.is_empty() {
                 println!("Skipping to next step");
                 return;
             }
             abi_string
-        } else {
-            get_input("Abi", None, false)
         };
 
         let abi_info: AbiInfo = abi_string.as_str().into();
@@ -103,27 +131,32 @@ pub(crate) fn add_abis(
         );
 
         let contract_name = get_input("Contract Name", None, false);
-        add_abi_to_project(
-            abi_file_contents,
-            &contract_name,
-            project_dir,
-        );
+        add_abi_to_project(abi_file_contents, &contract_name, project_dir);
         add_block_to_object_mapping_code(contract_name);
     } else {
-        for abi_info in abi_infos {
-            let abi_file_contents = get_abi_file_contents(
-                abi_info,
-                &protocol_and_network_info.protocol.protocol_type,
-                &protocol_and_network_info.network,
-            );
+        if let Some(contract_names) = contract_names {
+            for (abi_info, contract_name) in abi_infos.into_iter().zip(contract_names.into_iter()) {
+                let abi_file_contents = get_abi_file_contents(
+                    abi_info,
+                    &protocol_and_network_info.protocol.protocol_type,
+                    &protocol_and_network_info.network,
+                );
 
-            let contract_name = get_input("Contract Name", None, false);
-            add_abi_to_project(
-                abi_file_contents,
-                &contract_name,
-                project_dir,
-            );
-            add_block_to_object_mapping_code(contract_name);
+                add_abi_to_project(abi_file_contents, &contract_name, project_dir);
+                add_block_to_object_mapping_code(contract_name);
+            }
+        } else {
+            for abi_info in abi_infos {
+                let abi_file_contents = get_abi_file_contents(
+                    abi_info,
+                    &protocol_and_network_info.protocol.protocol_type,
+                    &protocol_and_network_info.network,
+                );
+
+                let contract_name = get_input("Contract Name", None, false);
+                add_abi_to_project(abi_file_contents, &contract_name, project_dir);
+                add_block_to_object_mapping_code(contract_name);
+            }
         }
     }
 
@@ -154,11 +187,7 @@ pub(crate) fn add_abis(
         );
 
         let contract_name = get_input("Contract Name", None, false);
-        add_abi_to_project(
-            abi_file_contents,
-            &contract_name,
-            project_dir,
-        );
+        add_abi_to_project(abi_file_contents, &contract_name, project_dir);
         add_block_to_object_mapping_code(contract_name);
     }
 }
@@ -170,17 +199,11 @@ fn get_abi_file_contents(
 ) -> String {
     match abi_info {
         AbiInfo::LocalFilePath(local_file_path) => {
-            println!(
-                "{}",
-                get_success_message("Abi retrieved!")
-            );
+            println!("{}", get_success_message("Abi retrieved!"));
             fs::read_to_string(local_file_path).unwrap()
         }
         AbiInfo::ContractAddress(contract_address) => {
-            println!(
-                "{}",
-                get_success_message("Abi retrieved!")
-            );
+            println!("{}", get_success_message("Abi retrieved!"));
             download_abi(contract_address, protocol_type, network)
         }
     }
@@ -258,15 +281,15 @@ fn download_abi(
     spinner.end_with_success_message("Download completed!".to_string());
 
     // Lets make the json look nice
-    let result_json: Value = serde_json::from_str(&contract_download_response.result).expect(&format!("Downloaded contract is not valid json! Contract contents: {}", contract_download_response.result));
+    let result_json: Value =
+        serde_json::from_str(&contract_download_response.result).expect(&format!(
+            "Downloaded contract is not valid json! Contract contents: {}",
+            contract_download_response.result
+        ));
     serde_json::to_string_pretty(&result_json).unwrap()
 }
 
-fn add_abi_to_project(
-    abi_file_contents: String,
-    contract_name: &String,
-    project_dir: &PathBuf,
-) {
+fn add_abi_to_project(abi_file_contents: String, contract_name: &String, project_dir: &PathBuf) {
     let abi_dir = project_dir.join("abi");
     let contract_filepath = if contract_name.ends_with(".json") {
         abi_dir.join(contract_name)
@@ -290,7 +313,10 @@ fn add_abi_to_project(
             filepath: build_rs_filepath,
             file_contents: get_build_rs_default_file_contents(),
         }));
-        if cargo_toml_contents.add_build_dependencies(vec!["anyhow".into_dep(), "substreams-common".dep_with_local_path("common")]) {
+        if cargo_toml_contents.add_build_dependencies(vec![
+            "anyhow".into_dep(),
+            "substreams-common".dep_with_local_path("common"),
+        ]) {
             operations.push(FileContentsModification::UpdateFile(File {
                 filepath: cargo_toml_filepath,
                 file_contents: cargo_toml_contents.get_file_contents(),

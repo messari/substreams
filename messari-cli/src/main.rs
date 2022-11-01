@@ -1,11 +1,11 @@
 mod abi;
 mod automapper;
-mod terminal_interface;
 mod command_line_client;
 mod commands;
-mod protocols;
-mod utils;
 mod file_modification;
+mod protocols;
+mod terminal_interface;
+mod utils;
 
 use clap::Parser;
 
@@ -15,4 +15,3 @@ fn main() {
     let mut client: CommandLineClient = CommandLineClient::parse();
     client.execute();
 }
-    

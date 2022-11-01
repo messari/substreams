@@ -1,10 +1,10 @@
 use std::fs;
 use std::path::PathBuf;
-use yaml_rust::{YamlLoader, YamlEmitter, Yaml};
+use yaml_rust::{Yaml, YamlEmitter, YamlLoader};
 
 pub(crate) struct SubstreamsYaml {
-    substreams_yaml_dir: PathBuf,  // This is parent directory for the substreams.yaml file
-    yaml: Yaml
+    substreams_yaml_dir: PathBuf, // This is parent directory for the substreams.yaml file
+    yaml: Yaml,
 }
 
 impl SubstreamsYaml {
@@ -20,24 +20,33 @@ impl SubstreamsYaml {
             binaries:\n    \
                 default:\n        \
                     type: wasm/rust-v1\n        \
-                    file: ../target/wasm32-unknown-unknown/release/{0}.wasm", project_name);
+                    file: ../target/wasm32-unknown-unknown/release/{0}.wasm",
+            project_name
+        );
 
         SubstreamsYaml {
             substreams_yaml_dir,
-            yaml: YamlLoader::load_from_str(yaml_contents.as_str()).unwrap()[0].clone()
+            yaml: YamlLoader::load_from_str(yaml_contents.as_str()).unwrap()[0].clone(),
         }
     }
 
     pub(crate) fn load_from_file(substreams_yaml_filepath: &PathBuf) -> Self {
         let substreams_yaml_dir = substreams_yaml_filepath.parent().unwrap().to_path_buf();
 
-        let yaml_contents = fs::read_to_string(substreams_yaml_filepath).expect(&format!("Unable to read substreams_yaml contents! Filepath: {}", substreams_yaml_filepath.to_string_lossy()));
-        let yaml = YamlLoader::load_from_str(yaml_contents.as_str()).expect(&format!("Unable to read substreams_yaml contents! Filepath: {}\nFile contents: {}",
-                                                                                     substreams_yaml_filepath.to_string_lossy(), yaml_contents))[0].clone();
+        let yaml_contents = fs::read_to_string(substreams_yaml_filepath).expect(&format!(
+            "Unable to read substreams_yaml contents! Filepath: {}",
+            substreams_yaml_filepath.to_string_lossy()
+        ));
+        let yaml = YamlLoader::load_from_str(yaml_contents.as_str()).expect(&format!(
+            "Unable to read substreams_yaml contents! Filepath: {}\nFile contents: {}",
+            substreams_yaml_filepath.to_string_lossy(),
+            yaml_contents
+        ))[0]
+            .clone();
 
         SubstreamsYaml {
             substreams_yaml_dir,
-            yaml
+            yaml,
         }
     }
 

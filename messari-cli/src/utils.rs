@@ -28,8 +28,8 @@ impl StaticStrExt for &'static str {
         Dependency {
             crate_name: self,
             location: Location::Remote {
-                major_version_requirement: Some(major_version_requirement)
-            }
+                major_version_requirement: Some(major_version_requirement),
+            },
         }
     }
 
@@ -37,8 +37,8 @@ impl StaticStrExt for &'static str {
         Dependency {
             crate_name: self,
             location: Location::Local {
-                local_path: local_path.into()
-            }
+                local_path: local_path.into(),
+            },
         }
     }
 
@@ -52,24 +52,9 @@ impl StaticStrExt for &'static str {
     fn into_dep(self) -> Dependency {
         Dependency {
             crate_name: self,
-            location: Location::Remote {major_version_requirement: None},
-        }
-    }
-}
-
-pub(crate) trait PathBufExt {
-    fn clean_path(&mut self);
-}
-
-impl PathBufExt for PathBuf {
-    fn clean_path(&mut self) {
-        let cleaned_path = self.canonicalize().expect(&format!("Unable to find file!: {}", self.to_string_lossy()));
-        let cleaned_path_string = cleaned_path.to_string_lossy().to_string();
-        if cleaned_path_string.starts_with("\\\\?\\") {
-            // This .canonicalize() is pretty dodgy.. we need to clean it up..
-            *self = PathBuf::from(cleaned_path_string[4..].to_string());
-        } else {
-            *self = cleaned_path;
+            location: Location::Remote {
+                major_version_requirement: None,
+            },
         }
     }
 }
@@ -101,5 +86,9 @@ pub(crate) fn get_relative_path_from_root_folder(folder_path: &PathBuf) -> Strin
 }
 
 pub(crate) fn get_relative_path(starting_path: &PathBuf, target_path: &PathBuf) -> String {
-    pathdiff::diff_paths(target_path, starting_path).unwrap().to_string_lossy().to_string().replace("\\", "/")
+    pathdiff::diff_paths(target_path, starting_path)
+        .unwrap()
+        .to_string_lossy()
+        .to_string()
+        .replace("\\", "/")
 }

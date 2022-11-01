@@ -1,16 +1,18 @@
 use clap::{Parser, ValueEnum};
-use std::{fs, mem};
+use std::mem;
 use std::path::PathBuf;
 use strum_macros::{EnumIter, EnumVariantNames};
 
-use crate::abi::{add_abis, AbisArg};
+use crate::abi::{add_abis, AbisArgs};
 use crate::file_modification::cargo_toml::CargoToml;
-use crate::terminal_interface::{get_input, select_from_enum};
-use crate::file_modification::file_contents_modifier::{safely_modify_file_contents, File, FileContentsModification};
+use crate::file_modification::file_contents_modifier::{
+    create_dir_all, safely_modify_file_contents, File, FileContentsModification,
+};
 use crate::file_modification::makefile::MakeFile;
 use crate::file_modification::substreams_yaml::SubstreamsYaml;
 use crate::protocols::ProtocolAndNetworkArgs;
-use crate::utils::{get_current_directory, get_repo_root_folder, PathBufExt};
+use crate::terminal_interface::{get_input, select_from_enum};
+use crate::utils::{get_current_directory, get_repo_root_folder};
 
 #[derive(Parser)]
 pub(crate) struct Init {
@@ -20,7 +22,7 @@ pub(crate) struct Init {
         short = 'd',
         long,
         value_name = "Base Directory",
-        help = "Specify a directory for the project directory to be created in. Leave blank for project directory to be created in current directory."
+        help = "Specify a directory for the project directory to be created in. Relative paths should start with \"./\" or \"../\". Leave blank for project directory to be created in current directory."
     )]
     pub(crate) base_dir: Option<String>,
     #[arg(short = 'i', long, value_name = "Project Description")]
@@ -31,7 +33,7 @@ pub(crate) struct Init {
     #[clap(flatten)]
     pub(crate) protocol_and_network_args: ProtocolAndNetworkArgs,
     #[clap(flatten)]
-    pub(crate) abis_arg: AbisArg,
+    pub(crate) abis_arg: AbisArgs,
 }
 
 #[derive(ValueEnum, Clone, EnumIter, EnumVariantNames, PartialEq)]
@@ -65,17 +67,11 @@ impl Init {
             if base_dir.is_relative() {
                 // If relative it will always be treated as relative to the current directory
                 base_dir = get_current_directory().join(base_dir);
-                // TODO: This create_dir_all command should be replace for an operation in the safely_modify_file_contents() fn.
-                fs::create_dir_all(&base_dir).expect(&format!("Unable to create base directory: {}.", base_dir.to_string_lossy()));
-                base_dir.clean_path();
             } else {
                 if !base_dir.exists() {
                     // Absolute paths have to already exist although relative paths are allowed to be created
                     panic!("Directory: {} does not exist!", base_dir.to_string_lossy());
                 }
-            }
-            if !base_dir.is_dir() {
-                panic!("Input: {}, is not a directory!", base_dir.to_string_lossy());
             }
             base_dir
         };
@@ -83,7 +79,10 @@ impl Init {
         let project_dir = base_dir.join(&project_name);
 
         if project_dir.exists() {
-            panic!("Project you are trying to create already exists!! Project filepath: {}", project_dir.to_string_lossy());
+            panic!(
+                "Project you are trying to create already exists!! Project filepath: {}",
+                project_dir.to_string_lossy()
+            );
         }
 
         let project_description =
@@ -102,10 +101,10 @@ impl Init {
                 }
             };
 
-        if self.project_type == Some(ProjectType::SubstreamsProject)
+        if !(self.project_type == Some(ProjectType::SubstreamsProject)
             || self.protocol_and_network_args.protocol_type.is_some()
             || self.protocol_and_network_args.network.is_some()
-            || self.abis_arg.abis.is_some()
+            || self.abis_arg.abis.is_some())
         {
             // User has not given enough information for us to determine what sort of project they want to build yet so we need to find out
             let project_type: ProjectType = select_from_enum("Project type", Some(0));
@@ -145,22 +144,28 @@ fn create_library_project(
     let mut root_cargo_toml_contents = CargoToml::load_from_file(&root_cargo_toml);
     root_cargo_toml_contents.add_project_to_workspace(&project_dir);
 
-    let operations = vec![
-        FileContentsModification::CreateFolder(project_dir.clone()),
+    let mut operations = create_dir_all(project_dir);
+    operations.extend(vec![
         FileContentsModification::CreateFolder(src_dir),
         FileContentsModification::UpdateFile(File {
             file_contents: root_cargo_toml_contents.get_file_contents(),
-            filepath: root_cargo_toml
+            filepath: root_cargo_toml,
         }),
         FileContentsModification::CreateFile(File {
             filepath: lib_file,
             file_contents: "".to_string(),
         }),
         FileContentsModification::CreateFile(File {
-            file_contents: CargoToml::new(project_name, project_description, ProjectType::LibraryProject, &project_cargo_toml).get_file_contents(),
+            file_contents: CargoToml::new(
+                project_name,
+                project_description,
+                ProjectType::LibraryProject,
+                &project_cargo_toml,
+            )
+            .get_file_contents(),
             filepath: project_cargo_toml,
         }),
-    ];
+    ]);
 
     safely_modify_file_contents(operations);
 }
@@ -191,34 +196,41 @@ fn create_substreams_project(
     let mut project_makefile_contents = MakeFile::new(&project_makefile);
     project_makefile_contents.add_build_operation();
 
-    let operations = vec![
-        FileContentsModification::CreateFolder(project_dir.clone()),
+    let mut operations = create_dir_all(project_dir.clone());
+    operations.extend(vec![
         FileContentsModification::CreateFolder(src_dir),
         FileContentsModification::UpdateFile(File {
             filepath: root_cargo_toml,
-            file_contents: root_cargo_toml_contents.get_file_contents()
+            file_contents: root_cargo_toml_contents.get_file_contents(),
         }),
         FileContentsModification::UpdateFile(File {
             filepath: root_makefile,
-            file_contents: root_makefile_contents.get_file_contents()
+            file_contents: root_makefile_contents.get_file_contents(),
         }),
         FileContentsModification::CreateFile(File {
             filepath: lib_file,
-            file_contents: "".to_string()
+            file_contents: "".to_string(),
         }),
         FileContentsModification::CreateFile(File {
-            file_contents: SubstreamsYaml::new(project_name.as_str(), &substreams_yaml).get_file_contents(),
-            filepath: substreams_yaml
+            file_contents: SubstreamsYaml::new(project_name.as_str(), &substreams_yaml)
+                .get_file_contents(),
+            filepath: substreams_yaml,
         }),
         FileContentsModification::CreateFile(File {
-            file_contents: CargoToml::new(project_name, project_description, ProjectType::SubstreamsProject, &project_cargo_toml).get_file_contents(),
-            filepath: project_cargo_toml
+            file_contents: CargoToml::new(
+                project_name,
+                project_description,
+                ProjectType::SubstreamsProject,
+                &project_cargo_toml,
+            )
+            .get_file_contents(),
+            filepath: project_cargo_toml,
         }),
         FileContentsModification::CreateFile(File {
             filepath: project_makefile,
-            file_contents: project_makefile_contents.get_file_contents()
+            file_contents: project_makefile_contents.get_file_contents(),
         }),
-    ];
+    ]);
 
     safely_modify_file_contents(operations);
 }

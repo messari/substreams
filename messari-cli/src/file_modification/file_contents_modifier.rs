@@ -58,6 +58,22 @@ fn rollback_file_contents_changes(rollback_operations: Vec<FileContentsModificat
     panic!("Rollback complete - exiting program");
 }
 
+pub(crate) fn create_dir_all(mut directory: PathBuf) -> Vec<FileContentsModification> {
+    let mut dir_creation_operations = Vec::new();
+    while !directory.exists() {
+        dir_creation_operations.push(FileContentsModification::CreateFolder(directory.clone()));
+        directory = if let Some(parent_dir) = directory.parent() {
+            parent_dir.to_path_buf()
+        } else {
+            dir_creation_operations.reverse();
+            return dir_creation_operations;
+        }
+    }
+
+    dir_creation_operations.reverse();
+    dir_creation_operations
+}
+
 pub(crate) enum FileContentsModification {
     CreateFile(File),
     UpdateFile(File),
@@ -127,7 +143,7 @@ impl FileContentsModification {
                 fs::write(file.filepath, file.file_contents)
             }
             FileContentsModification::DeleteFile(filepath) => fs::remove_file(filepath),
-            FileContentsModification::CreateFolder(folder_path) => fs::create_dir_all(folder_path),
+            FileContentsModification::CreateFolder(folder_path) => fs::create_dir(folder_path),
             FileContentsModification::DeleteFolder(folder_path) => fs::remove_dir_all(folder_path),
         }
     }

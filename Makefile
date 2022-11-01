@@ -20,4 +20,8 @@ run-all:
 .PHONY: test
 test:
 	$(MAKE) build-all
-	$(MAKE) example-all
+	$(MAKE) run-all
+
+.PHONY: install-cli
+install-cli:
+	cargo install --path ./messari-cli

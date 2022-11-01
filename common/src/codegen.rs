@@ -96,10 +96,12 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     fs::create_dir_all(&target_pb_dir).ok();
 
     // Move all pb files to target folder
-    for file in fs::read_dir(&pb_dir).unwrap().into_iter() {
-        let current_filepath = file.unwrap().path();
-        let target_filepath = target_pb_dir.join(current_filepath.file_name().unwrap());
-        fs::rename(&current_filepath, &target_filepath).ok();
+    if let Ok(read_dir) = fs::read_dir(&pb_dir) {
+        for file in read_dir.into_iter() {
+            let current_filepath = file.unwrap().path();
+            let target_filepath = target_pb_dir.join(current_filepath.file_name().unwrap());
+            fs::rename(&current_filepath, &target_filepath).ok();
+        }
     }
 
     fs::create_dir(pb_dir.clone()).ok();
@@ -135,9 +137,8 @@ pub fn generate(out_dir: Option<&str>) -> Result<(), Error> {
 /// Get filenames without file type suffix
 pub fn dir_filenames(path: impl AsRef<OsStr>) -> Vec<String> {
     println!("Searching for files in {}", path.as_ref().to_str().unwrap());
-    fs::read_dir(&path.as_ref())
-        .unwrap()
-        .map(|x| {
+    if let Ok(read_dir) = fs::read_dir(&path.as_ref()) {
+        read_dir.map(|x| {
             x.unwrap()
                 .path()
                 .file_stem()
@@ -146,5 +147,8 @@ pub fn dir_filenames(path: impl AsRef<OsStr>) -> Vec<String> {
                 .unwrap()
                 .to_string()
         })
-        .collect::<Vec<String>>()
+            .collect::<Vec<String>>()
+    } else {
+        Vec::new()
+    }
 }

@@ -1,5 +1,5 @@
 use dialoguer::theme::ColorfulTheme;
-use dialoguer::{Input, Select, FuzzySelect};
+use dialoguer::{FuzzySelect, Input, Select};
 use lazy_static::lazy_static;
 use strum::{IntoEnumIterator, VariantNames};
 
