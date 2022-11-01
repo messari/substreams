@@ -138,15 +138,16 @@ pub fn generate(out_dir: Option<&str>) -> Result<(), Error> {
 pub fn dir_filenames(path: impl AsRef<OsStr>) -> Vec<String> {
     println!("Searching for files in {}", path.as_ref().to_str().unwrap());
     if let Ok(read_dir) = fs::read_dir(&path.as_ref()) {
-        read_dir.map(|x| {
-            x.unwrap()
-                .path()
-                .file_stem()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .to_string()
-        })
+        read_dir
+            .map(|x| {
+                x.unwrap()
+                    .path()
+                    .file_stem()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string()
+            })
             .collect::<Vec<String>>()
     } else {
         Vec::new()

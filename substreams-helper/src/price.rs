@@ -1,7 +1,7 @@
 use std::ops::Div;
 
-use substreams::scalar::BigDecimal;
 use hex_literal::hex;
+use substreams::scalar::BigDecimal;
 
 use crate::{abi, math, types};
 
@@ -98,9 +98,7 @@ fn via_chainlink_feed_registry(
         .call(network_config.chainlink_feed_registry.to_vec());
 
         if let (Some(price_mantissa), Some(decimals)) = (price_mantissa_res, decimals_res) {
-            Some(
-                price_mantissa.1.to_decimal(decimals.to_u64()),
-            )
+            Some(price_mantissa.1.to_decimal(decimals.to_u64()))
         } else {
             None
         }

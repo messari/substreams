@@ -6,13 +6,13 @@ pub mod pb;
 mod keyer;
 
 use hex_literal::hex;
+use substreams::store::StoreNew;
+use substreams::store::StoreSetRaw;
 use substreams::store::{StoreGet, StoreGetRaw, StoreSet};
 use substreams::{log, proto, store, Hex};
 use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
 use substreams_helper::erc20;
 use substreams_helper::types::Address;
-use substreams::store::StoreSetRaw;
-use substreams::store::StoreNew;
 
 use abi::factory;
 use abi::pair;

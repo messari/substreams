@@ -4,16 +4,16 @@ pub mod pb;
 
 use prost::Message;
 use prost_types::Timestamp;
-use substreams::{log, store};
 use substreams::scalar::BigInt;
-use substreams::store::{StoreAdd, StoreGet, StoreSet};
-use substreams_ethereum::pb::eth::v2::{self as eth};
-use substreams_ethereum::scalar::BigIntSign;
 use substreams::store::StoreAddBigInt;
 use substreams::store::StoreGetBigInt;
-use substreams::store::StoreNew;
 use substreams::store::StoreGetRaw;
+use substreams::store::StoreNew;
 use substreams::store::StoreSetRaw;
+use substreams::store::{StoreAdd, StoreGet, StoreSet};
+use substreams::{log, store};
+use substreams_ethereum::pb::eth::v2::{self as eth};
+use substreams_ethereum::scalar::BigIntSign;
 
 use crate::pb::network::v1::{self as network, Network};
 
@@ -77,7 +77,9 @@ impl<'a> CumulativeValuesStore<'a> {
     pub fn get_value(&self, ordinal: u64, key: &str) -> Option<network::BigInt> {
         self.0
             .get_at(ordinal, format!("{}:{}", CUMULATIVE_KEY, key))
-            .map(|bigint| network::BigInt { bytes: bigint.to_bytes_le().1 })
+            .map(|bigint| network::BigInt {
+                bytes: bigint.to_bytes_le().1,
+            })
     }
 
     pub fn get_network(&self, ordinal: u64) -> Network {

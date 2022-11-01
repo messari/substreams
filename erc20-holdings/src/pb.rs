@@ -1,2 +1,2 @@
-pub mod common;
 pub mod erc20;
+pub mod common;

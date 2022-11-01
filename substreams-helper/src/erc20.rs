@@ -1,8 +1,8 @@
 use std::ops::Div;
 
-use substreams::Hex;
-use substreams::scalar::BigInt;
 use crate::abi;
+use substreams::scalar::BigInt;
+use substreams::Hex;
 
 pub struct Erc20Token {
     pub address: String,
