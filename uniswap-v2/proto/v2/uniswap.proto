@@ -20,43 +20,41 @@ message PairCreatedEvents {
   repeated PairCreatedEvent items = 1;
 }
 
+message Event {
+  oneof type {
+    SwapEvent swap = 1;
+    BurnEvent burn = 2;
+    MintEvent mint = 3;
+  }
+  uint64 log_ordinal = 100;
+  uint64 log_index = 101;
+  string pool_address = 102;
+  string tx_hash = 106;
+  uint64 timestamp = 107;
+  uint64 created_at_block_number = 108;
+}
+
+message Events {
+  repeated Event items = 1;
+}
+
 // event Mint(address indexed sender, uint amount0, uint amount1);
 message MintEvent {
-  string tx_hash = 1; // bytes: Hash
-  uint32 log_index = 2;
-  uint64 log_ordinal = 3;
-
   string sender = 10; // bytes: Address
   string amount0 = 11; // string: BigInt
   string amount1 = 12; // string: BigInt
 }
 
-message MintEvents {
-  repeated MintEvent items = 1;
-}
-
 // event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
 message BurnEvent {
-  string tx_hash = 1; // bytes: Hash
-  uint32 log_index = 2;
-  uint64 log_ordinal = 3;
-
   string sender = 10; // bytes: Address
   string amount0 = 11; // string: BigInt
   string amount1 = 12; // string: BigInt
   string to = 13; // bytes: Address
 }
 
-message BurnEvents {
-  repeated BurnEvent items = 1;
-}
-
 // event Swap(address indexed sender, uint amount0In, uint amount1In, uint amount0Out, uint amount1Out, address indexed to);
 message SwapEvent {
-  string tx_hash = 1; // bytes: Hash
-  uint32 log_index = 2;
-  uint64 log_ordinal = 3;
-
   string sender = 10; // bytes: Address
   string amount0In = 11; // string: BigInt
   string amount1In = 12; // string: BigInt
@@ -65,16 +63,8 @@ message SwapEvent {
   string to = 15; // bytes: Address
 }
 
-message SwapEvents {
-  repeated SwapEvent items = 1;
-}
-
 // event Sync(uint112 reserve0, uint112 reserve1);
 message SyncEvent {
-  string tx_hash = 1; // bytes: Hash
-  uint32 log_index = 2;
-  uint64 log_ordinal = 3;
-
   string reserve0 = 10; // string: BigInt
   string reserve1 = 11; // string: BigInt
 }
