@@ -1,0 +1,25 @@
+[package]
+name = "messari-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dialoguer = { git="https://github.com/robinbernon/dialoguer", branch="replace_prompt_when_finished", features=["fuzzy-select"] }
+reqwest = { version = "0.11.12", features = ["blocking"] }
+clap = { version = "4.0.15", features = ["derive"] }
+serde = { version="1.0.144", features=["derive"] }
+strum_macros = "0.24.3"
+lazy_static = "1.4.0"
+serde_json = "1.0.85"
+cargo-edit = "0.11.5"
+yaml-rust = "0.4.5"
+spinners = "4.1.0"
+pathdiff = "0.2.1"
+semver = "1.0.14"
+strum = "0.24.1"
+regex = "1.6.0"
+url = "2.3.1"
+
+[[bin]]
+name = "messari"
+path = "src/main.rs"

@@ -28,3 +28,12 @@
 ### Helpers
 
 - [Keccak 256 Encoder](https://emn178.github.io/online-tools/keccak_256.html)
+
+### Messari Command line interface
+
+- To install run: `make install-cli`
+- Two commands are currently available:
+    - `messari init`
+    -  `messari add abi`
+- Use `--help` flag for details around providing args in the command line
+- If any args are left blank the CLI will ask you for the necessary information when needed

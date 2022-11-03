@@ -84,39 +84,47 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
             .insert(version.to_owned());
     }
 
-    let pb_mod_content = pb_files
-        .iter()
-        .map(|(pb, _)| format!("pub mod {};", pb))
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    fs::write("src/pb.rs", pb_mod_content).unwrap();
-
     // Create target directories
-    fs::create_dir_all(&target_pb_dir).ok();
-
-    // Move all pb files to target folder
-    for file in fs::read_dir(&pb_dir).unwrap().into_iter() {
-        let current_filepath = file.unwrap().path();
-        let target_filepath = target_pb_dir.join(current_filepath.file_name().unwrap());
-        fs::rename(&current_filepath, &target_filepath).ok();
+    if !target_pb_dir.exists() {
+        fs::create_dir_all(&target_pb_dir).unwrap();
     }
 
-    fs::create_dir(pb_dir.clone()).ok();
+    // Move all pb files to target folder
+    if let Ok(read_dir) = fs::read_dir(&pb_dir) {
+        for file in read_dir.into_iter() {
+            let current_filepath = file.unwrap().path();
+            let target_filepath = target_pb_dir.join(current_filepath.file_name().unwrap());
+            fs::rename(&current_filepath, &target_filepath).ok();
+        }
+    }
 
-    for (filename, versions) in pb_files.iter() {
-        let pb_file = format!("src/pb/{}.rs", filename);
-        let content = versions
+    if !pb_files.is_empty() {
+        if !pb_dir.exists() {
+            fs::create_dir(&pb_dir).unwrap();
+        }
+
+        let pb_mod_content = pb_files
             .iter()
-            .map(|v| {
-                format!(
-                    "#[rustfmt::skip]\n#[path = \"../../{}/pb/messari.{}.{}.rs\"]\npub mod {};\n",
-                    out_dir, filename, v, v
-                )
-            })
+            .map(|(pb, _)| format!("pub mod {};", pb))
             .collect::<Vec<_>>()
             .join("\n");
 
+        fs::write(pb_dir.join("mod.rs"), pb_mod_content).unwrap();
+    }
+
+    for (filename, versions) in pb_files.iter() {
+        let content = versions
+        .iter()
+        .map(|v| {
+            format!(
+                    "#[rustfmt::skip]\n#[path = \"../../{}/pb/messari.{}.{}.rs\"]\npub mod {};\n",
+                    out_dir, filename, v, v
+                )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+        let pb_file = format!("src/pb/{}.rs", filename);
         fs::write(pb_file, content).unwrap();
     }
 
@@ -135,16 +143,19 @@ pub fn generate(out_dir: Option<&str>) -> Result<(), Error> {
 /// Get filenames without file type suffix
 pub fn dir_filenames(path: impl AsRef<OsStr>) -> Vec<String> {
     println!("Searching for files in {}", path.as_ref().to_str().unwrap());
-    fs::read_dir(&path.as_ref())
-        .unwrap()
-        .map(|x| {
-            x.unwrap()
-                .path()
-                .file_stem()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .to_string()
-        })
-        .collect::<Vec<String>>()
+    if let Ok(read_dir) = fs::read_dir(&path.as_ref()) {
+        read_dir
+            .map(|x| {
+                x.unwrap()
+                    .path()
+                    .file_stem()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string()
+            })
+            .collect::<Vec<String>>()
+    } else {
+        Vec::new()
+    }
 }
