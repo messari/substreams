@@ -84,16 +84,10 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
             .insert(version.to_owned());
     }
 
-    let pb_mod_content = pb_files
-        .iter()
-        .map(|(pb, _)| format!("pub mod {};", pb))
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    fs::write("src/pb.rs", pb_mod_content).unwrap();
-
     // Create target directories
-    fs::create_dir_all(&target_pb_dir).ok();
+    if !target_pb_dir.exists() {
+        fs::create_dir_all(&target_pb_dir).unwrap();
+    }
 
     // Move all pb files to target folder
     if let Ok(read_dir) = fs::read_dir(&pb_dir) {
@@ -104,21 +98,33 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         }
     }
 
-    fs::create_dir(pb_dir.clone()).ok();
+    if !pb_files.is_empty() {
+        if !pb_dir.exists() {
+            fs::create_dir(&pb_dir).unwrap();
+        }
 
-    for (filename, versions) in pb_files.iter() {
-        let pb_file = format!("src/pb/{}.rs", filename);
-        let content = versions
+        let pb_mod_content = pb_files
             .iter()
-            .map(|v| {
-                format!(
-                    "#[rustfmt::skip]\n#[path = \"../../{}/pb/messari.{}.{}.rs\"]\npub mod {};\n",
-                    out_dir, filename, v, v
-                )
-            })
+            .map(|(pb, _)| format!("pub mod {};", pb))
             .collect::<Vec<_>>()
             .join("\n");
 
+        fs::write(pb_dir.join("mod.rs"), pb_mod_content).unwrap();
+    }
+
+    for (filename, versions) in pb_files.iter() {
+        let content = versions
+        .iter()
+        .map(|v| {
+            format!(
+                    "#[rustfmt::skip]\n#[path = \"../../{}/pb/messari.{}.{}.rs\"]\npub mod {};\n",
+                    out_dir, filename, v, v
+                )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+        let pb_file = format!("src/pb/{}.rs", filename);
         fs::write(pb_file, content).unwrap();
     }
 
