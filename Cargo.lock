@@ -186,6 +186,7 @@ dependencies = [
  "anyhow",
  "ethabi",
  "hex-literal",
+ "lazy_static",
  "prost",
  "substreams",
  "substreams-common",

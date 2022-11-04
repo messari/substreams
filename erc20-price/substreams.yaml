@@ -43,10 +43,11 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
 
-  - name: store_chainlink_eth_price
+  - name: store_chainlink_price
     kind: store
-    initialBlock: 10607717
+    initialBlock: 15336228
     updatePolicy: set
-    valueType: proto:messari.erc20_price.v1.Erc20Prices
+    valueType: proto:messari.erc20_price.v1.Erc20Price
     inputs:
       - source: sf.ethereum.type.v2.Block
+      - store: store_chainlink_aggregator

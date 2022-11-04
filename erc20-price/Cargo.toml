@@ -15,7 +15,11 @@ hex-literal = "0.3.4"
 substreams.workspace = true
 substreams-ethereum.workspace = true
 substreams-helper = { path = "../substreams-helper" }
+lazy_static = "1.4.0"
 
 [build-dependencies]
 anyhow = "1"
 substreams-common = { path = "../common" }
+
+[dependencies]
+lazy_static = "1.4.0"
