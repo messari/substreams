@@ -8,7 +8,7 @@ repository = "https://github.com/messari/substreams/"
 [lib]
 crate-type = ["cdylib"]
 
-[target.wasm32-unknown-unknown.dependencies]
+[dependencies]
 ethabi = "17.0"
 hex-literal = "0.3.4"
 prost = "0.11.0"

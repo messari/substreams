@@ -1,9 +1,3 @@
-# NOTE: The erc20-price-substreams-v0.1.0.spkg must be available at the root of this crate.
-
-.PHONY: codegen
-codegen:
-	substreams protogen ./substreams.yaml --exclude-paths="sf/ethereum,sf/substreams,google"
-
 .PHONY: build
 build:
 	$(MAKE) -C ../erc20-price build

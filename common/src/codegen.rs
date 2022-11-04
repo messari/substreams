@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::env::current_dir;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::Path;
@@ -54,40 +55,62 @@ pub fn generate_abi(out_dir: Option<&str>) -> Result<(), Error> {
 
 pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     let out_dir = out_dir.unwrap_or(DEFAULT_OUTPUT_DIR);
-    let pb_dir = Path::new("src").join("pb");
-    let target_pb_dir = Path::new(out_dir).join("pb");
+    let pb_dir = current_dir().unwrap().join("src").join("pb");
+    let target_pb_dir = current_dir().unwrap().join(out_dir).join("pb");
+    let substreams_yaml = current_dir().unwrap().join("substreams.yaml");
 
     // Remove previous generated files
     fs::remove_dir_all(&target_pb_dir).ok();
     fs::remove_dir_all(&pb_dir).ok();
 
     // generate pb files under src/pb
-    Command::new("make")
-        .args(&["codegen"])
+    Command::new("substreams")
+        .args(&["protogen", substreams_yaml.to_string_lossy().as_ref(), "--output-path=\"{manifestDir}/src/pb\""])
         .status()
         .expect("failed to run substreams protogen");
 
-    // Create target directories
-    fs::create_dir_all(&target_pb_dir).ok();
-
-    let mut pb_files = HashMap::new();
-    let pb_filenames = dir_filenames(&pb_dir);
-    for file in pb_filenames.iter() {
-        // parse version from file name
-        let filename = file.split('.').collect::<Vec<&str>>();
-        // let package_name = filename[0];
-        let name = filename[1];
-        let version = filename[2];
-        pb_files
-            .entry(name)
-            .or_insert(HashSet::new())
-            .insert(version.to_owned());
+    // Cleanup unwanted .proto bindings
+    if let Ok(read_dir) = fs::read_dir(&pb_dir) {
+        read_dir
+            .map(|x| {
+                let dir_entry = x.unwrap();
+                (dir_entry.path(), dir_entry.file_name().to_string_lossy().to_string())
+            })
+            .for_each(|(filepath, filename)| {
+                if filename.starts_with("sf.ethereum") || filename.starts_with("sf.substreams") || filename.starts_with("google") {
+                    fs::remove_file(filepath).unwrap();
+                }
+            });
     }
 
     // Create target directories
     if !target_pb_dir.exists() {
         fs::create_dir_all(&target_pb_dir).unwrap();
     }
+
+    let pb_files = {
+        let mut pb_files_hash = HashMap::new();
+        let pb_filenames = dir_filenames(&pb_dir);
+        for file in pb_filenames.iter() {
+            // parse version from file name
+            let filename = file.split('.').collect::<Vec<&str>>();
+            // let package_name = filename[0];
+            let name = filename[1].to_string();
+            let version = filename[2];
+            pb_files_hash
+                .entry(name)
+                .or_insert(HashSet::new())
+                .insert(version.to_owned());
+        }
+        let mut pb_files_vec = pb_files_hash.into_iter().map(|(filename, versions_hash)| {
+            let mut versions = versions_hash.into_iter().collect::<Vec<_>>();
+            versions.sort();
+            (filename, versions)
+        }).collect::<Vec<_>>();
+
+        pb_files_vec.sort_by(|(filename1, _), (filename2, _)| filename1.cmp(filename2));
+        pb_files_vec
+    };
 
     // Move all pb files to target folder
     if let Ok(read_dir) = fs::read_dir(&pb_dir) {
@@ -103,11 +126,13 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
             fs::create_dir(&pb_dir).unwrap();
         }
 
-        let pb_mod_content = pb_files
+        let mut pb_mod_content = pb_files
             .iter()
             .map(|(pb, _)| format!("pub mod {};", pb))
             .collect::<Vec<_>>()
             .join("\n");
+
+        pb_mod_content.push_str("\n");
 
         fs::write(pb_dir.join("mod.rs"), pb_mod_content).unwrap();
     }
