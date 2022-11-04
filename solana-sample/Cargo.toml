@@ -1,0 +1,21 @@
+[package]
+name = "solana-sample"
+version = "0.1.0"
+description = "Sample substreams for Solana"
+edition = "2021"
+repository = "https://github.com/messari/substreams/solana-sample"
+
+[target.wasm32-unknown-unknown.dependencies]
+substreams-helper = { path = "../substreams-helper" }
+substreams-solana = { workspace = true }
+substreams = { workspace = true }
+ethabi = "17.2.0"
+hex-literal = "0.3.4"
+prost = { version = "0.10.1" }
+prost-types = "0.10.1"
+
+[lib]
+crate-type = ["cdylib"]
+
+[build-dependencies]
+prost-build = "0.10.1"
