@@ -114,15 +114,15 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
 
     for (filename, versions) in pb_files.iter() {
         let content = versions
-        .iter()
-        .map(|v| {
-            format!(
+            .iter()
+            .map(|v| {
+                format!(
                     "#[rustfmt::skip]\n#[path = \"../../{}/pb/messari.{}.{}.rs\"]\npub mod {};\n",
                     out_dir, filename, v, v
                 )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
 
         let pb_file = format!("src/pb/{}.rs", filename);
         fs::write(pb_file, content).unwrap();
