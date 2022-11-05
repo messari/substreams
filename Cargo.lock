@@ -316,8 +316,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4eb1a864a501629691edf6c15a593b7a51eebaa1e8468e9ddc623de7c9b58ec6"
 dependencies = [
  "cfg-if 1.0.0",
+ "js-sys",
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -886,12 +888,12 @@ name = "solana-sample"
 version = "0.1.0"
 dependencies = [
  "ethabi",
+ "getrandom",
  "hex-literal",
  "prost 0.10.4",
  "prost-build 0.10.4",
  "prost-types 0.10.1",
- "substreams 0.3.2",
- "substreams-helper",
+ "substreams 0.0.11",
  "substreams-solana",
 ]
 
@@ -900,6 +902,23 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "substreams"
+version = "0.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c204a4e230019ce60eb11f0a9561e9030eeb7dbc2c15bddd5ab9e58aa96b262"
+dependencies = [
+ "bigdecimal",
+ "hex",
+ "hex-literal",
+ "num-bigint",
+ "prost 0.10.4",
+ "prost-build 0.10.4",
+ "prost-types 0.10.1",
+ "substreams-macro 0.0.11",
+ "thiserror",
+]
 
 [[package]]
 name = "substreams"
@@ -1056,6 +1075,18 @@ dependencies = [
  "substreams-ethereum",
  "thiserror",
  "tiny-keccak",
+]
+
+[[package]]
+name = "substreams-macro"
+version = "0.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6f0db235f75c362557d3ce78c481535b51a688e189a030dc2d8610d8b6526a20"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+ "thiserror",
 ]
 
 [[package]]

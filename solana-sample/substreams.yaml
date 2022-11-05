@@ -1,6 +1,6 @@
 specVersion: v0.1.0
 package:
-  name: solana-sample
+  name: solana_sample
   version: v0.1.0
 
 imports:
@@ -9,12 +9,12 @@ imports:
 binaries:
   default:
     type: wasm/rust-v1
-    file: "../target/wasm32-unknown-unknown/release/solana-sample.wasm"
+    file: "../target/wasm32-unknown-unknown/release/solana_sample.wasm"
 
 modules:
     - name: store_test
       kind: store
       updatePolicy: set
-      valueType: bigint
+      valueType: bytes
       inputs:
         - source: sf.solana.type.v1.Block
