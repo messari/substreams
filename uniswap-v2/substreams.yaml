@@ -38,28 +38,98 @@ modules:
     inputs:
       - map: map_pair_created_events
 
-  - name: map_pools
-    kind: map
-    inputs:
-      - map: map_pair_created_events
-    output:
-      type: proto:messari.dex_amm.v1.Pools
-
-  - name: store_pools
-    kind: store
-    updatePolicy: set
-    valueType: proto:messari.dex_amm.v1.Pools
-    inputs:
-      - map: map_pools
-
   - name: map_mint_events
     kind: map
     initialBlock: 10000835
     inputs:
       - source: sf.ethereum.type.v2.Block
-      - store: store_pools
+      - store: store_pair_created_events
     output:
       type: proto:messari.uniswap.v2.MintEvents
+
+  - name: map_burn_events
+    kind: map
+    initialBlock: 10000835
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pair_created_events
+    output:
+      type: proto:messari.uniswap.v2.BurnEvents
+
+  - name: map_swap_events
+    kind: map
+    initialBlock: 10000835
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pair_created_events
+    output:
+      type: proto:messari.uniswap.v2.SwapEvents
+
+  - name: map_deposits
+    kind: map
+    initialBlock: 10000835
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - map: map_mint_events
+      - store: store_pair_created_events
+    output:
+      type: proto:messari.dex_amm.v1.Deposits
+
+  - name: map_withdraws
+    kind: map
+    initialBlock: 10000835
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - map: map_burn_events
+      - store: store_pair_created_events
+    output:
+      type: proto:messari.dex_amm.v1.Withdraws
+
+  - name: map_swaps
+    kind: map
+    initialBlock: 10000835
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - map: map_swap_events
+      - store: store_pair_created_events
+    output:
+      type: proto:messari.dex_amm.v1.Swap
+
+  - name: store_deposits
+    kind: store
+    initialBlock: 10000835
+    updatePolicy: set
+    valueType: proto:messari.dex_amm.v1.Deposits
+    inputs:
+      - map: map_deposits
+
+  - name: store_withdraws
+    kind: store
+    initialBlock: 10000835
+    updatePolicy: set
+    valueType: proto:messari.dex_amm.v1.Withdraws
+    inputs:
+      - map: map_withdraws
+
+  - name: store_swaps
+    kind: store
+    initialBlock: 10000835
+    updatePolicy: set
+    valueType: proto:messari.dex_amm.v1.Swaps
+    inputs:
+      - map: map_swaps
+
+  - name: store_counts
+    kind: store
+    initialBlock: 10000835
+    updatePolicy: add
+    valueType: int64
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - map: map_pair_created_events
+      - map: map_mint_events
+      - map: map_burn_events
+      - map: map_swap_events
 
   - name: map_block_to_transfers
     kind: map
@@ -75,27 +145,3 @@ modules:
     inputs:
       - map: map_block_to_transfers
 
-  - name: map_swap_events
-    kind: map
-    initialBlock: 10000835
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - store: store_pools
-    output:
-      type: proto:messari.uniswap.v2.SwapEvents
-
-  - name: store_swap_events
-    kind: store
-    initialBlock: 10000835
-    updatePolicy: set
-    valueType: proto:messari.uniswap.v2.SwapEvent
-    inputs:
-      - map: map_swap_events
-
-  - name: store_swap_count
-    kind: store
-    initialBlock: 10000835
-    updatePolicy: add
-    valueType: int64
-    inputs:
-      - map: map_swap_events

@@ -6,22 +6,135 @@ import "erc20.proto";
 package messari.dex_amm.v1;
 
 message Pool {
-  string name = 1;
-  string address = 2; // bytes: Address
-  repeated messari.erc20.v1.ERC20Token input_tokens = 3;
-
-  // Metrics
-  string total_value_locked = 100; // string: BigDecimal
-}
-
-message PoolToken {
   string address = 1; // bytes: Address
-  // Balance of input token in native amounts
-  string balance = 2; // string: BigInt
-  // Weights of input token in the liquidity pool in percentage values. For example, 0.5/0.5 for Uniswap pools, 0.482/0.518 for a Curve pool, 0.1/0.1/0.8 for a Balancer pool
-  double weight = 3;
+  string name = 3;
+  uint64 created_timestamp = 5; // uint64: Timestamp
+  uint64 created_block_number = 6; // uint64: Block
+  repeated string input_tokens = 7;
+  repeated string input_token_amounts = 9;
+  string output_token = 10;
+  string output_token_supply = 11;
+  string total_value_locked = 12;
 }
 
 message Pools {
   repeated Pool items = 1;
 }
+
+message Deposit {
+  // Transaction hash of the transaction that emitted this event
+  string tx_hash = 1;
+
+  // Event log index. For transactions that don't emit event, create arbitrary index starting from 0
+  uint32 log_index = 2;
+
+  // Address that received the tokens
+  string to = 3;
+
+  // Address that sent the tokens
+  string from = 4;
+
+  // Block number of this event
+  uint64 block_number = 5;
+
+  // Timestamp of this event
+  uint64 timestamp = 6;
+
+  // Input tokens of the pool. E.g. WETH and USDC to a WETH-USDC pool
+  repeated string inputTokens = 7;
+
+  // Output token of the pool. E.g. the UNI-LP token
+  string outputToken = 8;
+
+  // Amount of input tokens in the token's native unit
+  repeated string input_token_amounts = 9;
+
+  // Amount of output tokens in the token's native unit
+  string output_token_amount = 10;
+
+  // The pool involving this transaction
+  string pool_address = 11;
+}
+
+message Deposits {
+  repeated Deposit items = 1;
+}
+
+message Withdraw {
+  // Transaction hash of the transaction that emitted this event
+  string tx_hash = 1;
+
+  // Event log index. For transactions that don't emit event, create arbitrary index starting from 0
+  uint32 log_index = 2;
+
+  // Address that received the tokens
+  string to = 3;
+
+  // Address that sent the tokens
+  string from = 4;
+
+  // Block number of this event
+  uint64 block_number = 5;
+
+  // Timestamp of this event
+  uint64 timestamp = 6;
+
+  // Input tokens of the pool (not input tokens of the event/transaction). E.g. WETH and USDC from a WETH-USDC pool
+  repeated string inputTokens = 7;
+
+  // Output token of the pool (not output token of the event/transaction). E.g. the UNI-LP token
+  string outputToken = 8;
+
+  // Amount of input tokens in the token's native unit
+  repeated string input_token_amounts = 9;
+
+  // Amount of output tokens in the token's native unit
+  string output_token_amount = 10;
+
+  // The pool involving this transaction
+  string pool_address = 11;
+}
+
+message Withdraws {
+  repeated Withdraw items = 1;
+}
+
+message Swap {
+  // Transaction hash of the transaction that emitted this event
+  string tx_hash = 1;
+
+  // Event log index. For transactions that don't emit event, create arbitrary index starting from 0
+  uint32 log_index = 2;
+
+  // Address that received the tokens
+  string to = 3;
+
+  // Address that sent the tokens
+  string from = 4;
+
+  // Block number of this event
+  uint64 block_number = 5;
+
+  // Timestamp of this event
+  uint64 timestamp = 6;
+
+  // Token deposited into pool
+  repeated string tokens_in = 7;
+
+  // Amount of token deposited into pool in native units
+  repeated string amounts_in = 8;
+
+  // Token withdrawn from pool
+  repeated string tokens_out = 9;
+
+  // Amount of token withdrawn from pool in native units
+  repeated string amounts_out = 10;
+
+  // The pool involving this transaction
+  string pool_address = 11;
+}
+
+message Swaps {
+  repeated Swap items = 1;
+}
+

@@ -25,6 +25,7 @@ message MintEvent {
   string tx_hash = 1; // bytes: Hash
   uint32 log_index = 2;
   uint64 log_ordinal = 3;
+  string pool_address = 6; // bytes: Address
 
   string sender = 10; // bytes: Address
   string amount0 = 11; // string: BigInt
@@ -40,6 +41,7 @@ message BurnEvent {
   string tx_hash = 1; // bytes: Hash
   uint32 log_index = 2;
   uint64 log_ordinal = 3;
+  string pool_address = 6; // bytes: Address
 
   string sender = 10; // bytes: Address
   string amount0 = 11; // string: BigInt
@@ -56,6 +58,7 @@ message SwapEvent {
   string tx_hash = 1; // bytes: Hash
   uint32 log_index = 2;
   uint64 log_ordinal = 3;
+  string pool_address = 6; // bytes: Address
 
   string sender = 10; // bytes: Address
   string amount0In = 11; // string: BigInt
