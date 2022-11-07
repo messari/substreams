@@ -1,0 +1,34 @@
+specVersion: v0.1.0
+package:
+  name: eth_balance
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+
+protobuf:
+  files:
+    - eth_balance.proto
+  importPaths:
+    - proto/v1
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/eth_balance.wasm"
+
+modules:
+  - name: map_block_to_transfers
+    kind: map
+    initialBlock: 14690152
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:messari.erc20.v1.TransferEvents
+
+  - name: store_balance
+    kind: store
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: map_block_to_transfers

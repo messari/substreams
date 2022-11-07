@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package messari.eth_balance.v1;
+
+message TransferEvents {
+  repeated TransferEvent items = 1;
+}
+
+message TransferEvent {
+  string tx_hash = 1;
+  uint32 log_index = 2;
+  uint64 log_ordinal = 3;
+  string token_address = 4;
+  string from = 5;
+  string to = 6;
+  string amount = 7; // BigInt, in token's native amount
+}
+
+message ETHBalance {
+  string token_address = 1;
+  string balance = 2; // BigInt, in token's native amount
+}
+
+message Wallet {
+  string address = 1;
+  repeated ETHBalance balances = 2;
+}

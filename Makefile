@@ -9,6 +9,7 @@ build-all:
 	$(MAKE) -C compound-v2 build
 	$(MAKE) -C network build
 	$(MAKE) -C solana-sample build
+	$(MAKE) -C eth-balance build
 
 .PHONY: run-all
 run-all:
