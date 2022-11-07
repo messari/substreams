@@ -1,0 +1,107 @@
+{
+  "@module": "store_usage_events",
+  "@block": 10008555,
+  "@deltas": [
+    {
+      "op": "CREATE",
+      "ordinal": 529,
+      "key": "deposit:2ef96febd1777e0403768e45e46dbd677f21079ba5f88297b500806b6fef23cb:6",
+      "old": null,
+      "new": {
+        "items": [
+          {}
+        ]
+      }
+    }
+  ]
+}
+{
+  "@module": "store_usage_events",
+  "@block": 10008566,
+  "@deltas": [
+    {
+      "op": "CREATE",
+      "ordinal": 97,
+      "key": "swap:932cb88306450d481a0e43365a3ed832625b68f036e9887684ef6da594891366:4",
+      "old": null,
+      "new": {}
+    }
+  ]
+}
+{
+  "@module": "store_usage_events",
+  "@block": 10008585,
+  "@deltas": [
+    {
+      "op": "CREATE",
+      "ordinal": 107,
+      "key": "swap:697b7aaca56a80a8d3a2f560ed7f1ecb97c22b2edd6eddc88ba4e89d96acf3c2:4",
+      "old": null,
+      "new": {}
+    }
+  ]
+}
+{
+  "@module": "store_usage_events",
+  "@block": 10013764,
+  "@deltas": [
+    {
+      "op": "CREATE",
+      "ordinal": 2165,
+      "key": "swap:43b6bfd06dde0814fe9c1b63ce98ec4c67c72d96169d73e13bf2b409d0551b58:4",
+      "old": null,
+      "new": {}
+    }
+  ]
+}
+{
+  "@module": "store_usage_events",
+  "@block": 10014178,
+  "@deltas": [
+    {
+      "op": "CREATE",
+      "ordinal": 1039,
+      "key": "deposit:98f92a0b6063b0b581722cecf8ef01131c24c4377e6d3323d9184d1a262fc168:12",
+      "old": null,
+      "new": {
+        "items": [
+          {}
+        ]
+      }
+    }
+  ]
+}
+{
+  "@module": "store_usage_events",
+  "@block": 10014418,
+  "@deltas": [
+    {
+      "op": "CREATE",
+      "ordinal": 1331,
+      "key": "swap:735cf98e86a5df67b6a837ae50de1d7a589d9f6baaf0e1ac95e992884a182ce2:3",
+      "old": null,
+      "new": {}
+    },
+    {
+      "op": "CREATE",
+      "ordinal": 1369,
+      "key": "swap:735cf98e86a5df67b6a837ae50de1d7a589d9f6baaf0e1ac95e992884a182ce2:6",
+      "old": null,
+      "new": {}
+    }
+  ]
+}
+{
+  "@module": "store_usage_events",
+  "@block": 10014425,
+  "@deltas": [
+    {
+      "op": "CREATE",
+      "ordinal": 502,
+      "key": "swap:f7e7f3b82d8944e0cc89ab16a015cbdcfe7d0806d48946e90801423402aa1362:3",
+      "old": null,
+      "new": {}
+    }
+  ]
+}
+all done

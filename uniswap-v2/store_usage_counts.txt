@@ -1,0 +1,267 @@
+{
+  "@module": "store_usage_counts",
+  "@block": 10008555,
+  "@deltas": [
+    {
+      "op": "CREATE",
+      "ordinal": 529,
+      "key": "Usage: (Event Name:deposit Time Window:Day ID:18387)",
+      "old": null,
+      "new": "1"
+    },
+    {
+      "op": "CREATE",
+      "ordinal": 529,
+      "key": "Usage: (Event Name:deposit Time Window:Hour ID:441309)",
+      "old": null,
+      "new": "1"
+    },
+    {
+      "op": "CREATE",
+      "ordinal": 529,
+      "key": "Transaction: (Time Window:Day ID:18387)",
+      "old": null,
+      "new": "1"
+    },
+    {
+      "op": "CREATE",
+      "ordinal": 529,
+      "key": "Transaction: (Time Window:Hour ID:441309)",
+      "old": null,
+      "new": "1"
+    }
+  ]
+}
+{
+  "@module": "store_usage_counts",
+  "@block": 10008566,
+  "@deltas": [
+    {
+      "op": "CREATE",
+      "ordinal": 97,
+      "key": "Usage: (Event Name:swap Time Window:Day ID:18387)",
+      "old": null,
+      "new": "1"
+    },
+    {
+      "op": "CREATE",
+      "ordinal": 97,
+      "key": "Usage: (Event Name:swap Time Window:Hour ID:441309)",
+      "old": null,
+      "new": "1"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 97,
+      "key": "Transaction: (Time Window:Day ID:18387)",
+      "old": "1",
+      "new": "2"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 97,
+      "key": "Transaction: (Time Window:Hour ID:441309)",
+      "old": "1",
+      "new": "2"
+    }
+  ]
+}
+{
+  "@module": "store_usage_counts",
+  "@block": 10008585,
+  "@deltas": [
+    {
+      "op": "UPDATE",
+      "ordinal": 107,
+      "key": "Usage: (Event Name:swap Time Window:Day ID:18387)",
+      "old": "1",
+      "new": "2"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 107,
+      "key": "Usage: (Event Name:swap Time Window:Hour ID:441309)",
+      "old": "1",
+      "new": "2"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 107,
+      "key": "Transaction: (Time Window:Day ID:18387)",
+      "old": "2",
+      "new": "3"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 107,
+      "key": "Transaction: (Time Window:Hour ID:441309)",
+      "old": "2",
+      "new": "3"
+    }
+  ]
+}
+{
+  "@module": "store_usage_counts",
+  "@block": 10013764,
+  "@deltas": [
+    {
+      "op": "CREATE",
+      "ordinal": 2165,
+      "key": "Usage: (Event Name:swap Time Window:Day ID:18388)",
+      "old": null,
+      "new": "1"
+    },
+    {
+      "op": "CREATE",
+      "ordinal": 2165,
+      "key": "Usage: (Event Name:swap Time Window:Hour ID:441328)",
+      "old": null,
+      "new": "1"
+    },
+    {
+      "op": "CREATE",
+      "ordinal": 2165,
+      "key": "Transaction: (Time Window:Day ID:18388)",
+      "old": null,
+      "new": "1"
+    },
+    {
+      "op": "CREATE",
+      "ordinal": 2165,
+      "key": "Transaction: (Time Window:Hour ID:441328)",
+      "old": null,
+      "new": "1"
+    }
+  ]
+}
+{
+  "@module": "store_usage_counts",
+  "@block": 10014178,
+  "@deltas": [
+    {
+      "op": "CREATE",
+      "ordinal": 1039,
+      "key": "Usage: (Event Name:deposit Time Window:Day ID:18388)",
+      "old": null,
+      "new": "1"
+    },
+    {
+      "op": "CREATE",
+      "ordinal": 1039,
+      "key": "Usage: (Event Name:deposit Time Window:Hour ID:441330)",
+      "old": null,
+      "new": "1"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 1039,
+      "key": "Transaction: (Time Window:Day ID:18388)",
+      "old": "1",
+      "new": "2"
+    },
+    {
+      "op": "CREATE",
+      "ordinal": 1039,
+      "key": "Transaction: (Time Window:Hour ID:441330)",
+      "old": null,
+      "new": "1"
+    }
+  ]
+}
+{
+  "@module": "store_usage_counts",
+  "@block": 10014418,
+  "@deltas": [
+    {
+      "op": "UPDATE",
+      "ordinal": 1331,
+      "key": "Usage: (Event Name:swap Time Window:Day ID:18388)",
+      "old": "1",
+      "new": "2"
+    },
+    {
+      "op": "CREATE",
+      "ordinal": 1331,
+      "key": "Usage: (Event Name:swap Time Window:Hour ID:441330)",
+      "old": null,
+      "new": "1"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 1331,
+      "key": "Transaction: (Time Window:Day ID:18388)",
+      "old": "2",
+      "new": "3"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 1331,
+      "key": "Transaction: (Time Window:Hour ID:441330)",
+      "old": "1",
+      "new": "2"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 1369,
+      "key": "Usage: (Event Name:swap Time Window:Day ID:18388)",
+      "old": "2",
+      "new": "3"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 1369,
+      "key": "Usage: (Event Name:swap Time Window:Hour ID:441330)",
+      "old": "1",
+      "new": "2"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 1369,
+      "key": "Transaction: (Time Window:Day ID:18388)",
+      "old": "3",
+      "new": "4"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 1369,
+      "key": "Transaction: (Time Window:Hour ID:441330)",
+      "old": "2",
+      "new": "3"
+    }
+  ]
+}
+{
+  "@module": "store_usage_counts",
+  "@block": 10014425,
+  "@deltas": [
+    {
+      "op": "UPDATE",
+      "ordinal": 502,
+      "key": "Usage: (Event Name:swap Time Window:Day ID:18388)",
+      "old": "3",
+      "new": "4"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 502,
+      "key": "Usage: (Event Name:swap Time Window:Hour ID:441330)",
+      "old": "2",
+      "new": "3"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 502,
+      "key": "Transaction: (Time Window:Day ID:18388)",
+      "old": "4",
+      "new": "5"
+    },
+    {
+      "op": "UPDATE",
+      "ordinal": 502,
+      "key": "Transaction: (Time Window:Hour ID:441330)",
+      "old": "3",
+      "new": "4"
+    }
+  ]
+}
+all done
