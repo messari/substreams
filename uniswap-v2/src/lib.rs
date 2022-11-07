@@ -7,14 +7,12 @@ mod keyer;
 mod utils;
 
 use hex_literal::hex;
-use std::str::FromStr;
 
 use substreams::store::StoreAdd;
 use substreams::store::StoreNew;
 use substreams::store::StoreSetRaw;
-use substreams::store::{StoreAddInt64, StoreGet, StoreGetRaw, StoreSet, StoreGetProto, StoreSetProto};
+use substreams::store::{StoreAddInt64, StoreAddBigInt, StoreGet, StoreSet, StoreGetProto, StoreSetProto};
 use substreams::{log, proto, store, Hex};
-use substreams::scalar::{BigDecimal, BigInt};
 use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
 use substreams_helper::erc20 as erc20_helper;
 use substreams_helper::types::Address;
@@ -26,6 +24,7 @@ use abi::pair;
 
 use pb::dex_amm::v1 as dex_amm;
 use pb::uniswap::v2 as uniswap;
+use crate::pb::dex_amm::v1::usage_event::Type::{Swap as SwapType, Deposit as DepositType, Withdraw as WithdrawType};
 
 pub const UNISWAP_V2_FACTORY: Address = hex!("5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f");
 pub const UNISWAP_V2_FACTORY_START_BLOCK: u64 = 10_000_835;
@@ -202,104 +201,14 @@ fn map_swap_events(
 }
 
 #[substreams::handlers::map]
-fn map_deposits(
-    block: eth::Block,
-    mint_events: uniswap::MintEvents,
-    pair_created_events_store: StoreGetProto<uniswap::PairCreatedEvent>,
-) -> Result<dex_amm::Deposits, substreams::errors::Error> {
-    let mut deposits = dex_amm::Deposits { items: vec![] };
-
-    for mint_event in mint_events.items {
-        let pair_created_key = keyer::pair_created_key(&mint_event.pool_address);
-        match pair_created_events_store.get_last(pair_created_key) {
-            None => {
-                log::info!(
-                    "invalid deposit. pool does not exist. pool address {} transaction {}",
-                    mint_event.pool_address,
-                    mint_event.tx_hash
-                );
-                continue;
-            }
-            Some(pair_created_event) => {
-                deposits.items.push(dex_amm::Deposit {
-                    tx_hash: mint_event.tx_hash.clone(),
-                    log_index: mint_event.log_index,
-                    to: pair_created_event.pair.clone(),
-                    from: mint_event.sender.clone(),
-                    block_number: block.number,
-                    timestamp: block.timestamp(),
-                    input_tokens: vec![
-                        pair_created_event.token0.clone(),
-                        pair_created_event.token1.clone(),
-                    ],
-                    output_token: pair_created_event.pair.clone(),
-                    input_token_amounts: vec![
-                        mint_event.amount0.clone(),
-                        mint_event.amount1.clone(),
-                    ],
-                    output_token_amount: "0".to_string(),
-                    pool_address: pair_created_event.pair.clone(),
-                })
-            }
-        }
-    }
-
-    Ok(deposits)
-}
-
-#[substreams::handlers::map]
-fn map_withdraws(
-    block: eth::Block,
-    burn_events: uniswap::BurnEvents,
-    pair_created_events_store: StoreGetProto<uniswap::PairCreatedEvent>,
-) -> Result<dex_amm::Withdraws, substreams::errors::Error> {
-    let mut withdraws = dex_amm::Withdraws  { items: vec![] };
-
-    for burn_event in burn_events.items {
-        let pair_created_key = keyer::pair_created_key(&burn_event.pool_address);
-        match pair_created_events_store.get_last(pair_created_key) {
-            None => {
-                log::info!(
-                    "invalid withdraw. pool does not exist. pool address {} transaction {}",
-                    burn_event.pool_address,
-                    burn_event.tx_hash
-                );
-                continue;
-            }
-            Some(pair_created_event) => {
-                withdraws.items.push(dex_amm::Withdraw {
-                    tx_hash: burn_event.tx_hash.clone(),
-                    log_index: burn_event.log_index,
-                    to: burn_event.to.clone(),
-                    from: burn_event.sender.clone(),
-                    block_number: block.number,
-                    timestamp: block.timestamp(),
-                    input_tokens: vec![
-                        pair_created_event.token0.clone(),
-                        pair_created_event.token1.clone(),
-                    ],
-                    output_token: pair_created_event.pair.clone(),
-                    input_token_amounts: vec![
-                        burn_event.amount0.clone(),
-                        burn_event.amount1.clone(),
-                    ],
-                    output_token_amount: "0".to_string(),
-                    pool_address: pair_created_event.pair.clone(),
-                })
-            }
-        }
-    }
-
-    Ok(withdraws)
-}
-
-#[substreams::handlers::map]
-fn map_swaps(
+fn map_usage_events(
     block: eth::Block,
     swap_events: uniswap::SwapEvents,
+    mint_events: uniswap::MintEvents,
+    burn_events: uniswap::BurnEvents,
     pair_created_events_store: StoreGetProto<uniswap::PairCreatedEvent>,
-) -> Result<dex_amm::Swaps, substreams::errors::Error> {
-    let mut swaps = dex_amm::Swaps { items: vec![] };
+) -> Result<dex_amm::UsageEvents, substreams::errors::Error> {
+    let mut usage_events = dex_amm::UsageEvents { items: vec![] };
 
     for swap_event in swap_events.items {
         let pair_created_key = keyer::pair_created_key(&swap_event.pool_address);
@@ -313,101 +222,201 @@ fn map_swaps(
                 continue;
             }
             Some(pair_created_event) => {
-                swaps.items.push(dex_amm::Swap {
+                usage_events.items.push(dex_amm::UsageEvent {
                     tx_hash: swap_event.tx_hash.clone(),
                     log_index: swap_event.log_index,
+                    log_ordinal: swap_event.log_ordinal,
                     to: swap_event.to.clone(),
                     from: swap_event.sender.clone(),
                     block_number: block.number,
                     timestamp: block.timestamp(),
-                    tokens_in: vec![
-                        pair_created_event.token0.clone(),
-                        pair_created_event.token1.clone(),
-                    ],
-                    amounts_in: vec![
-                        swap_event.amount0_in.clone(),
-                        swap_event.amount1_in.clone(),
-                    ],
-                    tokens_out: vec![
-                        pair_created_event.token0.clone(),
-                        pair_created_event.token1.clone(),
-                    ],
-                    amounts_out: vec![
-                        swap_event.amount0_out.clone(),
-                        swap_event.amount1_out.clone(),
-                    ],
-                    pool_address: pair_created_event.pair.clone(),
+                    r#type: Some(SwapType(dex_amm::Swap {
+                        tokens_in: vec![
+                            pair_created_event.token0.clone(),
+                            pair_created_event.token1.clone(),
+                        ],
+                        amounts_in: vec![
+                            swap_event.amount0_in.clone(),
+                            swap_event.amount1_in.clone(),
+                        ],
+                        tokens_out: vec![
+                            pair_created_event.token0.clone(),
+                            pair_created_event.token1.clone(),
+                        ],
+                        amounts_out: vec![
+                            swap_event.amount0_out.clone(),
+                            swap_event.amount1_out.clone(),
+                        ],
+                        pool_address: pair_created_event.pair.clone(),
+                    })),
                 })
             }
         }
     }
 
-    Ok(swaps)
+    for mint_event in mint_events.items {
+        let pair_created_key = keyer::pair_created_key(&mint_event.pool_address);
+        match pair_created_events_store.get_last(pair_created_key) {
+            None => {
+                log::info!(
+                    "invalid deposit. pool does not exist. pool address {} transaction {}",
+                    mint_event.pool_address,
+                    mint_event.tx_hash
+                );
+                continue;
+            }
+            Some(pair_created_event) => {
+                usage_events.items.push(dex_amm::UsageEvent {
+                    tx_hash: mint_event.tx_hash.clone(),
+                    log_index: mint_event.log_index,
+                    log_ordinal: mint_event.log_ordinal,
+                    to: pair_created_event.pair.clone(),
+                    from: mint_event.sender.clone(),
+                    block_number: block.number,
+                    timestamp: block.timestamp(),
+                    r#type: Some(DepositType(dex_amm::Deposit {
+                        input_tokens: vec![
+                            pair_created_event.token0.clone(),
+                            pair_created_event.token1.clone(),
+                        ],
+                        output_token: pair_created_event.pair.clone(),
+                        input_token_amounts: vec![
+                            mint_event.amount0.clone(),
+                            mint_event.amount1.clone(),
+                        ],
+                        output_token_amount: "0".to_string(),
+                        pool_address: pair_created_event.pair.clone(),
+                    })),
+                })
+            }
+        }
+    }
+
+    for burn_event in burn_events.items {
+        let pair_created_key = keyer::pair_created_key(&burn_event.pool_address);
+        match pair_created_events_store.get_last(pair_created_key) {
+            None => {
+                log::info!(
+                    "invalid withdraw. pool does not exist. pool address {} transaction {}",
+                    burn_event.pool_address,
+                    burn_event.tx_hash
+                );
+                continue;
+            }
+            Some(pair_created_event) => {
+                usage_events.items.push(dex_amm::UsageEvent {
+                    tx_hash: burn_event.tx_hash.clone(),
+                    log_index: burn_event.log_index,
+                    log_ordinal: burn_event.log_ordinal,
+                    to: burn_event.to.clone(),
+                    from: burn_event.sender.clone(),
+                    block_number: block.number,
+                    timestamp: block.timestamp(),
+                    r#type: Some(WithdrawType(dex_amm::Withdraw {
+                        input_tokens: vec![
+                            pair_created_event.token0.clone(),
+                            pair_created_event.token1.clone(),
+                        ],
+                        output_token: pair_created_event.pair.clone(),
+                        input_token_amounts: vec![
+                            burn_event.amount0.clone(),
+                            burn_event.amount1.clone(),
+                        ],
+                        output_token_amount: "0".to_string(),
+                        pool_address: pair_created_event.pair.clone(),
+                    })),
+
+                })
+            }
+        }
+    }
+
+    Ok(usage_events)
 }
 
 #[substreams::handlers::store]
-fn store_deposits(deposits: dex_amm::Deposits, output: store::StoreSetRaw) {
-    log::info!("Stored events {}", deposits.items.len());
-    for event in deposits.items {
-        let pool_key = keyer::deposit_key(&event.tx_hash, event.log_index);
-        output.set(0, &pool_key, &proto::encode(&event).unwrap());
+fn store_usage_events(usage_events: dex_amm::UsageEvents, usage_event_store: StoreSetProto<dex_amm::UsageEvent>) {
+    log::info!("Stored usage events {}", usage_events.items.len());
+
+    for event in usage_events.items {
+        // get the string representation of the type of the event
+        let event_type = match &event.r#type {
+            Some(SwapType(_)) => "swap",
+            Some(DepositType(_)) => "deposit",
+            Some(WithdrawType(_)) => "withdraw",
+            None => "unknown",
+        }.to_string();
+
+        usage_event_store.set(event.log_ordinal, &keyer::usage_event_key(&event_type, &event.tx_hash, event.log_index), &event);
     }
 }
 
 #[substreams::handlers::store]
-fn store_withdraws(withdraws: dex_amm::Withdraws, output: store::StoreSetRaw) {
-    log::info!("Stored events {}", withdraws.items.len());
-    for event in withdraws.items {
-        let pool_key = keyer::withdraw_key(&event.tx_hash, event.log_index);
-        output.set(0, &pool_key, &proto::encode(&event).unwrap());
-    }
-}
-
-#[substreams::handlers::store]
-fn store_swaps(swaps: dex_amm::Swaps, output: store::StoreSetRaw) {
-    log::info!("Stored events {}", swaps.items.len());
-    for event in swaps.items {
-        let pool_key = keyer::swap_key(&event.tx_hash, event.log_index);
-        output.set(0, &pool_key, &proto::encode(&event).unwrap());
-    }
-}
-
-#[substreams::handlers::store]
-fn store_counts(clock: Clock, pair_created_events: uniswap::PairCreatedEvents, mint_events: uniswap::MintEvents, burn_events: uniswap::BurnEvents, swap_events: uniswap::SwapEvents, s: store::StoreAddInt64) {
+fn store_usage_counts(clock: Clock, usage_events: dex_amm::UsageEvents, s: store::StoreAddInt64) {
     let timestamp_seconds = clock.timestamp.unwrap().seconds;
     let day_id: String = (timestamp_seconds / 86400).to_string();
     let hour_id: String = (timestamp_seconds / 3600).to_string();
 
-    for event in mint_events.items {
-        s.add(event.log_ordinal, &keyer::usage_count_key(&"Deposit".to_string(), &"Day".to_string(), &day_id), 1);
-        s.add(event.log_ordinal, &keyer::usage_count_key(&"Deposit".to_string(), &"Hour".to_string(), &hour_id), 1);
-        s.add (event.log_ordinal, &keyer::transaction_count_key(&"Day".to_string(), &day_id), 1);
-        s.add (event.log_ordinal, &keyer::transaction_count_key(&"Hour".to_string(), &hour_id), 1);
-    }
+    for event in usage_events.items {
+        // get the string representation of the type of the event
+        let event_type = match &event.r#type {
+            Some(SwapType(_)) => "swap",
+            Some(DepositType(_)) => "deposit",
+            Some(WithdrawType(_)) => "withdraw",
+            None => "unknown",
+        }.to_string();
 
-    for event in burn_events.items {
-        s.add(event.log_ordinal, &keyer::usage_count_key(&"Withdraw".to_string(), &"Day".to_string(), &day_id), 1);
-        s.add(event.log_ordinal, &keyer::usage_count_key(&"Withdraw".to_string(), &"Hour".to_string(), &hour_id), 1);
-        s.add (event.log_ordinal, &keyer::transaction_count_key(&"Day".to_string(), &day_id), 1);
-        s.add (event.log_ordinal, &keyer::transaction_count_key(&"Hour".to_string(), &hour_id), 1);
-    }
-
-    for event in swap_events.items {
-        s.add(event.log_ordinal, &keyer::usage_count_key(&"Swap".to_string(), &"Day".to_string(), &day_id), 1);
-        s.add(event.log_ordinal, &keyer::usage_count_key(&"Swap".to_string(), &"Hour".to_string(), &hour_id), 1);
-        s.add (event.log_ordinal, &keyer::transaction_count_key(&"Day".to_string(), &day_id), 1);
-        s.add (event.log_ordinal, &keyer::transaction_count_key(&"Hour".to_string(), &hour_id), 1);
+        s.add(event.log_ordinal, &keyer::usage_count_key(&event_type, &"Day".to_string(), &day_id), 1);
+        s.add(event.log_ordinal, &keyer::usage_count_key(&event_type, &"Hour".to_string(), &hour_id), 1);
     }
 }
 
 #[substreams::handlers::store]
-fn map_volumes_from_swaps(swaps: dex_amm::Swaps, s: store::StoreAddBigInt) {
+fn store_volumes_from_swaps(swaps: dex_amm::Swaps, s: store::StoreAddBigInt) {
     for swap in swaps.items {
         for (token_index, token_address) in swap.tokens_in.iter().enumerate() {
             let amount_bi = utils::convert_string_to_bigint(&swap.amounts_in[token_index]);
-            s.add(swap.log_ordinal, &keyer::pool_input_token_amounts_key(&swap.pool_address, &swap.tokens_in[token_index]), &amount_bi);
+            s.add(0, &keyer::pool_input_token_amounts_key(&swap.pool_address, &token_address), &amount_bi);
         }
     }
+}
+
+#[substreams::handlers::map]
+pub fn map_pool_deltas(events: dex_amm::UsageEvents) -> Result<uniswap::PoolTokenTvlDeltas, substreams::errors::Error> {
+    let mut pool_token_tvl_deltas = uniswap::PoolTokenTvlDeltas { items: vec![] };
+
+    for event in events.items {
+        log::debug!("trx_id: {}", event.tx_hash);
+
+        match event.r#type.unwrap() {
+            WithdrawType(withdraw) => {
+                pool_token_tvl_deltas.items.push(uniswap::PoolTokenTvlDelta {
+                    log_ordinal: event.log_ordinal,
+                    pool_address: withdraw.pool_address.clone(),
+                    token_addresses: withdraw.input_tokens.clone(),
+                    deltas: utils::negative_bi_array(withdraw.input_token_amounts.clone()),
+                });
+            }
+            DepositType(deposit) => {
+                pool_token_tvl_deltas.items.push(uniswap::PoolTokenTvlDelta {
+                    log_ordinal: event.log_ordinal,
+                    pool_address: deposit.pool_address.clone(),
+                    token_addresses: deposit.input_tokens.clone(),
+                    deltas: deposit.input_token_amounts.clone(),
+                });
+            }
+            SwapType(swap) => {
+                pool_token_tvl_deltas.items.push(uniswap::PoolTokenTvlDelta {
+                    log_ordinal: event.log_ordinal,
+                    pool_address: swap.pool_address.clone(),
+                    token_addresses: swap.tokens_in.clone(),
+                    deltas: utils::get_delta_bi_array(&swap.amounts_in, &swap.amounts_out),
+                });
+            }
+        }
+    }
+
+    Ok(pool_token_tvl_deltas)
 }
 
 #[substreams::handlers::map]

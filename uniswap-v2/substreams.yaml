@@ -65,71 +65,43 @@ modules:
     output:
       type: proto:messari.uniswap.v2.SwapEvents
 
-  - name: map_deposits
-    kind: map
-    initialBlock: 10000835
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - map: map_mint_events
-      - store: store_pair_created_events
-    output:
-      type: proto:messari.dex_amm.v1.Deposits
-
-  - name: map_withdraws
-    kind: map
-    initialBlock: 10000835
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - map: map_burn_events
-      - store: store_pair_created_events
-    output:
-      type: proto:messari.dex_amm.v1.Withdraws
-
-  - name: map_swaps
+  - name: map_usage_events
     kind: map
     initialBlock: 10000835
     inputs:
       - source: sf.ethereum.type.v2.Block
       - map: map_swap_events
+      - map: map_mint_events
+      - map: map_burn_events
       - store: store_pair_created_events
     output:
-      type: proto:messari.dex_amm.v1.Swap
+      type: proto:messari.dex_amm.v1.UsageEvents
 
-  - name: store_deposits
+
+  - name: store_usage_events
     kind: store
     initialBlock: 10000835
     updatePolicy: set
-    valueType: proto:messari.dex_amm.v1.Deposits
+    valueType: proto:messari.dex_amm.v1.UsageEvents
     inputs:
-      - map: map_deposits
+      - map: map_usage_events
 
-  - name: store_withdraws
-    kind: store
-    initialBlock: 10000835
-    updatePolicy: set
-    valueType: proto:messari.dex_amm.v1.Withdraws
-    inputs:
-      - map: map_withdraws
-
-  - name: store_swaps
-    kind: store
-    initialBlock: 10000835
-    updatePolicy: set
-    valueType: proto:messari.dex_amm.v1.Swaps
-    inputs:
-      - map: map_swaps
-
-  - name: store_counts
+  - name: store_usage_counts
     kind: store
     initialBlock: 10000835
     updatePolicy: add
     valueType: int64
     inputs:
       - source: sf.substreams.v1.Clock
-      - map: map_pair_created_events
-      - map: map_mint_events
-      - map: map_burn_events
-      - map: map_swap_events
+      - map: map_usage_events
+
+  - name: store_volumes_from_swaps
+    kind: store
+    initialBlock: 10000835
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: map_usage_events
 
   - name: map_block_to_transfers
     kind: map

@@ -22,24 +22,6 @@ message Pools {
 }
 
 message Deposit {
-  // Transaction hash of the transaction that emitted this event
-  string tx_hash = 1;
-
-  // Event log index. For transactions that don't emit event, create arbitrary index starting from 0
-  uint32 log_index = 2;
-
-  // Address that received the tokens
-  string to = 3;
-
-  // Address that sent the tokens
-  string from = 4;
-
-  // Block number of this event
-  uint64 block_number = 5;
-
-  // Timestamp of this event
-  uint64 timestamp = 6;
-
   // Input tokens of the pool. E.g. WETH and USDC to a WETH-USDC pool
   repeated string inputTokens = 7;
 
@@ -61,24 +43,6 @@ message Deposits {
 }
 
 message Withdraw {
-  // Transaction hash of the transaction that emitted this event
-  string tx_hash = 1;
-
-  // Event log index. For transactions that don't emit event, create arbitrary index starting from 0
-  uint32 log_index = 2;
-
-  // Address that received the tokens
-  string to = 3;
-
-  // Address that sent the tokens
-  string from = 4;
-
-  // Block number of this event
-  uint64 block_number = 5;
-
-  // Timestamp of this event
-  uint64 timestamp = 6;
-
   // Input tokens of the pool (not input tokens of the event/transaction). E.g. WETH and USDC from a WETH-USDC pool
   repeated string inputTokens = 7;
 
@@ -100,24 +64,6 @@ message Withdraws {
 }
 
 message Swap {
-  // Transaction hash of the transaction that emitted this event
-  string tx_hash = 1;
-
-  // Event log index. For transactions that don't emit event, create arbitrary index starting from 0
-  uint32 log_index = 2;
-
-  // Address that received the tokens
-  string to = 3;
-
-  // Address that sent the tokens
-  string from = 4;
-
-  // Block number of this event
-  uint64 block_number = 5;
-
-  // Timestamp of this event
-  uint64 timestamp = 6;
-
   // Token deposited into pool
   repeated string tokens_in = 7;
 
@@ -138,3 +84,34 @@ message Swaps {
   repeated Swap items = 1;
 }
 
+message UsageEvent {
+  oneof type {
+    Deposit deposit = 1;
+    Withdraw withdraw = 2;
+    Swap swap = 3;
+  };
+
+  // Transaction hash of the transaction that emitted this event
+  string tx_hash = 100;
+
+  // Event log index. For transactions that don't emit event, create arbitrary index starting from 0
+  uint32 log_index = 101;
+
+  uint64 log_ordinal = 102;
+
+  // Address that received the tokens
+  string to = 103;
+
+  // Address that sent the tokens
+  string from = 104;
+
+  // Block number of this event
+  uint64 block_number = 105;
+
+  // Timestamp of this event
+  uint64 timestamp = 106;
+}
+
+message UsageEvents {
+  repeated UsageEvent items = 1;
+}

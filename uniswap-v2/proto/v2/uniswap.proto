@@ -85,3 +85,14 @@ message SyncEvent {
 message SyncEvents {
   repeated SyncEvent items = 1;
 }
+
+message PoolTokenTvlDelta {
+  uint64 log_ordinal = 1;
+  string pool_address = 2; // bytes: Address
+  repeated string token_addresses = 3;
+  repeated string deltas = 4;
+}
+
+message PoolTokenTvlDeltas {
+  repeated PoolTokenTvlDelta items = 1;
+}
