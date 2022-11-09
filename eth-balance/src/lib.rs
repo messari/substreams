@@ -3,74 +3,49 @@ pub mod abi;
 #[rustfmt::skip]
 pub mod pb;
 
-use std::str::FromStr;
-use substreams::store::StoreAdd;
-use substreams::store::StoreAddBigInt;
-use substreams::store::StoreNew;
+use num_bigint;
+use substreams::{store, Hex};
 use substreams::scalar::BigInt;
-use substreams_helper::types::Address;
-use substreams::{hex, log, store, Hex};
-use pb::eth_balance::v1::{TransferEvents};
-use substreams_ethereum::{pb::eth as pbeth, NULL_ADDRESS};
-
-
-pub fn account_balance_key(account_address: &String) -> String {
-    format!("account_balance:{}", account_address)
-}
-
+use substreams_ethereum::{pb::eth as pbeth};
+use substreams::store::{StoreSetRaw, StoreSet, StoreNew};
+use pb::eth_balance::v1::{EthBalanceChanges, EthBalanceChange};
 
 #[substreams::handlers::map]
-fn map_block_to_transfers(
+fn map_block_to_balance_changes(
     block: pbeth::v2::Block
-) ->Result<TransferEvents, substreams::errors::Error> {
-    const ETH_ADDRESS: Address = hex!("0c10bf8fcb7bf5412187a595ab97a3609160b5c6"); // USDD
+) ->Result<EthBalanceChanges, substreams::errors::Error> {
+    let mut eth_balance_changes = EthBalanceChanges { items: vec![] };
 
-    let transfer_events = TransferEvents { items: vec![] };
+    for transaction in block.transactions() {
+        for calls in transaction.calls() {
+            for balance_change in calls.call.balance_changes.clone() {
+                let new_value = balance_change
+                    .new_value
+                    .as_ref()
+                    .map(|value| {
+                        num_bigint::BigInt::from_bytes_be(num_bigint::Sign::Plus, &value.bytes).into()
+                    })
+                    .unwrap_or(BigInt::zero());
 
-    for transaction in block.transaction_traces {
-        let to = Hex(transaction.clone().to).to_string();
-        let from = Hex(transaction.clone().from).to_string();
-        let transaction_hash = Hex(transaction.clone().hash).to_string();
-        let gas_used = transaction.clone().gas_used;
-        let gas_price = match transaction.clone().gas_price {
-            Some(value) => BigInt::try_from(value.bytes).unwrap(),
-            None => BigInt::from(0)
-        };
-
-        let value = match transaction.clone().value {
-            Some(value) => BigInt::try_from(value.bytes).unwrap(),
-            None => BigInt::from(0)
-        };
-
-        log::info!(
-            "tx_hash: {}, from: {}, to: {}, gas_used: {}, gas_price: {}, amount: {:?}", 
-            transaction_hash,
-            from,
-            to,
-            gas_used,
-            gas_price,
-            value
-        );
+                
+                eth_balance_changes.items.push(EthBalanceChange{
+                    address: Hex(&balance_change.address).to_string(),
+                    ordinal: transaction.end_ordinal,
+                    value: new_value.to_string()
+                })
+            }
+        }
     }
-    Ok(transfer_events)
+    Ok(eth_balance_changes)
 } 
 
 #[substreams::handlers::store]
-fn store_balance(transfers: TransferEvents, output: store::StoreAddBigInt) {
-    log::info!("Stored events {}", transfers.items.len());
-    for transfer in transfers.items {
-        output.add(
-            transfer.log_ordinal,
-            account_balance_key(&transfer.to),
-            &BigInt::from_str(transfer.amount.as_str()).unwrap(),
+fn store_balance(balance_changes: EthBalanceChanges, output: store::StoreSetRaw) {
+    for balance_change in balance_changes.items {
+        output.set(
+            balance_change.ordinal,
+            format!("Address:{}", balance_change.address),
+            &balance_change.value
         );
-
-        if Hex::decode(transfer.from.clone()).unwrap() != NULL_ADDRESS {
-            output.add(
-                transfer.log_ordinal,
-                account_balance_key(&transfer.from),
-                &BigInt::from_str((transfer.amount).as_str()).unwrap().neg(),
-            );
-        }
     }
 }
