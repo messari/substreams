@@ -16,9 +16,9 @@ fn map_block_to_balance_changes(
 ) ->Result<EthBalanceChanges, substreams::errors::Error> {
     let mut eth_balance_changes = EthBalanceChanges { items: vec![] };
 
-    for transaction in block.transactions() {
-        for calls in transaction.calls() {
-            for balance_change in calls.call.balance_changes.clone() {
+    for transaction in &block.transaction_traces {
+        for call in &transaction.calls {
+            for balance_change in &call.balance_changes {
                 let new_value = balance_change
                     .new_value
                     .as_ref()
