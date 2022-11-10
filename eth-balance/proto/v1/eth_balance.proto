@@ -2,17 +2,11 @@ syntax = "proto3";
 
 package messari.eth_balance.v1;
 
-message EthBalanceChanges {
-  repeated EthBalanceChange items = 1;
-}
-
-message EthBalanceChange {
+message EthBalance {
   string address = 1;
   string value = 2;
-  uint64 ordinal = 3;
 }
 
-message Wallet {
-  string address = 1;
-  string balances = 2;
+message EthBalances {
+  repeated EthBalance items = 1;
 }

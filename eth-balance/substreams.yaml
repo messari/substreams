@@ -18,17 +18,9 @@ binaries:
     file: "../target/wasm32-unknown-unknown/release/eth_balance.wasm"
 
 modules:
-  - name: map_block_to_balance_changes
-    kind: map
-    initialBlock: 14690152
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-    output:
-      type: proto:messari.erc20.v1.EthBalanceChanges
-
   - name: store_balance
     kind: store
     updatePolicy: set
     valueType: string
     inputs:
-      - map: map_block_to_balance_changes
+      - source: sf.ethereum.type.v2.Block
