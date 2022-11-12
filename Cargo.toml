@@ -7,6 +7,7 @@ members = [
     "erc20-price",
     "erc20-market-cap",
     "erc721",
+    "eth-balance",
     "substreams-helper",
     "uniswap-v2",
     "solana-sample",

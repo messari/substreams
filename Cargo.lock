@@ -215,8 +215,22 @@ dependencies = [
  "anyhow",
  "ethabi",
  "hex-literal",
- "prost 0.11.0",
- "substreams 0.3.2",
+ "prost",
+ "substreams",
+ "substreams-common",
+ "substreams-ethereum",
+ "substreams-helper",
+]
+
+[[package]]
+name = "eth-balance"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ethabi",
+ "hex-literal",
+ "prost",
+ "substreams",
  "substreams-common",
  "substreams-ethereum",
  "substreams-helper",
@@ -634,19 +648,9 @@ dependencies = [
 
 [[package]]
 name = "prost"
-version = "0.10.4"
+version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71adf41db68aa0daaefc69bb30bcd68ded9b9abaad5d1fbb6304c4fb390e083e"
-dependencies = [
- "bytes",
- "prost-derive 0.10.1",
-]
-
-[[package]]
-name = "prost"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "399c3c31cdec40583bb68f0b18403400d01ec4289c383aa047560439952c4dd7"
+checksum = "a0841812012b2d4a6145fae9a6af1534873c32aa67fff26bd09f8fa42c83f95a"
 dependencies = [
  "bytes",
  "prost-derive 0.11.0",

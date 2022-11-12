@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package messari.eth_balance.v1;
+
+message EthBalance {
+  string address = 1;
+  string value = 2;
+}
+
+message EthBalances {
+  repeated EthBalance items = 1;
+}
