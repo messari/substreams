@@ -1,0 +1,20 @@
+specVersion: v0.1.0
+package:
+  name: solana_sample
+  version: v0.1.0
+
+imports:
+  sol: https://github.com/streamingfast/firehose-solana/releases/download/v0.1.0/solana-v0.1.0.spkg
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/solana_sample.wasm"
+
+modules:
+    - name: store_test
+      kind: store
+      updatePolicy: set
+      valueType: bytes
+      inputs:
+        - source: sf.solana.type.v1.Block
