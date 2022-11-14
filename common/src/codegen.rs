@@ -18,7 +18,6 @@ pub fn generate_abi(out_dir: Option<&str>) -> Result<(), Error> {
     let out_dir = out_dir.unwrap_or(DEFAULT_OUTPUT_DIR);
     let mut abi_filenames = dir_filenames("./abi");
     abi_filenames.sort();
-    // panic!("ABI: {:?}", abi_filenames);
     let target_abi_dir = Path::new(out_dir).join("abi");
     fs::remove_dir_all(&target_abi_dir).ok();
     fs::create_dir_all(&target_abi_dir).ok();

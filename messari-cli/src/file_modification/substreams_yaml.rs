@@ -78,7 +78,7 @@ impl SubstreamsYaml {
             if let Yaml::Hash(protobuf_hashmap) = protobuf {
                 protobuf_hashmap
             } else {
-                panic!("TODO")
+                panic!("Error with yaml file - protobuf section is not a hashmap! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
             }
         } else {
             contents_hashmap.insert(Yaml::from_str("protobuf"), Yaml::Hash(LinkedHashMap::new()));
@@ -101,7 +101,8 @@ impl SubstreamsYaml {
                 if let Yaml::Array(files_array) = files {
                     files_array
                 } else {
-                    panic!("TODO: write good error message here about why it should always be an array here...etc..")
+                    panic!("Error with yaml file - protobuf:files section is not an array! Make sure each item in protobuf:files section is declared with a '-' \
+                to make it be treated as an array item . Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
                 }
             } else {
                 protobuf_hashmap.insert(Yaml::from_str("files"), Yaml::Array(Vec::new()));
@@ -143,7 +144,8 @@ impl SubstreamsYaml {
             if let Yaml::Array(import_paths_array) = import_paths {
                 import_paths_array
             } else {
-                panic!("TODO: write good error message here about why it should always be an array here...etc..")
+                panic!("Error with yaml file - protobuf:importPaths section is not an array! Make sure each item in protobuf:importPaths section is declared with a '-' \
+                to make it be treated as an array item . Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
             }
         } else {
             protobuf_hashmap.insert(Yaml::from_str("importPaths"), Yaml::Array(Vec::new()));
