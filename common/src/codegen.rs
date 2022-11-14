@@ -153,6 +153,23 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         write_or_replace_if_different(pb_dir.join("mod.rs"), pb_mod_content);
     }
 
+    // Making sure to cleanup any old proto bindings that are no longer being used
+    let pb_files_for_creation = pb_files
+        .iter()
+        .map(|(filename, _)| filename.clone())
+        .collect::<Vec<_>>();
+    for dir_entry_result in fs::read_dir(&pb_dir).unwrap() {
+        let dir_entry = dir_entry_result.unwrap();
+        let filepath = dir_entry.path();
+        let file_stem = filepath.file_stem().unwrap().to_string_lossy().to_string();
+        if file_stem != "mod".to_string() && !pb_files_for_creation.contains(&file_stem) {
+            fs::remove_file(&filepath).expect(&format!(
+                "Unable to cleanup used protobuf binding file! Filepath: {}",
+                filepath.to_string_lossy()
+            ));
+        }
+    }
+
     for (filename, versions) in pb_files.iter() {
         let content = versions
             .iter()
