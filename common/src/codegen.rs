@@ -18,6 +18,7 @@ pub fn generate_abi(out_dir: Option<&str>) -> Result<(), Error> {
     let out_dir = out_dir.unwrap_or(DEFAULT_OUTPUT_DIR);
     let mut abi_filenames = dir_filenames("./abi");
     abi_filenames.sort();
+    // panic!("ABI: {:?}", abi_filenames);
     let target_abi_dir = Path::new(out_dir).join("abi");
     fs::remove_dir_all(&target_abi_dir).ok();
     fs::create_dir_all(&target_abi_dir).ok();
@@ -66,7 +67,11 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
 
     // generate pb files under src/pb
     Command::new("substreams")
-        .args(&["protogen", substreams_yaml.to_string_lossy().as_ref(), "--output-path=target/tmp"])
+        .args(&[
+            "protogen",
+            substreams_yaml.to_string_lossy().as_ref(),
+            "--output-path=target/tmp",
+        ])
         .status()
         .expect("failed to run substreams protogen");
 
@@ -75,10 +80,16 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         read_dir
             .map(|x| {
                 let dir_entry = x.unwrap();
-                (dir_entry.path(), dir_entry.file_name().to_string_lossy().to_string())
+                (
+                    dir_entry.path(),
+                    dir_entry.file_name().to_string_lossy().to_string(),
+                )
             })
             .for_each(|(filepath, filename)| {
-                if filename.starts_with("sf.ethereum") || filename.starts_with("sf.substreams") || filename.starts_with("google") {
+                if filename.starts_with("sf.ethereum")
+                    || filename.starts_with("sf.substreams")
+                    || filename.starts_with("google")
+                {
                     fs::remove_file(filepath).unwrap();
                 }
             });
@@ -98,11 +109,14 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
                 .or_insert(HashSet::new())
                 .insert(version.to_owned());
         }
-        let mut pb_files_vec = pb_files_hash.into_iter().map(|(filename, versions_hash)| {
-            let mut versions = versions_hash.into_iter().collect::<Vec<_>>();
-            versions.sort();
-            (filename, versions)
-        }).collect::<Vec<_>>();
+        let mut pb_files_vec = pb_files_hash
+            .into_iter()
+            .map(|(filename, versions_hash)| {
+                let mut versions = versions_hash.into_iter().collect::<Vec<_>>();
+                versions.sort();
+                (filename, versions)
+            })
+            .collect::<Vec<_>>();
 
         pb_files_vec.sort_by(|(filename1, _), (filename2, _)| filename1.cmp(filename2));
         pb_files_vec
@@ -142,15 +156,15 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
 
     for (filename, versions) in pb_files.iter() {
         let content = versions
-        .iter()
-        .map(|v| {
-            format!(
+            .iter()
+            .map(|v| {
+                format!(
                     "#[rustfmt::skip]\n#[path = \"../../{}/pb/messari.{}.{}.rs\"]\npub mod {};\n",
                     out_dir, filename, v, v
                 )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
 
         write_or_replace_if_different(pb_dir.join(format!("{}.rs", filename)), content);
     }

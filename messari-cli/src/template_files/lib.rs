@@ -13,7 +13,7 @@ use substreams_helper::types::Address;
 
 /// Extracts transfer events from the blocks
 #[substreams::handlers::map]
-fn map_test(
+fn map_example(
     block: pbeth::v2::Block,
 ) -> Result<erc20::TransferEvents, substreams::errors::Error> {
     // NOTE: Update TRACKED_CONTRACT to the address of the contract you want to track
@@ -43,7 +43,7 @@ fn map_test(
 }
 
 #[substreams::handlers::store]
-fn store_test(transfers: erc20::TransferEvents, output: store::StoreSetRaw) {
+fn store_example(transfers: erc20::TransferEvents, output: store::StoreSetRaw) {
     log::info!("Stored events {}", transfers.items.len());
     for transfer in transfers.items {
         output.set(

@@ -1,7 +1,5 @@
 use crate::commands::init::ProjectType;
-use crate::utils::{
-    get_relative_path, get_relative_path_from_root_folder, get_repo_root_folder, StaticStrExt,
-};
+use crate::utils::{get_relative_path, get_relative_path_from_root_folder, get_repo_root_folder};
 use cargo_edit::{get_compatible_dependency, get_latest_dependency, LocalManifest, Manifest};
 use semver::{Comparator, Op};
 use std::path::{Path, PathBuf};
@@ -48,23 +46,10 @@ impl CargoToml {
             );
         }
 
-        let mut cargo_toml = CargoToml {
+        CargoToml {
             manifest: Manifest::from_str(&document_string).unwrap(),
             cargo_dir,
-        };
-
-        if project_type == ProjectType::SubstreamsProject {
-            cargo_toml.add_wasm_dependencies(vec![
-                "substreams-helper".dep_with_local_path("substreams-helper"),
-                "substreams-ethereum".dep_from_workspace(),
-                "substreams".dep_from_workspace(),
-                "ethabi".dep_with_major_version(17),
-                "hex-literal".into_dep(),
-                "prost".dep_with_major_version(0),
-            ]);
         }
-
-        cargo_toml
     }
 
     pub(crate) fn load_from_file(cargo_filepath: &PathBuf) -> Self {
@@ -117,26 +102,23 @@ impl CargoToml {
             return false;
         }
 
-        self.add_dependencies(build_dependencies, "build-dependencies")
+        self.add_crate_dependencies(build_dependencies, "build-dependencies")
     }
 
     /// Returns true if an edit to the cargo.toml was made. (false if no changes made)
-    pub(crate) fn add_wasm_dependencies(&mut self, wasm_dependencies: Vec<Dependency>) -> bool {
-        if wasm_dependencies.is_empty() {
+    pub(crate) fn add_dependencies(&mut self, dependencies: Vec<Dependency>) -> bool {
+        if dependencies.is_empty() {
             return false;
         }
 
-        self.add_dependencies(
-            wasm_dependencies,
-            "target.wasm32-unknown-unknown.dependencies",
-        )
+        self.add_crate_dependencies(dependencies, "dependencies")
     }
 
     pub(crate) fn get_file_contents(self) -> String {
         self.manifest.to_string()
     }
 
-    fn add_dependencies(&mut self, dependencies: Vec<Dependency>, section: &str) -> bool {
+    fn add_crate_dependencies(&mut self, dependencies: Vec<Dependency>, section: &str) -> bool {
         let section_parts = section.split(".").into_iter().collect::<Vec<_>>();
         self.ensure_section_created(section, &section_parts);
         let mut section_parts_iter = section_parts.into_iter();

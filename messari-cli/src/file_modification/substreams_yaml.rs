@@ -1,8 +1,8 @@
 use crate::utils::{get_relative_path, get_repo_root_folder};
+use linked_hash_map::LinkedHashMap;
 use std::fmt::{Display, Formatter};
 use std::fs;
 use std::path::PathBuf;
-use linked_hash_map::LinkedHashMap;
 use yaml_rust::yaml::Hash;
 use yaml_rust::{Yaml, YamlEmitter, YamlLoader};
 
@@ -72,15 +72,19 @@ impl SubstreamsYaml {
         let substreams_yaml_dir = self.substreams_yaml_dir.clone();
         let contents_hashmap = self.get_contents_hashmap();
 
-        let protobuf_hashmap = if let Some(protobuf) = contents_hashmap.get_mut(&Yaml::from_str("protobuf")) {
-            if let Yaml::Hash(protobuf_hashmap ) = protobuf {
+        let protobuf_hashmap = if let Some(protobuf) =
+            contents_hashmap.get_mut(&Yaml::from_str("protobuf"))
+        {
+            if let Yaml::Hash(protobuf_hashmap) = protobuf {
                 protobuf_hashmap
             } else {
                 panic!("TODO")
             }
         } else {
             contents_hashmap.insert(Yaml::from_str("protobuf"), Yaml::Hash(LinkedHashMap::new()));
-            let protobuf = contents_hashmap.get_mut(&Yaml::from_str("protobuf")).unwrap();
+            let protobuf = contents_hashmap
+                .get_mut(&Yaml::from_str("protobuf"))
+                .unwrap();
             if let Yaml::Hash(protobuf_hashmap) = protobuf {
                 protobuf_hashmap
             } else {
@@ -91,7 +95,9 @@ impl SubstreamsYaml {
         let mut modified = false;
 
         {
-            let files_array = if let Some(files) = protobuf_hashmap.get_mut(&Yaml::from_str("files")) {
+            let files_array = if let Some(files) =
+                protobuf_hashmap.get_mut(&Yaml::from_str("files"))
+            {
                 if let Yaml::Array(files_array) = files {
                     files_array
                 } else {
@@ -119,7 +125,11 @@ impl SubstreamsYaml {
                 .collect::<Vec<_>>();
 
             for protobuf_file_path in &protobuf_file_paths {
-                let filename = protobuf_file_path.file_name().unwrap().to_string_lossy().to_string();
+                let filename = protobuf_file_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string();
                 if !existing_files.contains(&filename) {
                     modified = true;
                     files_array.push(Yaml::from_str(filename.as_str()));
@@ -127,7 +137,9 @@ impl SubstreamsYaml {
             }
         }
 
-        let import_paths_array = if let Some(import_paths) = protobuf_hashmap.get_mut(&Yaml::from_str("importPaths")) {
+        let import_paths_array = if let Some(import_paths) =
+            protobuf_hashmap.get_mut(&Yaml::from_str("importPaths"))
+        {
             if let Yaml::Array(import_paths_array) = import_paths {
                 import_paths_array
             } else {
@@ -135,7 +147,9 @@ impl SubstreamsYaml {
             }
         } else {
             protobuf_hashmap.insert(Yaml::from_str("importPaths"), Yaml::Array(Vec::new()));
-            let import_paths = protobuf_hashmap.get_mut(&Yaml::from_str("importPaths")).unwrap();
+            let import_paths = protobuf_hashmap
+                .get_mut(&Yaml::from_str("importPaths"))
+                .unwrap();
             if let Yaml::Array(import_paths_array) = import_paths {
                 import_paths_array
             } else {
@@ -203,7 +217,7 @@ impl SubstreamsYaml {
 
             modules_array.push(module.to_yaml());
         } else {
-            contents_hashmap.insert(Yaml::from_str("modules"), module.to_yaml());
+            contents_hashmap.insert(Yaml::from_str("modules"), Yaml::Array(vec![module.to_yaml()]));
         }
 
         true
@@ -380,7 +394,7 @@ impl Display for Input {
 pub(crate) enum InputType {
     Source,
     Store,
-    Map
+    Map,
 }
 
 impl Display for InputType {
@@ -388,7 +402,7 @@ impl Display for InputType {
         match self {
             InputType::Source => write!(f, "source"),
             InputType::Store => write!(f, "store"),
-            InputType::Map => write!(f, "map")
+            InputType::Map => write!(f, "map"),
         }
     }
 }
