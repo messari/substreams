@@ -122,6 +122,9 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     };
 
     if !target_pb_dir.exists() {
+        // We use create_dir rather than create_dir_all as the substreams protogen cmd above always creates the
+        // target/tmp folder if successful so we only need to create the pb folder itself. Failure to create this
+        // folder would imply a failure with the substreams protogen cmd.
         fs::create_dir(&target_pb_dir).unwrap();
     }
 
