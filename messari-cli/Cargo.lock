@@ -832,6 +832,7 @@ dependencies = [
  "clap",
  "dialoguer",
  "lazy_static",
+ "linked-hash-map",
  "pathdiff",
  "regex",
  "reqwest",
