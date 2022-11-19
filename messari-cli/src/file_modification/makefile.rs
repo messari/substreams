@@ -81,6 +81,32 @@ impl MakeFile {
         true
     }
 
+    /// Returns true if an edit to the Makefile was made. (false if no changes made)
+    pub(crate) fn add_project_to_run_all_command(&mut self, project_dir: &PathBuf) -> bool {
+        let project = get_relative_path(&self.makefile_dir, project_dir);
+
+        for command in self.commands.iter_mut() {
+            if command.command_name == "run-all".to_string() {
+                let run_all_projects = command.get_run_all_projects();
+                return if run_all_projects.contains(&project) {
+                    false
+                } else {
+                    command
+                        .operations
+                        .push(format!("$(MAKE) -C {} run", project));
+                    true
+                };
+            }
+        }
+
+        self.commands.push(MakeCommand {
+            command_name: "run-all".to_string(),
+            operations: vec![format!("$(MAKE) -C {} run", project)],
+        });
+
+        true
+    }
+
     /// Returns true if an edit to the Makefile was made. (false if no changes made - due to build command already existing)
     pub(crate) fn add_build_operation(&mut self) -> bool {
         for command in self.commands.iter() {
@@ -92,6 +118,22 @@ impl MakeFile {
         self.commands.push(MakeCommand {
             command_name: "build".to_string(),
             operations: vec!["cargo build --target wasm32-unknown-unknown --release".to_string()],
+        });
+
+        true
+    }
+
+    /// Returns true if an edit to the Makefile was made. (false if no changes made - due to run command already existing)
+    pub(crate) fn add_example_run_operation(&mut self) -> bool {
+        for command in self.commands.iter() {
+            if command.command_name == "run".to_string() {
+                return false;
+            }
+        }
+
+        self.commands.push(MakeCommand {
+            command_name: "run".to_string(),
+            operations: vec!["substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_example,store_example -s 14690152".to_string()],
         });
 
         true
@@ -159,6 +201,21 @@ impl MakeCommand {
             .iter()
             .filter_map(|operation| {
                 if operation.starts_with("$(MAKE) -C ") && operation.ends_with(" build") {
+                    let operation_args = operation.split(" ").collect::<Vec<_>>();
+                    if operation_args.len() == 4 {
+                        return Some(operation_args[2].to_string());
+                    }
+                }
+                None
+            })
+            .collect()
+    }
+
+    fn get_run_all_projects(&self) -> Vec<String> {
+        self.operations
+            .iter()
+            .filter_map(|operation| {
+                if operation.starts_with("$(MAKE) -C ") && operation.ends_with(" run") {
                     let operation_args = operation.split(" ").collect::<Vec<_>>();
                     if operation_args.len() == 4 {
                         return Some(operation_args[2].to_string());

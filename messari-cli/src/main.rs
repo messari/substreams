@@ -4,6 +4,7 @@ mod command_line_client;
 mod commands;
 mod file_modification;
 mod protocols;
+mod template_files;
 mod terminal_interface;
 mod utils;
 

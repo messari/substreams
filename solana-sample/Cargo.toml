@@ -5,7 +5,7 @@ description = "Sample substreams for Solana"
 edition = "2021"
 repository = "https://github.com/messari/substreams/solana-sample"
 
-[target.wasm32-unknown-unknown.dependencies]
+[dependencies]
 getrandom = { version = "0.2", features = ["js"] }
 substreams = "0.0.11"
 substreams-solana = "0.1.0"
