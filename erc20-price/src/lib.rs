@@ -1,14 +1,23 @@
 #[rustfmt::skip]
-pub mod abi;
-#[rustfmt::skip]
 pub mod pb;
+#[rustfmt::skip]
+pub mod abi;
 
+use abi::{chainlink_aggregator, price_feed};
 use hex_literal::hex;
+use pb::chainlink::v1::Aggregator;
 use pb::erc20_price::v1::{Erc20Price, Erc20Prices};
+use std::ops::Not;
+use substreams::scalar::BigInt;
+use substreams::store::StoreNew;
+use substreams::store::{StoreGet, StoreSet};
+use substreams::store::{StoreGetProto, StoreSetProto};
 use substreams::{log, Hex};
-use substreams_ethereum::pb::eth::v2 as eth;
+use substreams_ethereum::Function;
+use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait};
 use substreams_helper::price;
 use substreams_helper::types::Network;
+use substreams_helper::utils::address_pretty;
 
 #[substreams::handlers::map]
 fn map_eth_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {
@@ -38,4 +47,92 @@ fn map_price_for_tokens(
     }
 
     Ok(prices)
+}
+
+#[substreams::handlers::store]
+fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregator>) {
+    for call in block.calls() {
+        if let Some(decoded_call) = price_feed::functions::ConfirmAggregator::match_and_decode(call)
+        {
+            let decimals = chainlink_aggregator::functions::Decimals {}
+                .call(decoded_call.aggregator.to_vec())
+                .unwrap_or(BigInt::zero());
+            let description = chainlink_aggregator::functions::Description {}
+                .call(decoded_call.aggregator.to_vec())
+                .unwrap_or(String::from(""));
+
+            let base_quote: Vec<&str> = description.split(" / ").collect();
+
+            if base_quote.len() != 2 {
+                log::info!(
+                    "[ChainlinkAggregator] Unexpected Description: {}",
+                    description
+                );
+                continue;
+            }
+
+            let mut aggregator_address = decoded_call.aggregator;
+
+            let nested_aggregator = chainlink_aggregator::functions::Aggregator {}
+                .call(aggregator_address.to_vec())
+                .unwrap_or(Vec::<u8>::new());
+
+            if nested_aggregator.is_empty().not() {
+                // In `AggregatorFacade` contracts, the aggregator contract is nested two times.
+                aggregator_address = nested_aggregator;
+            }
+
+            let aggregator = Aggregator {
+                address: address_pretty(&aggregator_address).to_string(),
+                description: description.clone(),
+                base: base_quote[0].to_string(),
+                quote: base_quote[1].to_string(),
+                decimals: decimals.to_u64(),
+            };
+
+            output.set(
+                0,
+                format!("aggregator:{}", address_pretty(&aggregator_address)),
+                &aggregator,
+            );
+        }
+    }
+}
+
+#[substreams::handlers::store]
+fn store_chainlink_price(
+    block: eth::Block,
+    store: StoreGetProto<Aggregator>,
+    output: StoreSetProto<Erc20Price>,
+) {
+    for log in block.logs() {
+        if let Some(event) = chainlink_aggregator::events::AnswerUpdated::match_and_decode(log) {
+            let aggregator_address = address_pretty(log.address());
+
+            if let Some(aggregator) = store.get_last(format!("aggregator:{}", aggregator_address)) {
+                if ["USD", "DAI", "USDC", "USDT"]
+                    .contains(&aggregator.quote.as_str())
+                    .not()
+                {
+                    // TODO: add logic for handling `ETH` quote.
+                    continue;
+                }
+
+                let token_address = aggregator.address;
+                let token_price = event.current.to_decimal(aggregator.decimals);
+
+                let erc20price = Erc20Price {
+                    block_number: block.number,
+                    price_usd: token_price.to_string(),
+                    token_address: token_address.clone(),
+                };
+
+                output.set(
+                    0,
+                    format!("chainlink_price:{}", &token_address),
+                    &erc20price,
+                );
+            }
+        }
+    }
 }
