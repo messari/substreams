@@ -2,6 +2,7 @@ use std::convert::TryInto;
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
+use substreams::Hex;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DecodeError {
@@ -21,6 +22,10 @@ impl Display for DecodeError {
 }
 
 impl Error for DecodeError {}
+
+pub fn address_pretty(input: &[u8]) -> String {
+    format!("0x{}", Hex::encode(input))
+}
 
 pub fn read_uint32(input: &[u8]) -> Result<u32, DecodeError> {
     if input.len() != 32 {
