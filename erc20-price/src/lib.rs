@@ -1,12 +1,9 @@
 #[rustfmt::skip]
 pub mod pb;
 #[rustfmt::skip]
-pub mod pb;
-#[rustfmt::skip]
 pub mod abi;
 pub mod utils;
 
-use abi::{chainlink_aggregator, price_feed};
 use abi::{chainlink_aggregator, price_feed};
 use hex_literal::hex;
 use lazy_static::__Deref;
@@ -17,19 +14,10 @@ use substreams::scalar::BigInt;
 use substreams::store::StoreNew;
 use substreams::store::{StoreGet, StoreSet};
 use substreams::store::{StoreGetProto, StoreSetProto};
-use std::ops::Not;
-use substreams::scalar::BigInt;
-use substreams::store::StoreNew;
-use substreams::store::{StoreGet, StoreSet};
-use substreams::store::{StoreGetProto, StoreSetProto};
 use substreams::{log, Hex};
 use substreams_ethereum::Function;
-use substreams_ethereum::{Function;
-use substreams_ethereum::{pb::eth::v2 as eth, Event as EventTrait}, Event as EventTrait};
 use substreams_helper::price;
 use substreams_helper::types::Network;
-use substreams_helper::utils::address_pretty;
-use substreams_helper::utils::address_pretty;
 
 #[substreams::handlers::map]
 fn map_eth_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {
