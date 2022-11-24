@@ -29,7 +29,7 @@ modules:
 
   - name: store_chainlink_aggregator
     kind: store
-    initialBlock: 10332982
+    initialBlock: 10606500
     updatePolicy: set_if_not_exists
     valueType: proto:messari.chainlink.v1.Aggregator
     inputs:
@@ -37,7 +37,7 @@ modules:
 
   - name: store_chainlink_price
     kind: store
-    initialBlock: 10332982
+    initialBlock: 10606500 
     updatePolicy: set
     valueType: proto:messari.erc20_price.v1.Erc20Price
     inputs:

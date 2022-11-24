@@ -3,9 +3,10 @@ syntax = "proto3";
 package messari.erc20_price.v1;
 
 message ERC20Price {
-  uint64 block_number = 1;
+  string token_address = 1;
   string price_usd = 2;
-  string token_address = 3;
+  uint64 block_number = 3;
+  string source = 4;
 }
 
 message ERC20Prices {

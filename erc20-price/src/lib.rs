@@ -2,9 +2,11 @@
 pub mod pb;
 #[rustfmt::skip]
 pub mod abi;
+pub mod utils;
 
 use abi::{chainlink_aggregator, price_feed};
 use hex_literal::hex;
+use lazy_static::__Deref;
 use pb::chainlink::v1::Aggregator;
 use pb::erc20_price::v1::{Erc20Price, Erc20Prices};
 use std::ops::Not;
@@ -39,9 +41,10 @@ fn map_price_for_tokens(
                 substreams::errors::Error::Unexpected(format!("Failed to get price: {}", e))
             })?;
         prices.items.push(Erc20Price {
-            block_number,
+            block_number: block_number,
             price_usd: token_price.to_string(),
             token_address: Hex(erc20_token.clone()).to_string(),
+            source: "Oracle".to_string()
         });
         log::info!("token {} price {}", Hex(erc20_token), token_price);
     }
@@ -82,9 +85,18 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
                 aggregator_address = nested_aggregator;
             }
 
+            let base_address = match utils::TOKENS.get(base_quote[0]) {
+                Some(v) => String::from(v.deref()),
+                _ => {
+                    log::info!("Cannot find token mapping for base: {}", base_quote[0].to_string());
+                    continue;
+                }
+            };
+
             let aggregator = Aggregator {
                 address: address_pretty(&aggregator_address).to_string(),
                 description: description.clone(),
+                base_address: base_address.clone(),
                 base: base_quote[0].to_string(),
                 quote: base_quote[1].to_string(),
                 decimals: decimals.to_u64(),
@@ -118,13 +130,14 @@ fn store_chainlink_price(
                     continue;
                 }
 
-                let token_address = aggregator.address;
+                let token_address = aggregator.base_address;
                 let token_price = event.current.to_decimal(aggregator.decimals);
 
                 let erc20price = Erc20Price {
                     block_number: block.number,
                     price_usd: token_price.to_string(),
                     token_address: token_address.clone(),
+                    source: format!("Chainlink::{}", aggregator_address)
                 };
 
                 output.set(
