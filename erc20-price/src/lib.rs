@@ -1,7 +1,7 @@
 #[rustfmt::skip]
-pub mod pb;
-#[rustfmt::skip]
 pub mod abi;
+#[rustfmt::skip]
+pub mod pb;
 pub mod utils;
 
 use abi::{chainlink_aggregator, price_feed};
@@ -15,6 +15,7 @@ use substreams::store::StoreNew;
 use substreams::store::{StoreGet, StoreSet};
 use substreams::store::{StoreGetProto, StoreSetProto};
 use substreams::{log, Hex};
+use substreams_ethereum::pb::eth::v2 as eth;
 use substreams_ethereum::Function;
 use substreams_helper::price;
 use substreams_helper::types::Network;
@@ -42,7 +43,7 @@ fn map_price_for_tokens(
             block_number: block_number,
             price_usd: token_price.to_string(),
             token_address: Hex(erc20_token.clone()).to_string(),
-            source: "Oracle".to_string()
+            source: "Oracle".to_string(),
         });
         log::info!("token {} price {}", Hex(erc20_token), token_price);
     }
@@ -55,10 +56,10 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
     for call in block.calls() {
         if let Some(decoded_call) = price_feed::functions::ConfirmAggregator::match_and_decode(call)
         {
-            let decimals = chainlink_aggregator::functions::Decimals {}
+            let decimals = (chainlink_aggregator::functions::Decimals {})
                 .call(decoded_call.aggregator.to_vec())
                 .unwrap_or(BigInt::zero());
-            let description = chainlink_aggregator::functions::Description {}
+            let description = (chainlink_aggregator::functions::Description {})
                 .call(decoded_call.aggregator.to_vec())
                 .unwrap_or(String::from(""));
 
@@ -74,7 +75,7 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
 
             let mut aggregator_address = decoded_call.aggregator;
 
-            let nested_aggregator = chainlink_aggregator::functions::Aggregator {}
+            let nested_aggregator = (chainlink_aggregator::functions::Aggregator {})
                 .call(aggregator_address.to_vec())
                 .unwrap_or(Vec::<u8>::new());
 
@@ -86,13 +87,16 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
             let base_address = match utils::TOKENS.get(base_quote[0]) {
                 Some(v) => String::from(v.deref()),
                 _ => {
-                    log::info!("Cannot find token mapping for base: {}", base_quote[0].to_string());
+                    log::info!(
+                        "Cannot find token mapping for base: {}",
+                        base_quote[0].to_string()
+                    );
                     continue;
                 }
             };
 
             let aggregator = Aggregator {
-                address: address_pretty(&aggregator_address).to_string(),
+                address: Hex(&aggregator_address).to_string(),
                 description: description.clone(),
                 base_address: base_address.clone(),
                 base: base_quote[0].to_string(),
@@ -102,7 +106,7 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
 
             output.set(
                 0,
-                format!("aggregator:{}", address_pretty(&aggregator_address)),
+                format!("aggregator:{}", Hex(&aggregator_address).to_string()),
                 &aggregator,
             );
         }
@@ -117,7 +121,7 @@ fn store_chainlink_price(
 ) {
     for log in block.logs() {
         if let Some(event) = chainlink_aggregator::events::AnswerUpdated::match_and_decode(log) {
-            let aggregator_address = address_pretty(log.address());
+            let aggregator_address = Hex(log.address()).to_string();
 
             if let Some(aggregator) = store.get_last(format!("aggregator:{}", aggregator_address)) {
                 if ["USD", "DAI", "USDC", "USDT"]
@@ -135,7 +139,7 @@ fn store_chainlink_price(
                     block_number: block.number,
                     price_usd: token_price.to_string(),
                     token_address: token_address.clone(),
-                    source: format!("Chainlink::{}", aggregator_address)
+                    source: format!("Chainlink::{}", aggregator_address),
                 };
 
                 output.set(
