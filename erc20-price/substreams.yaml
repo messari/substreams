@@ -9,6 +9,7 @@ imports:
 protobuf:
   files:
     - chainlink.proto
+    - chainlink.proto
     - erc20_price.proto
   importPaths:
     - ./proto/v1
