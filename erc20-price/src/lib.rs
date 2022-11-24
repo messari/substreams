@@ -16,7 +16,7 @@ use substreams::store::{StoreGet, StoreSet};
 use substreams::store::{StoreGetProto, StoreSetProto};
 use substreams::{log, Hex};
 use substreams_ethereum::pb::eth::v2 as eth;
-use substreams_ethereum::Function;
+use substreams_ethereum::{Event, Function};
 use substreams_helper::price;
 use substreams_helper::types::Network;
 
