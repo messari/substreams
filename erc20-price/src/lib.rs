@@ -43,7 +43,7 @@ fn map_price_for_tokens(
             block_number: block_number,
             price_usd: token_price.to_string(),
             token_address: Hex(erc20_token.clone()).to_string(),
-            source: "Oracle".to_string(),
+            source: 0,
         });
         log::info!("token {} price {}", Hex(erc20_token), token_price);
     }
@@ -81,6 +81,8 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
 
             if nested_aggregator.is_empty().not() {
                 // In `AggregatorFacade` contracts, the aggregator contract is nested two times.
+                // Example: 0xb103ede8acd6f0c106b7a5772e9d24e34f5ebc2c
+
                 aggregator_address = nested_aggregator;
             }
 
@@ -95,12 +97,24 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
                 }
             };
 
+            let quote_address = match utils::TOKENS.get(base_quote[1]) {
+                Some(v) => String::from(v.deref()),
+                _ => {
+                    log::info!(
+                        "Cannot find token mapping for quote: {}",
+                        base_quote[1].to_string()
+                    );
+                    continue;
+                }
+            };
+
             let aggregator = Aggregator {
                 address: Hex(&aggregator_address).to_string(),
                 description: description.clone(),
-                base_address: base_address.clone(),
                 base: base_quote[0].to_string(),
+                base_address: base_address.clone(),
                 quote: base_quote[1].to_string(),
+                quote_address: quote_address.clone(),
                 decimals: decimals.to_u64(),
             };
 
@@ -139,7 +153,7 @@ fn store_chainlink_price(
                     block_number: block.number,
                     price_usd: token_price.to_string(),
                     token_address: token_address.clone(),
-                    source: format!("Chainlink::{}", aggregator_address),
+                    source: 1,
                 };
 
                 output.set(

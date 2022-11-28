@@ -8,5 +8,6 @@ message Aggregator {
   string base = 3;
   string base_address = 4;
   string quote = 5;
-  uint64 decimals = 6;
+  string quote_address = 6;
+  uint64 decimals = 7;
 }

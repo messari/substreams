@@ -4,6 +4,7 @@ use std::collections::HashMap;
 lazy_static::lazy_static! {
     pub static ref TOKENS: HashMap<&'static str, &'static str> = {
         let token_mapping: HashMap<&str, &str> = HashMap::from([
+            ("USD", "0x0000000000000000000000000000000000000348"),
             ("CRO", "0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b"),
             ("STMX", "0xbe9375c6a420d2eeb258962efb95551a5b722803"),
             ("SRM", "0x476c5e26a75bd202a9683ffd34359c0cc15be0ff"),

@@ -5,8 +5,12 @@ package messari.erc20_price.v1;
 message Erc20Price {
   string token_address = 1;
   string price_usd = 2;
-  uint64 block_number = 3;
-  string source = 4;
+  uint64 block_number = 3; // last updated block number
+  enum Source {
+    oracles = 0;
+    chainlink = 1;
+  }
+  Source source = 4;
 }
 
 message Erc20Prices {
