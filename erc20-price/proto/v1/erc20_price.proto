@@ -7,8 +7,8 @@ message Erc20Price {
   string price_usd = 2;
   uint64 block_number = 3; // last updated block number
   enum Source {
-    oracles = 0;
-    chainlink = 1;
+    ORACLES = 0;
+    CHAINLINK = 1;
   }
   Source source = 4;
 }
