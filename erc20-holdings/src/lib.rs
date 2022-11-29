@@ -22,6 +22,7 @@ use substreams::store::StoreSetBigDecimal;
 use substreams::store::StoreSetRaw;
 use substreams::{hex, log, proto, store, Hex};
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
+use substreams_helper::keyer::chainlink_asset_key;
 use substreams_helper::types::Address;
 
 fn code_len(call: &pbeth::v2::Call) -> usize {
@@ -134,21 +135,22 @@ fn store_balance_usd(
     output: store::StoreSetBigDecimal,
 ) {
     for transfer in transfers.items {
-        let token_price =
-            match prices.get_last(format!("chainlink_price:{}", &transfer.token_address)) {
-                Some(x) => BigDecimal::from_str(x.price_usd.as_str()).unwrap(),
-                None => BigDecimal::from_str("0").unwrap(),
-            };
+        let mut token_price = BigDecimal::zero();
+        let mut token_decimals = 0;
 
-        let token_denominator = abi::erc20::functions::Decimals {}
-            .call(Hex::decode(transfer.token_address.clone()).unwrap())
-            .unwrap_or(BigInt::from(0));
+        match prices.get_last(chainlink_asset_key(&transfer.token_address)) {
+            Some(price_store) => {
+                token_price = BigDecimal::from_str(price_store.price_usd.as_str()).unwrap();
+                token_decimals = price_store.token.unwrap().decimals;
+            }
+            None => {}
+        };
 
         match balances.get_last(keyer::account_balance_key(&transfer.to)) {
             Some(balance) => output.set(
                 transfer.log_ordinal,
                 keyer::account_balance_usd_key(&transfer.to),
-                &(token_price.clone() * balance.to_decimal(token_denominator.to_u64().into())),
+                &(token_price.clone() * balance.to_decimal(token_decimals.into())),
             ),
             None => {}
         }
@@ -158,7 +160,7 @@ fn store_balance_usd(
                 Some(balance) => output.set(
                     transfer.log_ordinal,
                     keyer::account_balance_usd_key(&transfer.from),
-                    &(token_price.clone() * balance.to_decimal(token_denominator.to_u64().into())),
+                    &(token_price.clone() * balance.to_decimal(token_decimals.into())),
                 ),
                 None => {}
             };

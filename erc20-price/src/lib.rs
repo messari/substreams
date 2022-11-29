@@ -10,7 +10,7 @@ use abi::{chainlink_aggregator, price_feed};
 use hex_literal::hex;
 use lazy_static::__Deref;
 use pb::chainlink::v1::Aggregator;
-use pb::erc20_price::v1::{Erc20Price, Erc20Prices};
+use pb::erc20_price::v1::{Erc20Price, Erc20Prices, Token};
 use std::ops::Not;
 use substreams::scalar::BigInt;
 use substreams::store::StoreNew;
@@ -19,6 +19,7 @@ use substreams::store::{StoreGetProto, StoreSetProto};
 use substreams::{log, Hex};
 use substreams_ethereum::pb::eth::v2 as eth;
 use substreams_ethereum::{Event, Function};
+use substreams_helper::erc20;
 use substreams_helper::price;
 use substreams_helper::types::Network;
 
@@ -41,10 +42,20 @@ fn map_price_for_tokens(
             .map_err(|e| {
                 substreams::errors::Error::Unexpected(format!("Failed to get price: {}", e))
             })?;
+
+        let token_info = match erc20::get_erc20_token(Hex(erc20_token.clone()).to_string()) {
+            Some(x) => x,
+            _ => continue,
+        };
+
         prices.items.push(Erc20Price {
+            token: Some(Token {
+                address: Hex(erc20_token.clone()).to_string(),
+                symbol: token_info.symbol,
+                decimals: token_info.decimals,
+            }),
             block_number: block_number,
             price_usd: token_price.to_string(),
-            token_address: Hex(erc20_token.clone()).to_string(),
             source: 0,
         });
         log::info!("token {} price {}", Hex(erc20_token), token_price);
@@ -58,10 +69,10 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
     for call in block.calls() {
         if let Some(decoded_call) = price_feed::functions::ConfirmAggregator::match_and_decode(call)
         {
-            let decimals = (chainlink_aggregator::functions::Decimals {})
+            let decimals = chainlink_aggregator::functions::Decimals {}
                 .call(decoded_call.aggregator.to_vec())
                 .unwrap_or(BigInt::zero());
-            let description = (chainlink_aggregator::functions::Description {})
+            let description = chainlink_aggregator::functions::Description {}
                 .call(decoded_call.aggregator.to_vec())
                 .unwrap_or(String::from(""));
 
@@ -99,6 +110,10 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
                 }
             };
 
+            let base_decimals = abi::erc20::functions::Decimals {}
+                .call(Hex::decode(base_address.clone()).unwrap())
+                .unwrap_or(BigInt::zero());
+
             let quote_address = match utils::TOKENS.get(base_quote[1]) {
                 Some(v) => String::from(v.deref()),
                 _ => {
@@ -110,13 +125,19 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
                 }
             };
 
+            let quote_decimals = abi::erc20::functions::Decimals {}
+                .call(Hex::decode(quote_address.clone()).unwrap())
+                .unwrap_or(BigInt::zero());
+
             let aggregator = Aggregator {
                 address: Hex(&aggregator_address).to_string(),
                 description: description.clone(),
                 base: base_quote[0].to_string(),
                 base_address: base_address.clone(),
+                base_decimals: base_decimals.to_u64(),
                 quote: base_quote[1].to_string(),
                 quote_address: quote_address.clone(),
+                quote_decimals: quote_decimals.to_u64(),
                 decimals: decimals.to_u64(),
             };
 
@@ -139,7 +160,9 @@ fn store_chainlink_price(
         if let Some(event) = chainlink_aggregator::events::AnswerUpdated::match_and_decode(log) {
             let aggregator_address = Hex(log.address()).to_string();
 
-            if let Some(aggregator) = store.get_last(keyer::chainlink_aggregator_key(&aggregator_address)) {
+            if let Some(aggregator) =
+                store.get_last(keyer::chainlink_aggregator_key(&aggregator_address))
+            {
                 if ["USD", "DAI", "USDC", "USDT"]
                     .contains(&aggregator.quote.as_str())
                     .not()
@@ -152,17 +175,17 @@ fn store_chainlink_price(
                 let token_price = event.current.to_decimal(aggregator.decimals);
 
                 let erc20price = Erc20Price {
-                    block_number: block.number,
+                    token: Some(Token {
+                        address: token_address.clone(),
+                        symbol: aggregator.base,
+                        decimals: aggregator.base_decimals,
+                    }),
                     price_usd: token_price.to_string(),
-                    token_address: token_address.clone(),
+                    block_number: block.number,
                     source: 1,
                 };
 
-                output.set(
-                    0,
-                    keyer::chainlink_asset_key(&token_address),
-                    &erc20price,
-                );
+                output.set(0, keyer::chainlink_asset_key(&token_address), &erc20price);
             }
         }
     }
