@@ -4,6 +4,8 @@ pub mod abi;
 pub mod pb;
 pub mod utils;
 
+mod keyer;
+
 use abi::{chainlink_aggregator, price_feed};
 use hex_literal::hex;
 use lazy_static::__Deref;
@@ -120,7 +122,7 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
 
             output.set(
                 0,
-                format!("aggregator:{}", Hex(&aggregator_address).to_string()),
+                keyer::chainlink_aggregator_key(&Hex(&aggregator_address).to_string()),
                 &aggregator,
             );
         }
@@ -137,7 +139,7 @@ fn store_chainlink_price(
         if let Some(event) = chainlink_aggregator::events::AnswerUpdated::match_and_decode(log) {
             let aggregator_address = Hex(log.address()).to_string();
 
-            if let Some(aggregator) = store.get_last(format!("aggregator:{}", aggregator_address)) {
+            if let Some(aggregator) = store.get_last(keyer::chainlink_aggregator_key(&aggregator_address)) {
                 if ["USD", "DAI", "USDC", "USDT"]
                     .contains(&aggregator.quote.as_str())
                     .not()
@@ -158,7 +160,7 @@ fn store_chainlink_price(
 
                 output.set(
                     0,
-                    format!("chainlink_price:{}", &token_address),
+                    keyer::chainlink_asset_key(&token_address),
                     &erc20price,
                 );
             }
