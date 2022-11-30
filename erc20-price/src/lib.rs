@@ -10,6 +10,7 @@ use abi::{chainlink_aggregator, price_feed};
 use hex_literal::hex;
 use lazy_static::__Deref;
 use pb::chainlink::v1::Aggregator;
+use pb::erc20::v1::Erc20Token;
 use pb::erc20_price::v1::{Erc20Price, Erc20Prices};
 use std::ops::Not;
 use substreams::scalar::BigInt;
@@ -19,6 +20,7 @@ use substreams::store::{StoreGetProto, StoreSetProto};
 use substreams::{log, Hex};
 use substreams_ethereum::pb::eth::v2 as eth;
 use substreams_ethereum::{Event, Function};
+use substreams_helper;
 use substreams_helper::price;
 use substreams_helper::types::Network;
 
@@ -42,8 +44,16 @@ fn map_price_for_tokens(
                 substreams::errors::Error::Unexpected(format!("Failed to get price: {}", e))
             })?;
 
+        let token = substreams_helper::erc20::get_erc20_token(Hex(erc20_token.clone()).to_string())
+            .unwrap();
+
         prices.items.push(Erc20Price {
-            token: utils::get_erc20_token(Hex(erc20_token.clone()).to_string()),
+            token: Some(Erc20Token {
+                address: token.address,
+                name: token.name,
+                symbol: token.symbol,
+                decimals: token.decimals,
+            }),
             block_number: block_number,
             price_usd: token_price.to_string(),
             source: 0,
@@ -89,8 +99,10 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
                 aggregator_address = nested_aggregator;
             }
 
-            let base_address = match utils::TOKENS.get(base_quote[0]) {
-                Some(v) => String::from(v.deref()),
+            let base_asset = match utils::TOKENS.get(base_quote[0]) {
+                Some(base) => {
+                    substreams_helper::erc20::get_erc20_token(String::from(base.deref())).unwrap()
+                }
                 _ => {
                     log::info!(
                         "Cannot find token mapping for base: {}",
@@ -100,8 +112,10 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
                 }
             };
 
-            let quote_address = match utils::TOKENS.get(base_quote[1]) {
-                Some(v) => String::from(v.deref()),
+            let quote_asset = match utils::TOKENS.get(base_quote[1]) {
+                Some(quote) => {
+                    substreams_helper::erc20::get_erc20_token(String::from(quote.deref())).unwrap()
+                }
                 _ => {
                     log::info!(
                         "Cannot find token mapping for quote: {}",
@@ -114,8 +128,18 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
             let aggregator = Aggregator {
                 address: Hex(&aggregator_address).to_string(),
                 description: description.clone(),
-                base_asset: utils::get_erc20_token(base_address),
-                quote_asset: utils::get_erc20_token(quote_address),
+                base_asset: Some(Erc20Token {
+                    address: base_asset.address,
+                    name: base_asset.name,
+                    symbol: base_asset.symbol,
+                    decimals: base_asset.decimals,
+                }),
+                quote_asset: Some(Erc20Token {
+                    address: quote_asset.address,
+                    name: quote_asset.name,
+                    symbol: quote_asset.symbol,
+                    decimals: quote_asset.decimals,
+                }),
                 decimals: decimals.to_u64(),
             };
 

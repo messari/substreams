@@ -1,12 +1,5 @@
-use crate::abi;
-use crate::pb;
-
-use abi::erc20::functions;
 use lazy_static;
-use pb::erc20::v1::Erc20Token;
 use std::collections::HashMap;
-use substreams::scalar::BigInt;
-use substreams::Hex;
 
 lazy_static::lazy_static! {
     pub static ref TOKENS: HashMap<&'static str, &'static str> = {
@@ -155,26 +148,4 @@ lazy_static::lazy_static! {
 
         token_mapping
     };
-}
-
-pub fn get_erc20_token(token_address: String) -> Option<Erc20Token> {
-    let token_address_vec = Hex::decode(token_address.clone()).unwrap();
-
-    let name = functions::Name {}
-        .call(token_address_vec.clone())
-        .unwrap_or(String::new());
-    let symbol = functions::Symbol {}
-        .call(token_address_vec.clone())
-        .unwrap_or(String::new());
-    let decimals = functions::Decimals {}
-        .call(token_address_vec.clone())
-        .unwrap_or(BigInt::zero())
-        .to_u64();
-
-    Some(Erc20Token {
-        address: token_address,
-        name: name,
-        symbol: symbol,
-        decimals: decimals,
-    })
 }

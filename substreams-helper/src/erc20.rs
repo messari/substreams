@@ -1,6 +1,6 @@
-use std::ops::Div;
-
 use crate::abi;
+
+use abi::erc20::functions;
 use substreams::scalar::BigInt;
 use substreams::Hex;
 
@@ -13,28 +13,27 @@ pub struct Erc20Token {
 }
 
 pub fn get_erc20_token(token_address: String) -> Option<Erc20Token> {
-    use abi::erc20::functions;
+    let token_address_vec = Hex::decode(token_address.clone()).unwrap();
 
-    let token_address_bytes = Hex::decode(token_address.clone()).unwrap();
-    let name_res = functions::Name {}.call(token_address_bytes.clone());
-    let symbol_res = functions::Symbol {}.call(token_address_bytes.clone());
-    let decimals_res = functions::Decimals {}.call(token_address_bytes.clone());
-    let total_supply_res = functions::TotalSupply {}.call(token_address_bytes.clone());
+    let name = functions::Name {}
+        .call(token_address_vec.clone())
+        .unwrap_or(String::new());
+    let symbol = functions::Symbol {}
+        .call(token_address_vec.clone())
+        .unwrap_or(String::new());
+    let decimals = functions::Decimals {}
+        .call(token_address_vec.clone())
+        .unwrap_or(BigInt::zero())
+        .to_u64();
+    let total_supply = functions::TotalSupply {}
+        .call(token_address_vec.clone())
+        .unwrap_or(BigInt::zero());
 
-    if let (Some(name), Some(symbol), Some(decimals), Some(total_supply)) =
-        (name_res, symbol_res, decimals_res, total_supply_res)
-    {
-        let decimals_u64 = decimals.to_u64();
-        let total_supply = total_supply.div(BigInt::from(10).pow(decimals_u64 as u32));
-
-        Some(Erc20Token {
-            address: token_address.clone(),
-            name,
-            symbol,
-            decimals: decimals_u64,
-            total_supply,
-        })
-    } else {
-        None
-    }
+    Some(Erc20Token {
+        address: token_address.clone(),
+        name,
+        symbol,
+        decimals: decimals,
+        total_supply,
+    })
 }
