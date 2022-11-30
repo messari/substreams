@@ -31,9 +31,9 @@ pub fn get_erc20_token(token_address: String) -> Option<Erc20Token> {
 
     Some(Erc20Token {
         address: token_address.clone(),
-        name,
-        symbol,
+        name: name,
+        symbol: symbol,
         decimals: decimals,
-        total_supply,
+        total_supply: total_supply,
     })
 }
