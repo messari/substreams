@@ -8,10 +8,12 @@ imports:
 
 protobuf:
   files:
+    - erc20.proto
     - chainlink.proto
     - erc20_price.proto
   importPaths:
     - ./proto/v1
+    - ../common/proto
 
 binaries:
   default:
