@@ -246,6 +246,8 @@ fn store_uniswap_price(
                     .reserve1
                     .to_decimal(pair.token1.clone().unwrap().decimals);
 
+                // TODO: Add a check for mininmum liquidity threshhold.
+
                 match pair.token0.clone().unwrap().symbol.as_str() {
                     symbol if ["DAI", "USDC", "USDT"].contains(&symbol) => {
                         let token_price = reserve0.clone() / reserve1.clone();
