@@ -6,14 +6,16 @@ pub mod pb;
 mod keyer;
 pub mod utils;
 
-use abi::{chainlink_aggregator, price_feed};
+use abi::{chainlink_aggregator, factory, pair, price_feed};
 use hex_literal::hex;
 use lazy_static::__Deref;
 use pb::chainlink::v1::Aggregator;
 use pb::erc20::v1::Erc20Token;
 use pb::erc20_price::v1::{Erc20Price, Erc20Prices};
+use pb::uniswap::v1::PairCreatedEvent;
 use std::ops::Not;
-use substreams::scalar::BigInt;
+use std::str::FromStr;
+use substreams::scalar::{BigDecimal, BigInt};
 use substreams::store::StoreNew;
 use substreams::store::{StoreGet, StoreSet};
 use substreams::store::{StoreGetProto, StoreSetProto};
@@ -145,7 +147,7 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
 
             output.set(
                 0,
-                keyer::chainlink_aggregator_key(&Hex(&aggregator_address).to_string()),
+                keyer::chainlink_aggregator_key(&aggregator.address),
                 &aggregator,
             );
         }
@@ -184,6 +186,158 @@ fn store_chainlink_price(
                 };
 
                 output.set(0, keyer::chainlink_asset_key(&token_address), &erc20price);
+            }
+        }
+    }
+}
+
+#[substreams::handlers::store]
+fn store_pair_created_events(block: eth::Block, output: StoreSetProto<PairCreatedEvent>) {
+    for log in block.logs() {
+        if let Some(event) = factory::events::PairCreated::match_and_decode(log) {
+            let token0_asset =
+                substreams_helper::erc20::get_erc20_token(Hex(event.token0.clone()).to_string())
+                    .unwrap();
+            let token1_asset =
+                substreams_helper::erc20::get_erc20_token(Hex(event.token1.clone()).to_string())
+                    .unwrap();
+
+            let pair_created_event = PairCreatedEvent {
+                token0: Some(Erc20Token {
+                    address: token0_asset.address,
+                    name: token0_asset.name,
+                    symbol: token0_asset.symbol,
+                    decimals: token0_asset.decimals,
+                }),
+                token1: Some(Erc20Token {
+                    address: token1_asset.address,
+                    name: token1_asset.name,
+                    symbol: token1_asset.symbol,
+                    decimals: token1_asset.decimals,
+                }),
+                pair: Hex(event.pair.clone()).to_string(),
+            };
+
+            output.set(
+                0,
+                keyer::pair_info_key(&pair_created_event.pair),
+                &pair_created_event,
+            );
+        }
+    }
+}
+
+#[substreams::handlers::store]
+fn store_uniswap_price(
+    block: eth::Block,
+    chainlink_prices: StoreGetProto<Erc20Price>,
+    store: StoreGetProto<PairCreatedEvent>,
+    output: StoreSetProto<Erc20Price>,
+) {
+    for log in block.logs() {
+        if let Some(event) = pair::events::Sync::match_and_decode(log) {
+            let pair_address = Hex(log.address()).to_string();
+
+            if let Some(pair) = store.get_last(keyer::pair_info_key(&pair_address)) {
+                let reserve0 = event
+                    .reserve0
+                    .to_decimal(pair.token0.clone().unwrap().decimals);
+                let reserve1 = event
+                    .reserve1
+                    .to_decimal(pair.token1.clone().unwrap().decimals);
+
+                match pair.token0.clone().unwrap().symbol.as_str() {
+                    symbol if ["DAI", "USDC", "USDT"].contains(&symbol) => {
+                        let token_price = reserve0.clone() / reserve1.clone();
+
+                        let erc20price = Erc20Price {
+                            token: pair.token1.clone(),
+                            price_usd: format!("{:.7}", token_price.to_string()),
+                            block_number: block.number,
+                            source: 2,
+                        };
+
+                        output.set(
+                            0,
+                            keyer::uniswap_asset_key(&pair.token0.clone().unwrap().address),
+                            &erc20price,
+                        );
+                    }
+                    "WETH" => {
+                        let eth_price = match chainlink_prices.get_last(keyer::chainlink_asset_key(
+                            &pair.token0.clone().unwrap().address,
+                        )) {
+                            Some(price) => BigDecimal::from_str(price.price_usd.as_str()).unwrap(),
+                            None => BigDecimal::zero(),
+                        };
+
+                        if eth_price.eq(&BigDecimal::zero()) {
+                            break;
+                        };
+
+                        let token_price = (reserve0.clone() / reserve1.clone()) * eth_price;
+
+                        let erc20price = Erc20Price {
+                            token: pair.token1.clone(),
+                            price_usd: format!("{:.7}", token_price.to_string()),
+                            block_number: block.number,
+                            source: 2,
+                        };
+
+                        output.set(
+                            0,
+                            keyer::uniswap_asset_key(&pair.token0.clone().unwrap().address),
+                            &erc20price,
+                        );
+                    }
+                    _ => {}
+                }
+
+                match pair.token1.clone().unwrap().symbol.as_str() {
+                    symbol if ["DAI", "USDC", "USDT"].contains(&symbol) => {
+                        let token_price = reserve1.clone() / reserve0.clone();
+
+                        let erc20price = Erc20Price {
+                            token: pair.token0.clone(),
+                            price_usd: format!("{:.7}", token_price.to_string()),
+                            block_number: block.number,
+                            source: 2,
+                        };
+
+                        output.set(
+                            0,
+                            keyer::uniswap_asset_key(&pair.token1.clone().unwrap().address),
+                            &erc20price,
+                        );
+                    }
+                    "WETH" => {
+                        let eth_price = match chainlink_prices.get_last(keyer::chainlink_asset_key(
+                            &pair.token1.clone().unwrap().address,
+                        )) {
+                            Some(price) => BigDecimal::from_str(price.price_usd.as_str()).unwrap(),
+                            None => BigDecimal::zero(),
+                        };
+
+                        if eth_price.eq(&BigDecimal::zero()) {
+                            break;
+                        };
+                        let token_price = (reserve1.clone() / reserve0.clone()) * eth_price;
+
+                        let erc20price = Erc20Price {
+                            token: pair.token0.clone(),
+                            price_usd: format!("{:.7}", token_price.to_string()),
+                            block_number: block.number,
+                            source: 2,
+                        };
+
+                        output.set(
+                            0,
+                            keyer::uniswap_asset_key(&pair.token0.clone().unwrap().address),
+                            &erc20price,
+                        );
+                    }
+                    _ => {}
+                }
             }
         }
     }

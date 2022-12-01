@@ -4,7 +4,7 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml store_chainlink_price -s 10606500 -t +1000000
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml store_uniswap_price -s 10040530 -t +1000000
 
 .PHONY: pack
 pack:

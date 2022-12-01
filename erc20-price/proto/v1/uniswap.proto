@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+import "erc20.proto";
+package messari.uniswap.v1;
+
+message PairCreatedEvent {
+  messari.erc20.v1.ERC20Token token0 = 1;
+  messari.erc20.v1.ERC20Token token1 = 2;
+  string pair = 3;
+}
