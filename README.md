@@ -1,8 +1,6 @@
 # Messari Substreams
 
-### Pre-requisites
-
-
+## Pre-requisites
 
 ### Getting started with Rust
 
@@ -28,3 +26,21 @@
 ### Helpers
 
 - [Keccak 256 Encoder](https://emn178.github.io/online-tools/keccak_256.html)
+
+## Workflow
+
+### Messari Command line interface
+
+- To install run: `make install-cli`
+- Two commands are currently available:
+    - `messari init`
+    -  `messari add abi`
+- Use `--help` flag for details around providing args in the command line
+- If any args are left blank the CLI will ask you for the necessary information when needed
+
+###  Logging
+
+- [Rust Logging](https://docs.rs/log/0.4.14/log/)
+- Logging can be done using the standard `log` crate, or using the `slog` crate.
+- **Note** that `substreams` does not cache the logs. If you want to see logs, you may need to make a change to your substreams code, so that a new binary will be generated - otherwise, this substream will just stream the cached data from the first execution without the logs.
+

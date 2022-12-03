@@ -1,0 +1,26 @@
+specVersion: v0.1.0
+package:
+  name: eth_balance
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+
+protobuf:
+  files:
+    - eth_balance.proto
+  importPaths:
+    - proto/v1
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/eth_balance.wasm"
+
+modules:
+  - name: store_balance
+    kind: store
+    updatePolicy: set
+    valueType: string
+    inputs:
+      - source: sf.ethereum.type.v2.Block

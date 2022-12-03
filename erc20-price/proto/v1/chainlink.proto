@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+import "erc20.proto";
+package messari.chainlink.v1;
+
+message Aggregator {
+  string address = 1;
+  string description = 2;
+
+  messari.erc20.v1.ERC20Token base_asset = 3;
+  messari.erc20.v1.ERC20Token quote_asset = 4;
+  
+  uint64 decimals = 5; // Aggregator Decimals
+}

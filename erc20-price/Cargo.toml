@@ -8,9 +8,10 @@ repository = "https://github.com/messari/substreams/erc20-price"
 [lib]
 crate-type = ["cdylib"]
 
-[target.wasm32-unknown-unknown.dependencies]
+[dependencies]
 ethabi = "17.0"
 prost = "^0.11.0"
+lazy_static = "1.4.0"
 hex-literal = "0.3.4"
 substreams.workspace = true
 substreams-ethereum.workspace = true

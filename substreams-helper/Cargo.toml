@@ -7,7 +7,7 @@ license = "MIT"
 homepage = "https://messari.io/"
 repository = "https://github.com/messari/substreams/substreams-helper"
 
-[target.wasm32-unknown-unknown.dependencies]
+[dependencies]
 ethabi = "17.0"
 hex = "0.4.3"
 hex-literal = "0.3.4"
@@ -18,10 +18,9 @@ pad = "0.1"
 tiny-keccak = { version = "2.0", features = ["keccak"] }
 substreams = { workspace = true }
 substreams-ethereum = { workspace = true }
+thiserror = "1.0.37"
 
 [build-dependencies]
 anyhow = "1"
 substreams-common = { path = "../common" }
 
-[dependencies]
-thiserror = "1.0.37"
