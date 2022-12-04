@@ -216,6 +216,7 @@ fn store_pair_created_events(block: eth::Block, output: StoreSetProto<PairCreate
                     decimals: token1_asset.decimals,
                 }),
                 pair: Hex(event.pair.clone()).to_string(),
+                factory: Hex(log.address()).to_string(),
             };
 
             output.set(
@@ -248,13 +249,13 @@ fn store_uniswap_price(
 
                 // TODO: Add a check for mininmum liquidity threshhold.
 
-                match pair.token0.clone().unwrap().symbol.as_str() {
-                    symbol if ["DAI", "USDC", "USDT"].contains(&symbol) => {
+                match pair.token0.clone().unwrap().address.as_str() {
+                    address if utils::STABLE_COINS.contains(&address) => {
                         let token_price = reserve0.clone() / reserve1.clone();
 
                         let erc20price = Erc20Price {
                             token: pair.token1.clone(),
-                            price_usd: format!("{:.7}", token_price.to_string()),
+                            price_usd: token_price.to_string(),
                             block_number: block.number,
                             source: 2,
                         };
@@ -265,7 +266,7 @@ fn store_uniswap_price(
                             &erc20price,
                         );
                     }
-                    "WETH" => {
+                    address if utils::TOKENS.get("ETH").unwrap().eq(&address) => {
                         let eth_price = match chainlink_prices.get_last(keyer::chainlink_asset_key(
                             &pair.token0.clone().unwrap().address,
                         )) {
@@ -281,7 +282,7 @@ fn store_uniswap_price(
 
                         let erc20price = Erc20Price {
                             token: pair.token1.clone(),
-                            price_usd: format!("{:.7}", token_price.to_string()),
+                            price_usd: token_price.to_string(),
                             block_number: block.number,
                             source: 2,
                         };
@@ -295,13 +296,13 @@ fn store_uniswap_price(
                     _ => {}
                 }
 
-                match pair.token1.clone().unwrap().symbol.as_str() {
-                    symbol if ["DAI", "USDC", "USDT"].contains(&symbol) => {
+                match pair.token1.clone().unwrap().address.as_str() {
+                    address if utils::STABLE_COINS.contains(&address) => {
                         let token_price = reserve1.clone() / reserve0.clone();
 
                         let erc20price = Erc20Price {
                             token: pair.token0.clone(),
-                            price_usd: format!("{:.7}", token_price.to_string()),
+                            price_usd: token_price.to_string(),
                             block_number: block.number,
                             source: 2,
                         };
@@ -312,7 +313,7 @@ fn store_uniswap_price(
                             &erc20price,
                         );
                     }
-                    "WETH" => {
+                    address if utils::TOKENS.get("ETH").unwrap().eq(&address) => {
                         let eth_price = match chainlink_prices.get_last(keyer::chainlink_asset_key(
                             &pair.token1.clone().unwrap().address,
                         )) {
@@ -327,14 +328,14 @@ fn store_uniswap_price(
 
                         let erc20price = Erc20Price {
                             token: pair.token0.clone(),
-                            price_usd: format!("{:.7}", token_price.to_string()),
+                            price_usd: token_price.to_string(),
                             block_number: block.number,
                             source: 2,
                         };
 
                         output.set(
                             0,
-                            keyer::uniswap_asset_key(&pair.token0.clone().unwrap().address),
+                            keyer::uniswap_asset_key(&pair.token1.clone().unwrap().address),
                             &erc20price,
                         );
                     }

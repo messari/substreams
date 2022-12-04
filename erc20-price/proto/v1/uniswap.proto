@@ -7,4 +7,6 @@ message PairCreatedEvent {
   messari.erc20.v1.ERC20Token token0 = 1;
   messari.erc20.v1.ERC20Token token1 = 2;
   string pair = 3;
+
+  string factory = 4;
 }
