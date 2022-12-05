@@ -77,7 +77,7 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         .output()
     {
         Ok(output) => output,
-        Err(error) => println!("Error!!: {}", error),
+        Err(error) => panic!("Error!!: {}", error),
     };
 
     println!("Command ran!!");
