@@ -64,20 +64,28 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         fs::remove_dir_all(&tmp_dir).unwrap();
     }
 
+    println!("About to run command!!");
+
     // generate pb files under src/pb
-    let cmd_output = Command::new("substreams")
+    let cmd_output = match Command::new("substreams")
         .args(&[
             "protogen",
             substreams_yaml.to_string_lossy().as_ref(),
             "--output-path=target/tmp",
         ])
         .stderr(Stdio::piped())
-        .output()
-        .unwrap();
+        .output() {
+        Ok(output) => output,
+        Err(error) => println!("Error!!: {}", error)
+    };
+
+    println!("Command ran!!");
 
     if cmd_output.stderr.len() > 0 {
         panic!("Error!: {}", String::from_utf8(cmd_output.stderr).unwrap())
     }
+
+    println!("Command ran");
 
     // Cleanup unwanted .proto bindings
     if let Ok(read_dir) = fs::read_dir(&tmp_dir) {
