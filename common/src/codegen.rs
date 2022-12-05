@@ -96,6 +96,19 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     }
 
     // ensure_substreams_added_to_path();
+    let substreams_cmd =
+        Path::new("/opt/hostedtoolcache/streamingfast/substreams/latest/linux-x64/substreams");
+    println!("Sub exist: {}", substreams_cmd.exists());
+
+    if let Ok(read_dir) = fs::read_dir(&tmp_dir) {
+        read_dir.for_each(|x| {
+            let dir_entry = x.unwrap();
+            println!(
+                "Filename: {}",
+                dir_entry.file_name().to_string_lossy().to_string()
+            )
+        });
+    }
 
     // Just checking if the substreams command actually works at all...
     let cmd_output = match Command::new(
