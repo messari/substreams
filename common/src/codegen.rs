@@ -95,13 +95,15 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         }
     }
 
-    ensure_substreams_added_to_path();
+    // ensure_substreams_added_to_path();
 
     // Just checking if the substreams command actually works at all...
-    let cmd_output = match Command::new("substreams")
-        .args(&["--version"])
-        .stdout(Stdio::piped())
-        .output()
+    let cmd_output = match Command::new(
+        "/opt/hostedtoolcache/streamingfast/substreams/latest/linux-x64/substreams",
+    )
+    .args(&["--version"])
+    .stdout(Stdio::piped())
+    .output()
     {
         Ok(output) => output,
         Err(error) => panic!("Error!!: {}", error),
