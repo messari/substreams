@@ -74,9 +74,10 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
             "--output-path=target/tmp",
         ])
         .stderr(Stdio::piped())
-        .output() {
+        .output()
+    {
         Ok(output) => output,
-        Err(error) => println!("Error!!: {}", error)
+        Err(error) => println!("Error!!: {}", error),
     };
 
     println!("Command ran!!");
