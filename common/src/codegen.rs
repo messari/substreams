@@ -66,9 +66,11 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
 
     println!("Creating tmp folder");
 
-    fs::create_dir_all(tmp_dir).unwrap();
+    fs::create_dir_all(&tmp_dir).unwrap();
 
     println!("About to run command!!");
+
+    println!("Substreams path: {}", substreams_yaml.to_string_lossy());
 
     // generate pb files under src/pb
     let cmd_output = match Command::new("substreams")
