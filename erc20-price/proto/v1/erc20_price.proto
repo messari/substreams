@@ -1,13 +1,20 @@
 syntax = "proto3";
 
+import "erc20.proto";
 package messari.erc20_price.v1;
 
-message ERC20Price {
-  uint64 block_number = 1;
+message Erc20Price {
+  messari.erc20.v1.ERC20Token token = 1;
   string price_usd = 2;
-  string token_address = 3;
+  uint64 block_number = 3; // last updated block number
+  
+  enum Source {
+    ORACLES = 0;
+    CHAINLINK = 1;
+  }
+  Source source = 4;
 }
 
-message ERC20Prices {
-  repeated ERC20Price items = 1;
+message Erc20Prices {
+  repeated Erc20Price items = 1;
 }

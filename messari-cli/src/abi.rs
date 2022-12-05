@@ -12,6 +12,7 @@ use crate::file_modification::file_contents_modifier::{
 use crate::protocols::{
     Protocol, ProtocolAndNetworkInfo, ProtocolType, SupportedAbiAdditionMethods,
 };
+use crate::template_files::BUILD_TEMPLATE;
 use crate::terminal_interface::{get_input, get_success_message, Spinner};
 use crate::utils::{StaticStrExt, StrExt};
 
@@ -298,7 +299,6 @@ fn add_abi_to_project(abi_file_contents: String, contract_name: &String, project
     };
     let build_rs_filepath = project_dir.join("build.rs");
     let cargo_toml_filepath = project_dir.join("Cargo.toml");
-    let mut cargo_toml_contents = CargoToml::load_from_file(&cargo_toml_filepath);
 
     let spinner = Spinner::new(format!("Adding abi boilerplate for {}", contract_name));
 
@@ -311,8 +311,9 @@ fn add_abi_to_project(abi_file_contents: String, contract_name: &String, project
     if !build_rs_filepath.exists() {
         operations.push(FileContentsModification::CreateFile(File {
             filepath: build_rs_filepath,
-            file_contents: get_build_rs_default_file_contents(),
+            file_contents: BUILD_TEMPLATE.to_string(),
         }));
+        let mut cargo_toml_contents = CargoToml::load_from_file(&cargo_toml_filepath);
         if cargo_toml_contents.add_build_dependencies(vec![
             "anyhow".into_dep(),
             "substreams-common".dep_with_local_path("common"),
@@ -332,20 +333,6 @@ fn add_abi_to_project(abi_file_contents: String, contract_name: &String, project
     safely_modify_file_contents(operations);
 
     spinner.end_with_success_message(format!("Abi boilerplate added for {}", contract_name));
-}
-
-fn get_build_rs_default_file_contents() -> String {
-    "use anyhow::{Ok, Result};
-use substreams_common::codegen;
-
-fn main() -> Result<(), anyhow::Error> {
-    println!(\"cargo:rerun-if-changed=proto\");
-    println!(\"cargo:rerun-if-changed=abi\");
-    codegen::generate(None)?;
-
-    Ok(())
-}"
-    .to_string()
 }
 
 #[derive(Deserialize)]

@@ -9,10 +9,13 @@ use crate::file_modification::file_contents_modifier::{
     create_dir_all, safely_modify_file_contents, File, FileContentsModification,
 };
 use crate::file_modification::makefile::MakeFile;
-use crate::file_modification::substreams_yaml::SubstreamsYaml;
+use crate::file_modification::substreams_yaml::{
+    Input, InputType, Module, SubstreamsYaml, UpdatePolicy,
+};
 use crate::protocols::ProtocolAndNetworkArgs;
+use crate::template_files::{BUILD_TEMPLATE, ERC20_TEMPLATE, LIB_TEMPLATE};
 use crate::terminal_interface::{get_input, select_from_enum};
-use crate::utils::{get_current_directory, get_repo_root_folder};
+use crate::utils::{get_current_directory, get_repo_root_folder, StaticStrExt};
 
 #[derive(Parser)]
 pub(crate) struct Init {
@@ -175,6 +178,8 @@ fn create_substreams_project(
     project_description: Option<String>,
     project_dir: &PathBuf,
 ) {
+    const TEMP_LIB_FILE_SCAFFOLDING: bool = true;
+
     // Root files
     let root_folder = get_repo_root_folder();
     let root_cargo_toml = root_folder.join("Cargo.toml");
@@ -196,6 +201,58 @@ fn create_substreams_project(
     let mut project_makefile_contents = MakeFile::new(&project_makefile);
     project_makefile_contents.add_build_operation();
 
+    let mut yaml_contents = SubstreamsYaml::new(project_name.as_str(), &substreams_yaml);
+
+    let mut project_cargo_toml_contents = CargoToml::new(
+        project_name,
+        project_description,
+        ProjectType::SubstreamsProject,
+        &project_cargo_toml,
+    );
+
+    let mut lib_file_contents = String::new();
+
+    if TEMP_LIB_FILE_SCAFFOLDING {
+        root_makefile_contents.add_project_to_run_all_command(project_dir);
+
+        project_makefile_contents.add_example_run_operation();
+
+        yaml_contents.add_module(Module::map(
+            "map_example".to_string(),
+            Some(14690152),
+            vec![Input {
+                input_type: InputType::Source,
+                input_value: "sf.ethereum.type.v2.Block".to_string(),
+            }],
+            "proto:messari.erc20.v1.TransferEvents".to_string(),
+        ));
+        yaml_contents.add_module(Module::store(
+            "store_example".to_string(),
+            None,
+            UpdatePolicy::Set,
+            "proto:messari.erc20.v1.TransferEvents".to_string(),
+            vec![Input {
+                input_type: InputType::Map,
+                input_value: "map_example".to_string(),
+            }],
+        ));
+        yaml_contents.add_protobuf_files(vec![get_repo_root_folder()
+            .join("common")
+            .join("proto")
+            .join("erc20.proto")]);
+
+        project_cargo_toml_contents.add_dependencies(vec![
+            "substreams-helper".dep_with_local_path("substreams-helper"),
+            "substreams-ethereum".dep_from_workspace(),
+            "substreams".dep_from_workspace(),
+            "ethabi".dep_with_major_version(17),
+            "hex-literal".into_dep(),
+            "prost".dep_with_major_version(0),
+        ]);
+
+        lib_file_contents = LIB_TEMPLATE.to_string();
+    }
+
     let mut operations = create_dir_all(project_dir.clone());
     operations.extend(vec![
         FileContentsModification::CreateFolder(src_dir),
@@ -208,29 +265,48 @@ fn create_substreams_project(
             file_contents: root_makefile_contents.get_file_contents(),
         }),
         FileContentsModification::CreateFile(File {
-            filepath: lib_file,
-            file_contents: "".to_string(),
-        }),
-        FileContentsModification::CreateFile(File {
-            file_contents: SubstreamsYaml::new(project_name.as_str(), &substreams_yaml)
-                .get_file_contents(),
+            file_contents: yaml_contents.get_file_contents(),
             filepath: substreams_yaml,
-        }),
-        FileContentsModification::CreateFile(File {
-            file_contents: CargoToml::new(
-                project_name,
-                project_description,
-                ProjectType::SubstreamsProject,
-                &project_cargo_toml,
-            )
-            .get_file_contents(),
-            filepath: project_cargo_toml,
         }),
         FileContentsModification::CreateFile(File {
             filepath: project_makefile,
             file_contents: project_makefile_contents.get_file_contents(),
         }),
+        FileContentsModification::CreateFile(File {
+            filepath: lib_file,
+            file_contents: lib_file_contents,
+        }),
     ]);
+
+    if TEMP_LIB_FILE_SCAFFOLDING {
+        let build_rs_filepath = project_dir.join("build.rs");
+        if !build_rs_filepath.exists() {
+            operations.push(FileContentsModification::CreateFile(File {
+                filepath: build_rs_filepath,
+                file_contents: BUILD_TEMPLATE.to_string(),
+            }));
+
+            project_cargo_toml_contents.add_build_dependencies(vec![
+                "anyhow".into_dep(),
+                "substreams-common".dep_with_local_path("common"),
+            ]);
+        }
+
+        let abi_folder = project_dir.join("abi");
+        let abi_example_file = abi_folder.join("erc20.json");
+        operations.extend(vec![
+            FileContentsModification::CreateFolder(abi_folder),
+            FileContentsModification::CreateFile(File {
+                filepath: abi_example_file,
+                file_contents: ERC20_TEMPLATE.to_string(),
+            }),
+        ]);
+    }
+
+    operations.push(FileContentsModification::CreateFile(File {
+        file_contents: project_cargo_toml_contents.get_file_contents(),
+        filepath: project_cargo_toml,
+    }));
 
     safely_modify_file_contents(operations);
 }

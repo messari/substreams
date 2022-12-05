@@ -27,6 +27,23 @@
 
 - [Keccak 256 Encoder](https://emn178.github.io/online-tools/keccak_256.html)
 
+## Development Status
+
+🔨 = In progress.  
+🛠 = Feature complete. Additional testing required.  
+✅ = Production-ready.
+
+| Substream        |  Status | Description                                |
+|------------------|  :------: |--------------------------------------------|
+| Ethereum Network | 🔨 | Network-level metrics and statistics       |
+| ETH Balance      | 🛠 | ETH balance for every Ethereum address     |
+| ERC20 Holdings   | 🛠 | ERC20 balance for every Ethereum address   |
+| ERC20 Price      | 🛠 | Pricing module for ERC20 tokens            |
+| SPL Holdings     |  | SPL token balance for every Solana address |
+| ENS Look Up      | 🔨 | ENS records for lookup and reverse lookup  |
+| Uniswap v2       | 🔨 | Substreams for Uniswap v2                  |
+| Compound v2      | 🔨 | Substreams for Compound v2                 |
+
 ## Workflow
 
 ### Messari Command line interface
