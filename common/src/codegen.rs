@@ -3,7 +3,7 @@ use std::env::current_dir;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::string::ToString;
 use substreams_ethereum::Abigen;
 
@@ -65,14 +65,19 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     }
 
     // generate pb files under src/pb
-    Command::new("substreams")
+    let cmd_output = Command::new("substreams")
         .args(&[
             "protogen",
             substreams_yaml.to_string_lossy().as_ref(),
             "--output-path=target/tmp",
         ])
-        .status()
-        .expect("failed to run substreams protogen");
+        .stderr(Stdio::piped())
+        .output()
+        .unwrap();
+
+    if cmd_output.stderr.len() > 0 {
+        panic!("Error!: {}", String::from_utf8(cmd_output.stderr).unwrap())
+    }
 
     // Cleanup unwanted .proto bindings
     if let Ok(read_dir) = fs::read_dir(&tmp_dir) {
