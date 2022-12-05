@@ -76,6 +76,27 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         substreams_yaml.exists()
     );
 
+    fn substreams_cmd_doesnt_exist() -> bool {
+        let cmd_output = Command::new("where")
+            .args(&["substreams"])
+            .stdout(Stdio::piped())
+            .output()
+            .unwrap();
+
+        cmd_output.stdout.len() == 0
+    }
+
+    fn ensure_substreams_added_to_path() {
+        if substreams_cmd_doesnt_exist() {
+            Command::new("export")
+                .args(&["PATH=\"/opt/hostedtoolcache/streamingfast/substreams/latest/linux-x64/bin:$PATH\""])
+                .status()
+                .unwrap();
+        }
+    }
+
+    ensure_substreams_added_to_path();
+
     // Just checking if the substreams command actually works at all...
     let cmd_output = match Command::new("substreams")
         .args(&["--version"])
