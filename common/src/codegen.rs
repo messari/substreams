@@ -64,6 +64,10 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         fs::remove_dir_all(&tmp_dir).unwrap();
     }
 
+    println!("Creating tmp folder");
+
+    fs::create_dir_all(tmp_dir).unwrap();
+
     println!("About to run command!!");
 
     // generate pb files under src/pb
