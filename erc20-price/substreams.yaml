@@ -8,9 +8,12 @@ imports:
 
 protobuf:
   files:
+    - erc20.proto
+    - chainlink.proto
     - erc20_price.proto
   importPaths:
     - ./proto/v1
+    - ../common/proto
 
 binaries:
   default:
@@ -25,3 +28,20 @@ modules:
       - source: sf.ethereum.type.v2.Block
     output:
       type: proto:messari.erc20_price.v1.Erc20Prices
+
+  - name: store_chainlink_aggregator
+    kind: store
+    initialBlock: 10606500
+    updatePolicy: set_if_not_exists
+    valueType: proto:messari.chainlink.v1.Aggregator
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+
+  - name: store_chainlink_price
+    kind: store
+    initialBlock: 10606500 
+    updatePolicy: set
+    valueType: proto:messari.erc20_price.v1.Erc20Price
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_chainlink_aggregator
