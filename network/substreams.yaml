@@ -9,8 +9,10 @@ imports:
 protobuf:
   files:
     - network.proto
+    - aggregate_data.proto
   importPaths:
     - ./proto/v1
+    - ./proto
 
 binaries:
   default:

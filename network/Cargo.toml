@@ -18,6 +18,8 @@ substreams = { workspace = true }
 substreams-ethereum = { workspace = true }
 substreams-helper = { path = "../substreams-helper" }
 thiserror = "1.0.37"
+lazy_static = "1.4.0"
+substreams-entity-change = "0.3.0"
 
 [build-dependencies]
 anyhow = "1"
