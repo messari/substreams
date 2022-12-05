@@ -70,7 +70,25 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
 
     println!("About to run command!!");
 
-    println!("Substreams path: {}", substreams_yaml.to_string_lossy());
+    println!(
+        "Substreams path: {} - exists: {}",
+        substreams_yaml.to_string_lossy(),
+        substreams_yaml.exists()
+    );
+
+    // Just checking if the substreams command actually works at all...
+    let cmd_output = match Command::new("substreams")
+        .args(&["--version"])
+        .stdout(Stdio::piped())
+        .output()
+    {
+        Ok(output) => output,
+        Err(error) => panic!("Error!!: {}", error),
+    };
+    println!("Command ran23232!!");
+    if cmd_output.stdout.len() > 0 {
+        println!("Error1!: {}", String::from_utf8(cmd_output.stdout).unwrap())
+    }
 
     // generate pb files under src/pb
     let cmd_output = match Command::new("substreams")
