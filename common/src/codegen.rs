@@ -118,8 +118,17 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
 
     // fs::copy(substreams_filepath, "substreams").unwrap();
 
+    println!("1111111");
+
+    Command::new(&substreams_filepath)
+        .args(&["--version"])
+        .status()
+        .unwrap();
+
+    println!("22222222");
+
     // Just checking if the substreams command actually works at all...
-    let cmd_output = match Command::new(substreams_filepath)
+    let cmd_output = match Command::new(&substreams_filepath)
         .args(&["--version"])
         .stdout(Stdio::piped())
         .output()
