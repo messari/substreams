@@ -1,15 +1,6 @@
 .PHONY: build-all
 build-all:
-	$(MAKE) -C substreams-helper build
-	$(MAKE) -C uniswap-v2 build
-	$(MAKE) -C erc20-holdings build
-	$(MAKE) -C erc20-price build
-	$(MAKE) -C erc20-market-cap build
-	$(MAKE) -C erc721 build
-	$(MAKE) -C compound-v2 build
 	$(MAKE) -C network build
-	$(MAKE) -C solana-sample build
-	$(MAKE) -C eth-balance build
 
 .PHONY: run-all
 run-all:

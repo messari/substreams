@@ -100,6 +100,9 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         Path::new("/opt/hostedtoolcache/streamingfast/substreams/latest/linux-x64/substreams");
     println!("Sub exist: {}", substreams_cmd.exists());
 
+    let folder_cmd = Path::new("/opt/hostedtoolcache/streamingfast/substreams/latest/linux-x64");
+    println!("Sub exist: {}", folder_cmd.exists());
+
     if let Ok(read_dir) = fs::read_dir(&tmp_dir) {
         read_dir.for_each(|x| {
             let dir_entry = x.unwrap();
