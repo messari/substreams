@@ -103,7 +103,7 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     let folder_cmd = Path::new("/opt/hostedtoolcache/streamingfast/substreams/latest/linux-x64");
     println!("Sub exist: {}", folder_cmd.exists());
 
-    if let Ok(read_dir) = fs::read_dir(&tmp_dir) {
+    if let Ok(read_dir) = fs::read_dir(&folder_cmd) {
         read_dir.for_each(|x| {
             let dir_entry = x.unwrap();
             println!(
@@ -112,6 +112,8 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
             )
         });
     }
+
+    println!("Now trying a get version");
 
     // Just checking if the substreams command actually works at all...
     let cmd_output = match Command::new(
