@@ -116,8 +116,10 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         substreams_filepath.to_string_lossy()
     );
 
+    fs::copy(substreams_filepath, "substreams").unwrap();
+
     // Just checking if the substreams command actually works at all...
-    let cmd_output = match Command::new(substreams_filepath)
+    let cmd_output = match Command::new("substreams")
         .args(&["--version"])
         .stdout(Stdio::piped())
         .output()
