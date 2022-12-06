@@ -103,28 +103,27 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     let folder_cmd = Path::new("/opt/hostedtoolcache/streamingfast/substreams/latest/linux-x64");
     println!("Sub exist: {}", folder_cmd.exists());
 
-    if let Ok(read_dir) = fs::read_dir(&folder_cmd) {
-        read_dir.for_each(|x| {
-            let dir_entry = x.unwrap();
-            println!(
-                "Filename: {}",
-                dir_entry.file_name().to_string_lossy().to_string()
-            )
-        });
-    }
+    let substreams_filepath = fs::read_dir(&folder_cmd)
+        .unwrap()
+        .into_iter()
+        .next()
+        .unwrap()
+        .unwrap()
+        .path();
 
-    println!("Now trying a get version");
+    println!(
+        "Now trying a get version. Filepath: {}",
+        substreams_filepath.to_string_lossy()
+    );
 
     // Just checking if the substreams command actually works at all...
-    let cmd_output = match Command::new(
-        "/opt/hostedtoolcache/streamingfast/substreams/latest/linux-x64/substreams",
-    )
-    .args(&["--version"])
-    .stdout(Stdio::piped())
-    .output()
+    let cmd_output = match Command::new(substreams_filepath)
+        .args(&["--version"])
+        .stdout(Stdio::piped())
+        .output()
     {
         Ok(output) => output,
-        Err(error) => panic!("Error!!: {}", error),
+        Err(error) => panic!("Erroraa!!: {}", error),
     };
     println!("Command ran23232!!");
     if cmd_output.stdout.len() > 0 {
