@@ -95,32 +95,9 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         }
     }
 
-    // ensure_substreams_added_to_path();
-    let substreams_cmd =
-        Path::new("/opt/hostedtoolcache/streamingfast/substreams/latest/linux-x64/substreams");
-    println!("Sub exist: {}", substreams_cmd.exists());
-
-    let folder_cmd = Path::new("/opt/hostedtoolcache/streamingfast/substreams/latest/linux-x64");
-    println!("Sub exist: {}", folder_cmd.exists());
-
-    let substreams_filepath = fs::read_dir(&folder_cmd)
-        .unwrap()
-        .into_iter()
-        .next()
-        .unwrap()
-        .unwrap()
-        .path();
-
-    println!(
-        "Now trying a get version. Filepath: {}",
-        substreams_filepath.to_string_lossy()
-    );
-
-    // fs::copy(substreams_filepath, "substreams").unwrap();
-
     println!("1111111");
 
-    Command::new(&substreams_filepath)
+    Command::new("substreams")
         .args(&["--version"])
         .status()
         .unwrap();
@@ -128,7 +105,7 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     println!("22222222");
 
     // Just checking if the substreams command actually works at all...
-    let cmd_output = match Command::new(&substreams_filepath)
+    let cmd_output = match Command::new("substreams")
         .args(&["--version"])
         .stdout(Stdio::piped())
         .output()
