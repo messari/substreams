@@ -1,7 +1,7 @@
 use substreams::store::{StoreNew, StoreSet, StoreSetProto};
 use substreams::Hex;
-use substreams_ethereum::Event;
 use substreams_ethereum::pb::eth::v2::{self as eth};
+use substreams_ethereum::Event;
 
 use crate::abi::factory;
 use crate::keyer;
@@ -13,11 +13,9 @@ fn store_pair_created_events(block: eth::Block, output: StoreSetProto<PairCreate
     for log in block.logs() {
         if let Some(event) = factory::events::PairCreated::match_and_decode(log) {
             let token0_asset =
-                substreams_helper::erc20::get_erc20_token(Hex(event.token0.clone()).to_string())
-                    .unwrap();
+                substreams_helper::erc20::get_erc20_token(Hex(&event.token0).to_string()).unwrap();
             let token1_asset =
-                substreams_helper::erc20::get_erc20_token(Hex(event.token1.clone()).to_string())
-                    .unwrap();
+                substreams_helper::erc20::get_erc20_token(Hex(&event.token1).to_string()).unwrap();
 
             let pair_created_event = PairCreatedEvent {
                 token0: Some(Erc20Token {

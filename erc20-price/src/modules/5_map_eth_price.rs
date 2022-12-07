@@ -27,8 +27,8 @@ fn map_price_for_tokens(
                 substreams::errors::Error::Unexpected(format!("Failed to get price: {}", e))
             })?;
 
-        let token = substreams_helper::erc20::get_erc20_token(Hex(erc20_token.clone()).to_string())
-            .unwrap();
+        let token =
+            substreams_helper::erc20::get_erc20_token(Hex(&erc20_token).to_string()).unwrap();
 
         prices.items.push(Erc20Price {
             token: Some(Erc20Token {
@@ -37,7 +37,7 @@ fn map_price_for_tokens(
                 symbol: token.symbol,
                 decimals: token.decimals,
             }),
-            block_number: block_number,
+            block_number,
             price_usd: token_price.to_string(),
             source: Source::Oracles as i32,
         });

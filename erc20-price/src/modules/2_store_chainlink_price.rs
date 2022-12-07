@@ -33,10 +33,10 @@ fn store_chainlink_price(
                 }
 
                 let token_price = event.current.to_decimal(aggregator.decimals);
-                let token_address = aggregator.base_asset.clone().unwrap().address;
+                let token_address = &aggregator.base_asset.as_ref().unwrap().address;
 
                 let erc20price = Erc20Price {
-                    token: aggregator.base_asset,
+                    token: aggregator.base_asset.clone(),
                     price_usd: token_price.to_string(),
                     block_number: block.number,
                     source: Source::ChainlinkAggregators as i32,
@@ -44,7 +44,7 @@ fn store_chainlink_price(
 
                 output.set(
                     log.ordinal(),
-                    keyer::chainlink_asset_key(&token_address),
+                    keyer::chainlink_asset_key(token_address),
                     &erc20price,
                 );
             }
