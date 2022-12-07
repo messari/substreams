@@ -16,6 +16,7 @@ jobs:
         with:
           repo: streamingfast/substreams
           cache: enable
+          tag: v0.0.20
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: install buf
@@ -40,7 +41,6 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            /opt
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: build all

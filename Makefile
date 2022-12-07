@@ -1,5 +1,7 @@
 .PHONY: build-all
 build-all:
+	echo substreams
+	substreams --version
 	$(MAKE) -C network build
 
 .PHONY: run-all
