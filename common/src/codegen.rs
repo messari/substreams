@@ -55,7 +55,7 @@ pub fn generate_abi(out_dir: Option<&str>) -> Result<(), Error> {
 
 pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     let out_dir = out_dir.unwrap_or(DEFAULT_OUTPUT_DIR);
-    let pb_dir = current_dir().unwrap().join("src").join("pb");
+    let pb_file = current_dir().unwrap().join("src").join("pb.rs");
     let tmp_dir = current_dir().unwrap().join("target").join("tmp");
     let target_pb_dir = current_dir().unwrap().join(out_dir).join("pb");
     let substreams_yaml = current_dir().unwrap().join("substreams.yaml");
@@ -133,7 +133,9 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         for file in read_dir.into_iter() {
             let current_filepath = file.unwrap().path();
             let target_filepath = target_pb_dir.join(current_filepath.file_name().unwrap());
-            fs::rename(&current_filepath, &target_filepath).unwrap();
+            let mut file_contents = fs::read_to_string(current_filepath).unwrap();
+            file_contents = file_contents.replace("super::super::", "super::"); // Path directions need to be changed now we are collating bindings in the same file
+            fs::write(&target_filepath, file_contents).unwrap();
         }
     }
 
@@ -141,51 +143,43 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     fs::remove_dir_all(&tmp_dir).unwrap();
 
     if !pb_files.is_empty() {
-        if !pb_dir.exists() {
-            fs::create_dir(&pb_dir).unwrap();
-        }
+        let pb_file_content = pb_files
+            .into_iter()
+            .map(|(filename, versions)| {
+                let (mod_content, registration_content): (Vec<String>, Vec<String>) = versions
+                    .into_iter()
+                    .map(|version| {
+                        (
+                            format!(
+                                "#[rustfmt::skip]\n\
+                                #[path = \"../{}/pb/messari.{}.{}.rs\"]\n\
+                                pub(in crate::pb) mod {1}_{2};\n",
+                                out_dir, filename, version
+                            ),
+                            format!(
+                                "    pub mod {} {{\n        \
+                                         pub use super::super::{}_{0}::*;\n    \
+                                     }}\n",
+                                version, filename
+                            ),
+                        )
+                    })
+                    .unzip();
 
-        let mut pb_mod_content = pb_files
-            .iter()
-            .map(|(pb, _)| format!("pub mod {};", pb))
-            .collect::<Vec<_>>()
-            .join("\n");
-
-        pb_mod_content.push_str("\n");
-
-        write_or_replace_if_different(pb_dir.join("mod.rs"), pb_mod_content);
-    }
-
-    // Making sure to cleanup any old proto bindings that are no longer being used
-    let pb_files_for_creation = pb_files
-        .iter()
-        .map(|(filename, _)| filename.clone())
-        .collect::<Vec<_>>();
-    for dir_entry_result in fs::read_dir(&pb_dir).unwrap() {
-        let dir_entry = dir_entry_result.unwrap();
-        let filepath = dir_entry.path();
-        let file_stem = filepath.file_stem().unwrap().to_string_lossy().to_string();
-        if file_stem != "mod".to_string() && !pb_files_for_creation.contains(&file_stem) {
-            fs::remove_file(&filepath).expect(&format!(
-                "Unable to cleanup used protobuf binding file! Filepath: {}",
-                filepath.to_string_lossy()
-            ));
-        }
-    }
-
-    for (filename, versions) in pb_files.iter() {
-        let content = versions
-            .iter()
-            .map(|v| {
                 format!(
-                    "#[rustfmt::skip]\n#[path = \"../../{}/pb/messari.{}.{}.rs\"]\npub mod {};\n",
-                    out_dir, filename, v, v
+                    "{}\n\
+                    pub mod {} {{\n\
+                        {}\
+                    }}\n",
+                    mod_content.join("\n"),
+                    filename,
+                    registration_content.join("\n")
                 )
             })
             .collect::<Vec<_>>()
             .join("\n");
 
-        write_or_replace_if_different(pb_dir.join(format!("{}.rs", filename)), content);
+        write_or_replace_if_different(pb_file, pb_file_content);
     }
 
     Ok(())

@@ -13,14 +13,12 @@ fn map_market_cap(prices: Erc20Prices) -> Result<Erc20MarketCaps, substreams::er
     let mut items = vec![];
 
     for Erc20Price {
-        price_usd,
-        token_address,
-        ..
+        price_usd, token, ..
     } in prices.items.iter()
     {
         let price = math::decimal_from_str(price_usd)
             .map_err(|e| substreams::errors::Error::Unexpected(e.to_string()))?;
-        let token_address_hex = format!("0x{}", Hex::encode(token_address));
+        let token_address_hex = format!("0x{}", Hex::encode(&token.as_ref().unwrap().address));
 
         let Erc20Token {
             total_supply,
