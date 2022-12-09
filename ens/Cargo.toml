@@ -1,0 +1,21 @@
+[package]
+name = "ens"
+version = "0.1.0"
+edition = "2021"
+repository = "https://github.com/messari/substreams/ens"
+
+[dependencies]
+substreams-helper = { path = "../substreams-helper" }
+substreams-ethereum = { workspace = true }
+substreams = { workspace = true }
+ethabi = "17.2.0"
+hex-literal = "0.3.4"
+prost = "0.11.3"
+tiny-keccak = "2.0.2"
+
+[build-dependencies]
+anyhow = "1.0.66"
+substreams-common = { path = "../common" }
+
+[lib]
+crate-type = ["cdylib"]

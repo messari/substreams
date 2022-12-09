@@ -1,0 +1,45 @@
+specVersion: v0.1.0
+package:
+  name: ens
+  version: v0.1.0
+
+imports:
+  eth: "https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg"
+
+protobuf:
+  files:
+    - ens.proto
+    - common.proto
+  importPaths:
+    - ./proto/v1
+    - ../common/proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/ens.wasm"
+
+modules:
+  - name: map_domain
+    kind: map
+    initialBlock: 9456600
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:messari.ens.v1.Domains
+  
+  - name: store_ens_record
+    kind: store
+    updatePolicy: set
+    initialBlock: 9456600
+    valueType: proto:messari.ens.v1.Domain
+    inputs:
+      - map: map_domain
+
+  - name: store_registrant_ens
+    kind: store
+    updatePolicy: append
+    initialBlock: 9456600
+    valueType: string
+    inputs:
+      - map: map_domain
