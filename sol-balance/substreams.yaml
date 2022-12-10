@@ -1,0 +1,26 @@
+specVersion: v0.1.0
+package:
+  name: sol_balance
+  version: v0.1.0
+
+imports:
+  sol: https://github.com/streamingfast/firehose-solana/releases/download/v0.1.0/solana-v0.1.0.spkg
+
+protobuf:
+  files:
+    - sol_balance.proto
+  importPaths:
+    - proto/v1
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/sol_balance.wasm"
+
+modules:
+  - name: store_balance
+    kind: store
+    updatePolicy: set
+    valueType: string
+    inputs:
+      - source: sf.solana.type.v1.Block
