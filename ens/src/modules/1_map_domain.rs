@@ -16,7 +16,7 @@ pub fn map_domain(block: eth::Block) -> Result<ENS::Domains, substreams::errors:
 
             items.push(ENS::Domain {
                 ens_name: ens_name.clone(),
-                name_hash: Hex(name_hash(ens_name.clone().as_str()).0.to_vec()).to_string(),
+                name_hash: Hex(name_hash(ens_name.as_str()).0.to_vec()).to_string(),
                 label_name: event.name.clone(),
                 label_hash: Hex(&event.label.to_vec()).to_string(),
                 controller_address: Hex(&log.address()).to_string(),
