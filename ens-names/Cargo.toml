@@ -1,8 +1,8 @@
 [package]
-name = "ens"
+name = "ens-names"
 version = "0.1.0"
 edition = "2021"
-repository = "https://github.com/messari/substreams/ens"
+repository = "https://github.com/messari/substreams/ens-names"
 
 [dependencies]
 substreams-helper = { path = "../substreams-helper" }

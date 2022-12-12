@@ -1,6 +1,6 @@
 specVersion: v0.1.0
 package:
-  name: ens
+  name: ens_names
   version: v0.1.0
 
 imports:
