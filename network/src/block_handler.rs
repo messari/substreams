@@ -1,6 +1,6 @@
 use substreams::scalar::BigInt;
-use substreams_ethereum::pb::eth::v2::{self as eth, BalanceChange};
 use substreams_ethereum::pb::eth::v2::balance_change::Reason;
+use substreams_ethereum::pb::eth::v2::{self as eth, BalanceChange};
 use substreams_ethereum::scalar::BigIntSign;
 
 use crate::utils::{BigIntDeserializeExt, get_latest_day, get_latest_hour};
@@ -50,11 +50,15 @@ impl<'a> BlockHandler<'a> {
 
     /// Get the supply for the current block
     pub fn supply(&self) -> BigInt {
-        self.0.balance_changes.iter().map(|balance_change| {
-            // Only need to consider positive movements of balance change as the negative movements
-            // are just from the other side of the positive balance changes
-            get_balance_gain(balance_change)
-        }).fold(BigInt::zero(), |sum, val| sum + val)
+        self.0
+            .balance_changes
+            .iter()
+            .map(|balance_change| {
+                // Only need to consider positive movements of balance change as the negative movements
+                // are just from the other side of the positive balance changes
+                get_balance_gain(balance_change)
+            })
+            .fold(BigInt::zero(), |sum, val| sum + val)
     }
 
     /// Gets the number of transactions seen in the block
@@ -65,7 +69,7 @@ impl<'a> BlockHandler<'a> {
     pub fn difficulty(&self) -> BigInt {
         if let Some(header) = self.0.header.as_ref() {
             if let Some(difficulty) = header.difficulty.as_ref() {
-                return difficulty.into();
+                return difficulty.deserialize();
             }
         }
         BigInt::zero()
@@ -98,7 +102,7 @@ impl<'a> BlockHandler<'a> {
     pub fn gas_price(&self) -> BigInt {
         if let Some(header) = self.0.header.as_ref() {
             if let Some(base_fee_per_gas) = header.base_fee_per_gas.as_ref() {
-                return base_fee_per_gas * self.gas_used();
+                return base_fee_per_gas.deserialize() * self.gas_used();
             }
         }
 
@@ -111,7 +115,7 @@ impl<'a> BlockHandler<'a> {
             .iter()
             .map(|transaction_trace| {
                 if let Some(gas_price) = transaction_trace.gas_price.as_ref() {
-                    gas_price.into() * BigInt::from(transaction_trace.gas_used)
+                    gas_price.deserialize() * BigInt::from(transaction_trace.gas_used)
                 } else {
                     BigInt::zero()
                 }
@@ -141,8 +145,8 @@ impl<'a> BlockHandler<'a> {
 fn get_balance_gain(balance_change: &BalanceChange) -> BigInt {
     match (balance_change.old_value.as_ref(), balance_change.new_value.as_ref()) {
         (Some(old_value_raw), Some(new_value_raw)) => {
-            let old_value = old_value_raw.into();
-            let new_value = new_value_raw.into();
+            let old_value = old_value_raw.deserialize();
+            let new_value = new_value_raw.deserialize();
             if new_value > old_value {
                 new_value - old_value
             } else {
@@ -151,23 +155,19 @@ fn get_balance_gain(balance_change: &BalanceChange) -> BigInt {
                 BigInt::zero()
             }
         }
-        (Some(old_value), None) => old_value.into(), // Maybe we should panic if this happens also..
-        (None, Some(new_value)) => new_value.into(),
-        (None, None) => BigInt::zero()
+        (Some(old_value), None) => old_value.deserialize(), // Maybe we should panic if this happens also..
+        (None, Some(new_value)) => new_value.deserialize(),
+        (None, None) => BigInt::zero(),
     }
 }
 
 fn is_a_reward(balance_change: &BalanceChange) -> bool {
-    use lazy_static::lazy_static;
-
-    lazy_static! {
-        static ref REWARD_REASONS: Vec<i32> = vec![
-            Reason::RewardFeeReset as i32,
-            Reason::RewardMineBlock as i32,
-            Reason::RewardMineUncle as i32,
-            Reason::RewardTransactionFee as i32
-        ];
-    }
+    const REWARD_REASONS: [i32; 4] = [
+        Reason::RewardFeeReset as i32,
+        Reason::RewardMineBlock as i32,
+        Reason::RewardMineUncle as i32,
+        Reason::RewardTransactionFee as i32
+    ];
 
     REWARD_REASONS.contains(&balance_change.reason)
 }

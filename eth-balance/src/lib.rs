@@ -16,17 +16,10 @@ fn store_balance(block: pbeth::v2::Block, output: store::StoreSetRaw) {
                 let new_value = balance_change
                     .new_value
                     .as_ref()
-                    .map(|value| {
-                        num_bigint::BigInt::from_bytes_be(num_bigint::Sign::Plus, &value.bytes)
-                            .into()
-                    })
+                    .map(|value| num_bigint::BigInt::from_bytes_be(num_bigint::Sign::Plus, &value.bytes).into())
                     .unwrap_or(BigInt::zero());
 
-                output.set(
-                    transaction.end_ordinal,
-                    format!("Address:{}", Hex(&balance_change.address).to_string()),
-                    &new_value.to_string(),
-                )
+                output.set(transaction.end_ordinal, format!("Address:{}", Hex(&balance_change.address).to_string()), &new_value.to_string())
             }
         }
     }

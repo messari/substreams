@@ -1,11 +1,12 @@
 use substreams::scalar::BigInt;
 use substreams::store;
 use substreams::store::StoreMax;
+use substreams::store::StoreMaxBigInt;
 
 use crate::min_max_updater::MinMaxUpdater;
 use crate::pb::aggregate_data::AggregateData;
 use crate::store_key::StoreKey;
-use crate::utils::{BigIntDeserializeExt, get_latest_day};
+use crate::utils::{get_latest_day, BigIntDeserializeExt};
 
 #[substreams::handlers::store]
 pub fn store_max_values(aggregate_data: AggregateData, mut max_value_store: store::StoreMaxBigInt) {

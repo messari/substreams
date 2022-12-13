@@ -1,6 +1,12 @@
 #[rustfmt::skip]
+#[allow(unused_imports)]
+#[path = "../target/pb/aggregate_data.rs"]
+pub mod aggregate_data;
+
+#[rustfmt::skip]
+#[allow(unused_imports)]
 #[path = "../target/pb/messari.network.v1.rs"]
-pub(in crate::pb) mod network_v1;
+pub(self) mod network_v1;
 
 pub mod network {
     pub mod v1 {

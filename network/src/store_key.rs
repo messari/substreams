@@ -34,6 +34,7 @@ pub(crate) enum StoreKey {
     HourlyUniqueAuthors,
     HourlySupply,
     HourlyTransactions,
+    GasPrice
 }
 
 impl StoreKey {
@@ -59,6 +60,14 @@ impl StoreKey {
 
     pub(crate) fn get_hour_sum_squares_key(&self, hour_timestamp: &String) -> String {
         format!("6{}{}", self.get_unique_id(), hour_timestamp)
+    }
+
+    pub(crate) fn get_unique_day_key(&self, day_timestamp: &String) -> String {
+        format!("{}{}", self.get_unique_id(), day_timestamp)
+    }
+
+    pub(crate) fn get_unique_hour_key(&self, hour_timestamp: &String) -> String {
+        format!("{}{}", self.get_unique_id(), hour_timestamp)
     }
 
     pub(crate) fn get_unique_id(&self) -> String {
@@ -97,6 +106,7 @@ impl StoreKey {
             StoreKey::HourlyUniqueAuthors => "c".to_string(),
             StoreKey::HourlySupply => "d".to_string(),
             StoreKey::HourlyTransactions => "e".to_string(),
+            StoreKey::GasPrice => "f".to_string(),
         }
     }
 }

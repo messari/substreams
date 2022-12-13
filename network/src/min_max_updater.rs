@@ -8,25 +8,25 @@ use crate::utils::{get_latest_day, get_latest_hour, i64_to_str};
 pub(crate) struct MinMaxUpdater<'a, T: MinMaxStore> {
     store: &'a mut T,
     day_timestamp: String,
-    hour_timestamp: String
+    hour_timestamp: String,
 }
 
-impl<T: MinMaxStore> MinMaxUpdater<T> {
+impl<'a, T: MinMaxStore> MinMaxUpdater<'a, T> {
     pub(crate) fn new(store: &mut T, timestamp: i64) -> Self {
         MinMaxUpdater {
             store,
             day_timestamp: i64_to_str(get_latest_day(timestamp)),
-            hour_timestamp: i64_to_str(get_latest_hour(timestamp))
+            hour_timestamp: i64_to_str(get_latest_hour(timestamp)),
         }
     }
 
     pub(crate) fn update_total_value(&mut self, key: StoreKey, value: &BigInt) {
-        self.store.update(key, value);
+        self.store.update(key.get_unique_id(), value);
     }
 
     pub(crate) fn update_hourly_and_daily_values(&mut self, key: StoreKey, value: &BigInt) {
-        self.store.update(format!("day:{}:{}", self.day_timestamp, key), value);
-        self.store.update(format!("hour:{}:{}", self.hour_timestamp, key), value);
+        self.store.update(key.get_unique_day_key(&self.day_timestamp), value);
+        self.store.update(key.get_unique_hour_key(&self.hour_timestamp), value);
     }
 }
 

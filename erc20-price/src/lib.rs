@@ -26,26 +26,16 @@ use substreams_helper::types::Network;
 
 #[substreams::handlers::map]
 fn map_eth_price(block: eth::Block) -> Result<Erc20Prices, substreams::errors::Error> {
-    map_price_for_tokens(
-        block.number,
-        vec![hex!("c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2").to_vec()],
-    )
+    map_price_for_tokens(block.number, vec![hex!("c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2").to_vec()])
 }
 
-fn map_price_for_tokens(
-    block_number: u64,
-    erc20_tokens: Vec<Vec<u8>>,
-) -> Result<Erc20Prices, substreams::errors::Error> {
+fn map_price_for_tokens(block_number: u64, erc20_tokens: Vec<Vec<u8>>) -> Result<Erc20Prices, substreams::errors::Error> {
     let mut prices = Erc20Prices { items: vec![] };
 
     for erc20_token in erc20_tokens {
-        let token_price = price::get_price(Network::Ethereum, block_number, erc20_token.clone())
-            .map_err(|e| {
-                substreams::errors::Error::Unexpected(format!("Failed to get price: {}", e))
-            })?;
+        let token_price = price::get_price(Network::Ethereum, block_number, erc20_token.clone()).map_err(|e| substreams::errors::Error::Unexpected(format!("Failed to get price: {}", e)))?;
 
-        let token = substreams_helper::erc20::get_erc20_token(Hex(erc20_token.clone()).to_string())
-            .unwrap();
+        let token = substreams_helper::erc20::get_erc20_token(Hex(erc20_token.clone()).to_string()).unwrap();
 
         prices.items.push(Erc20Price {
             token: Some(Erc20Token {
@@ -67,30 +57,20 @@ fn map_price_for_tokens(
 #[substreams::handlers::store]
 fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregator>) {
     for call in block.calls() {
-        if let Some(decoded_call) = price_feed::functions::ConfirmAggregator::match_and_decode(call)
-        {
-            let decimals = chainlink_aggregator::functions::Decimals {}
-                .call(decoded_call.aggregator.to_vec())
-                .unwrap_or(BigInt::zero());
-            let description = chainlink_aggregator::functions::Description {}
-                .call(decoded_call.aggregator.to_vec())
-                .unwrap_or(String::new());
+        if let Some(decoded_call) = price_feed::functions::ConfirmAggregator::match_and_decode(call) {
+            let decimals = chainlink_aggregator::functions::Decimals {}.call(decoded_call.aggregator.to_vec()).unwrap_or(BigInt::zero());
+            let description = chainlink_aggregator::functions::Description {}.call(decoded_call.aggregator.to_vec()).unwrap_or(String::new());
 
             let base_quote: Vec<&str> = description.split(" / ").collect();
 
             if base_quote.len() != 2 {
-                log::info!(
-                    "[ChainlinkAggregator] Unexpected Description: {}",
-                    description
-                );
+                log::info!("[ChainlinkAggregator] Unexpected Description: {}", description);
                 continue;
             }
 
             let mut aggregator_address = decoded_call.aggregator;
 
-            let nested_aggregator = (chainlink_aggregator::functions::Aggregator {})
-                .call(aggregator_address.to_vec())
-                .unwrap_or(Vec::<u8>::new());
+            let nested_aggregator = (chainlink_aggregator::functions::Aggregator {}).call(aggregator_address.to_vec()).unwrap_or(Vec::<u8>::new());
 
             if nested_aggregator.is_empty().not() {
                 // In `AggregatorFacade` contracts, the aggregator contract is nested two times.
@@ -100,27 +80,17 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
             }
 
             let base_asset = match utils::TOKENS.get(base_quote[0]) {
-                Some(base) => {
-                    substreams_helper::erc20::get_erc20_token(String::from(base.deref())).unwrap()
-                }
+                Some(base) => substreams_helper::erc20::get_erc20_token(String::from(base.deref())).unwrap(),
                 _ => {
-                    log::info!(
-                        "Cannot find token mapping for base: {}",
-                        base_quote[0].to_string()
-                    );
+                    log::info!("Cannot find token mapping for base: {}", base_quote[0].to_string());
                     continue;
                 }
             };
 
             let quote_asset = match utils::TOKENS.get(base_quote[1]) {
-                Some(quote) => {
-                    substreams_helper::erc20::get_erc20_token(String::from(quote.deref())).unwrap()
-                }
+                Some(quote) => substreams_helper::erc20::get_erc20_token(String::from(quote.deref())).unwrap(),
                 _ => {
-                    log::info!(
-                        "Cannot find token mapping for quote: {}",
-                        base_quote[1].to_string()
-                    );
+                    log::info!("Cannot find token mapping for quote: {}", base_quote[1].to_string());
                     continue;
                 }
             };
@@ -143,32 +113,19 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
                 decimals: decimals.to_u64(),
             };
 
-            output.set(
-                0,
-                keyer::chainlink_aggregator_key(&Hex(&aggregator_address).to_string()),
-                &aggregator,
-            );
+            output.set(0, keyer::chainlink_aggregator_key(&Hex(&aggregator_address).to_string()), &aggregator);
         }
     }
 }
 
 #[substreams::handlers::store]
-fn store_chainlink_price(
-    block: eth::Block,
-    store: StoreGetProto<Aggregator>,
-    output: StoreSetProto<Erc20Price>,
-) {
+fn store_chainlink_price(block: eth::Block, store: StoreGetProto<Aggregator>, output: StoreSetProto<Erc20Price>) {
     for log in block.logs() {
         if let Some(event) = chainlink_aggregator::events::AnswerUpdated::match_and_decode(log) {
             let aggregator_address = Hex(log.address()).to_string();
 
-            if let Some(aggregator) =
-                store.get_last(keyer::chainlink_aggregator_key(&aggregator_address))
-            {
-                if ["USD", "DAI", "USDC", "USDT"]
-                    .contains(&aggregator.quote_asset.unwrap().symbol.as_str())
-                    .not()
-                {
+            if let Some(aggregator) = store.get_last(keyer::chainlink_aggregator_key(&aggregator_address)) {
+                if ["USD", "DAI", "USDC", "USDT"].contains(&aggregator.quote_asset.unwrap().symbol.as_str()).not() {
                     // TODO: add logic for handling `ETH` quote.
                     continue;
                 }

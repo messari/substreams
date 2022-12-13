@@ -1,13 +1,14 @@
-use core::num::flt2dec::Sign;
 use substreams::scalar::BigInt;
-use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams::store;
 use substreams::store::{DeltaBytes, DeltaString, StoreAdd, StoreGet};
+use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams_ethereum::scalar::BigIntSign;
+use substreams::store::StoreAddBigInt;
+use substreams::store::StoreMaxBigInt;
 
 use crate::aggregator::Aggregator;
 use crate::block_handler::BlockHandler;
-use crate::pb::aggregate_data::{AggregateData, self, PreCalculatedAggregates};
+use crate::pb::aggregate_data::{self, AggregateData, PreCalculatedAggregates};
 use crate::store_key::StoreKey;
 use crate::utils::BigIntDeserializeExt;
 
@@ -22,7 +23,8 @@ pub fn store_mean_and_variance_contributions(aggregate_data: AggregateData, mut 
     let block_size = aggregate_data.block_size.unwrap().into();
 
     // Here the necessary aggregations are made for the network entity
-    if let Some(new_unique_authors) = aggregate_data.new_unique_authors { // Has to be optionally checked as we are optionally adding this field in the mapping stage
+    if let Some(new_unique_authors) = aggregate_data.new_unique_authors {
+        // Has to be optionally checked as we are optionally adding this field in the mapping stage
         aggregator.store_total_sum_contribution(StoreKey::CumulativeUniqueAuthors, &new_unique_authors.into());
     }
     aggregator.store_total_sum_contribution(StoreKey::BlockHeight, &BigInt::one());

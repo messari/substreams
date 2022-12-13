@@ -37,29 +37,17 @@ pub fn fetch_token(addr: Vec<u8>) -> Result<Token, String> {
     // TODO: remove dangerous unwrap
     let decoded_decimals = read_uint32(responses[0].clone().unwrap().as_ref());
     if decoded_decimals.is_err() {
-        return Err(format!(
-            "({}).decimal() decode failed: {}",
-            Hex(addr),
-            decoded_decimals.err().unwrap()
-        ));
+        return Err(format!("({}).decimal() decode failed: {}", Hex(addr), decoded_decimals.err().unwrap()));
     }
 
     let decoded_name = read_string(responses[1].clone().unwrap().as_ref());
     if decoded_name.is_err() {
-        return Err(format!(
-            "({}).name() decode failed: {}",
-            Hex(addr),
-            decoded_name.err().unwrap()
-        ));
+        return Err(format!("({}).name() decode failed: {}", Hex(addr), decoded_name.err().unwrap()));
     }
 
     let decoded_symbol = read_string(responses[2].clone().unwrap().as_ref());
     if decoded_symbol.is_err() {
-        return Err(format!(
-            "({}).symbol() decode failed: {}",
-            Hex(addr),
-            decoded_symbol.err().unwrap()
-        ));
+        return Err(format!("({}).symbol() decode failed: {}", Hex(addr), decoded_symbol.err().unwrap()));
     }
 
     return Ok(Token {
@@ -85,13 +73,7 @@ pub fn fetch_many(params: Vec<RpcCallParams>) -> Vec<Result<Vec<u8>, String>> {
         .responses
         .iter()
         .enumerate()
-        .map(|(i, r)| {
-            if r.failed {
-                Err(format!("eth_call failed: {:?}", params[i]))
-            } else {
-                Ok(r.raw.clone())
-            }
-        })
+        .map(|(i, r)| if r.failed { Err(format!("eth_call failed: {:?}", params[i])) } else { Ok(r.raw.clone()) })
         .collect();
 }
 

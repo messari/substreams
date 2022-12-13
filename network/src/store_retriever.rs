@@ -2,6 +2,7 @@ use substreams::pb::substreams::module::input::Input::Store;
 use substreams::scalar::BigInt;
 use substreams::store;
 use substreams::store::StoreGet;
+use substreams::store::StoreSetI64;
 
 use crate::store_key::StoreKey;
 use crate::utils::i64_to_str;
@@ -9,15 +10,15 @@ use crate::utils::i64_to_str;
 pub(crate) struct StoreRetriever<'a> {
     store: &'a store::StoreGetBigInt,
     day_timestamp: Option<String>,
-    hour_timestamp: Option<String>
+    hour_timestamp: Option<String>,
 }
 
-impl StoreRetriever {
-    pub(crate) fn new(store: &store::StoreGetBigInt, day_timestamp: Option<i64>,  hour_timestamp: Option<i64>) -> Self {
+impl<'a> StoreRetriever<'a> {
+    pub(crate) fn new(store: &store::StoreGetBigInt, day_timestamp: Option<i64>, hour_timestamp: Option<i64>) -> Self {
         StoreRetriever {
             store,
             day_timestamp: day_timestamp.map(|x| i64_to_str(x)),
-            hour_timestamp: hour_timestamp.map(|x| i64_to_str(x))
+            hour_timestamp: hour_timestamp.map(|x| i64_to_str(x)),
         }
     }
 
@@ -70,7 +71,15 @@ impl StoreRetriever {
         (sum, sum_squares)
     }
 
-    pub(crate) fn get_value(&self, key: StoreKey) -> BigInt {
+    pub(crate) fn get_total_min_or_max_value(&self, key: StoreKey) -> BigInt {
         self.store.get_at(0, key.get_unique_id()).unwrap()
+    }
+
+    pub(crate) fn get_day_min_or_max_value(&self, key: StoreKey) -> BigInt {
+        self.store.get_at(0, key.get_unique_day_key(self.day_timestamp.as_ref().unwrap())).unwrap()
+    }
+
+    pub(crate) fn get_hour_min_or_max_value(&self, key: StoreKey) -> BigInt {
+        self.store.get_at(0, key.get_unique_hour_key(self.hour_timestamp.as_ref().unwrap())).unwrap()
     }
 }

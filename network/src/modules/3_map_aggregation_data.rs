@@ -1,14 +1,14 @@
 use substreams::pb::substreams::store_delta::Operation;
 use substreams::scalar::BigInt;
-use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams::store;
 use substreams::store::{DeltaBytes, DeltaI64, DeltaString, StoreAdd, StoreGet};
+use substreams_ethereum::pb::eth::v2::{self as eth};
+use substreams::store::StoreGetBigInt;
 
 use crate::block_handler::BlockHandler;
-use crate::pb::aggregate_data::{AggregateData, self, PreCalculatedAggregates};
+use crate::pb::aggregate_data::{self, AggregateData, PreCalculatedAggregates};
 use crate::store_key::StoreKey;
 use crate::store_retriever::StoreRetriever;
-use crate::utils::BigIntSerializeExt;
 
 #[substreams::handlers::map]
 pub fn map_aggregation_data(block: eth::Block, unique_deltas: store::Deltas<DeltaI64>, pre_aggregation_store: store::StoreGetBigInt) -> AggregateData {
@@ -30,7 +30,7 @@ pub fn map_aggregation_data(block: eth::Block, unique_deltas: store::Deltas<Delt
         gas_price: Some(block_handler.gas_price().into()),
         block_interval: None,
         daily_aggregated_data: None,
-        hourly_aggregated_data: None
+        hourly_aggregated_data: None,
     };
 
     let mut new_unique_authors = 0;
@@ -45,7 +45,7 @@ pub fn map_aggregation_data(block: eth::Block, unique_deltas: store::Deltas<Delt
                 blocks: Some(store_retriever.get_day_sum(StoreKey::Blocks).into()),
                 unique_authors: Some(store_retriever.get_day_sum(StoreKey::UniqueAuthors).into()),
                 supply: Some(store_retriever.get_day_sum(StoreKey::Supply).into()),
-                transactions: Some(store_retriever.get_day_sum(StoreKey::Transactions).into())
+                transactions: Some(store_retriever.get_day_sum(StoreKey::Transactions).into()),
             });
         } else if unique_delta.key == "latest_hour_timestamp".to_string() && unique_delta.operation != Operation::Create {
             if store_retriever.hour_timestamp_is_not_set() {
@@ -57,10 +57,10 @@ pub fn map_aggregation_data(block: eth::Block, unique_deltas: store::Deltas<Delt
                 blocks: Some(store_retriever.get_hour_sum(StoreKey::Blocks).into()),
                 unique_authors: Some(store_retriever.get_hour_sum(StoreKey::UniqueAuthors).into()),
                 supply: Some(store_retriever.get_hour_sum(StoreKey::Supply).into()),
-                transactions: Some(store_retriever.get_hour_sum(StoreKey::Transactions).into())
+                transactions: Some(store_retriever.get_hour_sum(StoreKey::Transactions).into()),
             });
         } else if unique_delta.key == "block_timestamp".to_string() && unique_delta.operation != Operation::Create {
-            aggregation_data.block_interval = Some(BigInt::from(unique_delta.new_value-unique_delta.old_value).into());
+            aggregation_data.block_interval = Some(BigInt::from(unique_delta.new_value - unique_delta.old_value).into());
         } else if unique_delta.key.starts_with("t") && unique_delta.old_value == 0 {
             new_unique_authors += 1;
         }

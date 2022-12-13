@@ -1,5 +1,7 @@
 use substreams::store;
 use substreams::store::StoreMin;
+use substreams::store::StoreMinBigInt;
+use substreams::store::StoreGetBigInt;
 
 use crate::min_max_updater::MinMaxUpdater;
 use crate::pb::aggregate_data::AggregateData;
