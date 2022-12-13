@@ -8,5 +8,6 @@ use crate::pb::ens::v1 as ENS;
 pub fn store_ens_record(map_domains: ENS::Domains, output: StoreSetProto<ENS::Domain>) {
     for domain in map_domains.items {
         output.set(0, keyer::ens_domain_key(&domain.ens_name), &domain);
+        output.set(0, keyer::ens_domain_key(&domain.label_hash), &domain);
     }
 }

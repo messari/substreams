@@ -3,3 +3,8 @@
 #[allow(unused_imports)]
 #[path = "../target/abi/controller.rs"]
 pub mod controller;
+
+#[rustfmt::skip]
+#[allow(unused_imports)]
+#[path = "../target/abi/registrar.rs"]
+pub mod registrar;

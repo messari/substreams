@@ -19,9 +19,10 @@ pub fn map_domain(block: eth::Block) -> Result<ENS::Domains, substreams::errors:
                 name_hash: Hex(name_hash(ens_name.as_str()).0.to_vec()).to_string(),
                 label_name: event.name.clone(),
                 label_hash: Hex(&event.label.to_vec()).to_string(),
-                controller_address: Hex(&log.address()).to_string(),
+                controller_address: Hex(&event.owner.to_vec()).to_string(),
                 registrant_address: Hex(&event.owner.to_vec()).to_string(),
                 transaction_hash: Hex(&log.receipt.transaction.hash).to_string(),
+                block_number: block.number,
             })
         }
     }
