@@ -20,14 +20,15 @@ fn store_balance(block: solana::v1::Block, output: StoreSet) {
             for bal in meta.post_balances {
                 // TODO: I don't think this is the right address, but I am struggling to figure out another way
 
-                let change_address =
-
-                output.set(
-                    0,
-
-                )
+                // let change_address =
+                //
+                // output.set(
+                //     0,
+                //
+                // )
             }
-            // log::info!("{}", meta.log_messages_none);
+            log::info!("{}", meta.loaded_writable_addresses.len());
+            log::info!("{}", meta.post_balances.len());
             // for bal in meta.post_balances {
             //     log::info!("post bal: {}", bal);
             // }
