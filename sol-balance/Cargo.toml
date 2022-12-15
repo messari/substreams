@@ -15,7 +15,7 @@ ethabi = "17.2.0"
 num-bigint = "0.4"
 hex-literal = "0.3.4"
 substreams = "0.0.11"
-substreams-solana = { workspace = true }
+substreams-solana = "0.1.0"
 substreams-helper = { path = "../substreams-helper" }
 
 [build-dependencies]
