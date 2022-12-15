@@ -96,7 +96,7 @@ message Network {
 
     // #### Quantitative Data ####
 
-    // Block height at this day (aka, blockNumber)
+    // Block height at start of day (aka, blockNumber)
     uint64 block_height = 3;
 
     // Blocks created during this day (note, this is different from blocksPerDay)

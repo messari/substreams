@@ -156,7 +156,7 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
             if versions.len() == 1 && versions[0] == NO_VERSION_SET {
                 format!(
                     "#[rustfmt::skip]\n\
-                    #[allow(unused_imports)]\n\
+                    #[allow(unused_imports, dead_code)]\n\
                     #[path = \"../{}/pb/{}.rs\"]\n\
                     pub mod {1};\n",
                     out_dir, filename
@@ -169,7 +169,7 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
                         (
                             format!(
                                 "#[rustfmt::skip]\n\
-                                #[allow(unused_imports)]\n\
+                                #[allow(unused_imports, dead_code)]\n\
                                 #[path = \"../{}/pb/messari.{}.{}.rs\"]\n\
                                 pub(self) mod {1}_{2};\n",
                                 out_dir, filename, version

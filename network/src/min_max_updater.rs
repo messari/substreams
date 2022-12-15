@@ -5,14 +5,14 @@ use substreams::store::{StoreMax, StoreMin};
 use crate::store_key::StoreKey;
 use crate::utils::{get_latest_day, get_latest_hour, i64_to_str};
 
-pub(crate) struct MinMaxUpdater<'a, T: MinMaxStore> {
-    store: &'a mut T,
+pub(crate) struct MinMaxUpdater<T: MinMaxStore> {
+    store: T,
     day_timestamp: String,
     hour_timestamp: String,
 }
 
-impl<'a, T: MinMaxStore> MinMaxUpdater<'a, T> {
-    pub(crate) fn new(store: &mut T, timestamp: i64) -> Self {
+impl<T: MinMaxStore> MinMaxUpdater<T> {
+    pub(crate) fn new(store: T, timestamp: i64) -> Self {
         MinMaxUpdater {
             store,
             day_timestamp: i64_to_str(get_latest_day(timestamp)),

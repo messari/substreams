@@ -1,4 +1,4 @@
-use crate::pb::aggregate_data;
+use crate::pb::{aggregate_data, network};
 use substreams::scalar::BigInt;
 use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams_ethereum::scalar::BigIntSign;
@@ -24,6 +24,12 @@ impl Into<BigInt> for aggregate_data::BigInt {
 impl From<BigInt> for aggregate_data::BigInt {
     fn from(big_int: BigInt) -> Self {
         aggregate_data::BigInt { bytes: big_int.to_bytes_le().1 }
+    }
+}
+
+impl From<BigInt> for network::v1::BigInt {
+    fn from(big_int: BigInt) -> Self {
+        network::v1::BigInt { bytes: big_int.to_bytes_le().1 }
     }
 }
 

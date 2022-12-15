@@ -1,15 +1,13 @@
-use ethabi::ethereum_types::Address;
-use substreams::store;
-use substreams::store::{StoreSet, StoreSetIfNotExists};
+use substreams::store::StoreSet;
 use substreams_ethereum::pb::eth::v2::{self as eth};
-use substreams::store::StoreSetI64;
+use substreams::store::StoreSetInt64;
+use substreams::store::StoreNew;
 
 use crate::block_handler::BlockHandler;
-use crate::pb::aggregate_data::BigInt;
 use crate::utils::i64_to_str;
 
 #[substreams::handlers::store]
-pub fn unique_tracking(block: eth::Block, store: StoreSetI64) {
+pub fn unique_tracking(block: eth::Block, unique_tracking_store: StoreSetInt64) {
     let block_handler = BlockHandler::new(&block);
 
     if let Some(author) = block_handler.author() {
@@ -20,12 +18,12 @@ pub fn unique_tracking(block: eth::Block, store: StoreSetI64) {
         // "first block scenario" and fix the stats accordingly. (The fix would be to either not include it,
         // or to do a naive approximation to get the stats for the whole day, ie you could double the
         // aggregate if you have only half a days data and keep the variance the same)
-        store.set(0, format!("t:{}", author), &1); // (Any number can be used here for differentiation as long as it's not set as blank..)
-        store.set(0, format!("d:{}:{}", i64_to_str(block_handler.days_timestamp()), author), &1);
-        store.set(0, format!("h:{}:{}", i64_to_str(block_handler.hours_timestamp()), author), &1);
+        unique_tracking_store.set(0, format!("t:{}", author), &1); // (Any number can be used here for differentiation as long as it's not set as blank..)
+        unique_tracking_store.set(0, format!("d:{}:{}", i64_to_str(block_handler.days_timestamp()), author), &1);
+        unique_tracking_store.set(0, format!("h:{}:{}", i64_to_str(block_handler.hours_timestamp()), author), &1);
     }
 
-    store.set(0, "latest_day_timestamp", &block_handler.days_timestamp());
-    store.set(0, "latest_hour_timestamp", &block_handler.hours_timestamp());
-    store.set(0, "block_timestamp", &block_handler.timestamp());
+    unique_tracking_store.set(0, "latest_day_timestamp", &block_handler.days_timestamp());
+    unique_tracking_store.set(0, "latest_hour_timestamp", &block_handler.hours_timestamp());
+    unique_tracking_store.set(0, "block_timestamp", &block_handler.timestamp());
 }

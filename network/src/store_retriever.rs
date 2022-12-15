@@ -1,8 +1,6 @@
-use substreams::pb::substreams::module::input::Input::Store;
 use substreams::scalar::BigInt;
 use substreams::store;
 use substreams::store::StoreGet;
-use substreams::store::StoreSetI64;
 
 use crate::store_key::StoreKey;
 use crate::utils::i64_to_str;
@@ -14,7 +12,7 @@ pub(crate) struct StoreRetriever<'a> {
 }
 
 impl<'a> StoreRetriever<'a> {
-    pub(crate) fn new(store: &store::StoreGetBigInt, day_timestamp: Option<i64>, hour_timestamp: Option<i64>) -> Self {
+    pub(crate) fn new(store: &'a store::StoreGetBigInt, day_timestamp: Option<i64>, hour_timestamp: Option<i64>) -> Self {
         StoreRetriever {
             store,
             day_timestamp: day_timestamp.map(|x| i64_to_str(x)),

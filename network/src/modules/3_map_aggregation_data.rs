@@ -1,17 +1,17 @@
 use substreams::pb::substreams::store_delta::Operation;
 use substreams::scalar::BigInt;
 use substreams::store;
-use substreams::store::{DeltaBytes, DeltaI64, DeltaString, StoreAdd, StoreGet};
+use substreams::store::{DeltaInt64, StoreGet};
 use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams::store::StoreGetBigInt;
 
 use crate::block_handler::BlockHandler;
-use crate::pb::aggregate_data::{self, AggregateData, PreCalculatedAggregates};
+use crate::pb::aggregate_data::{AggregateData, PreCalculatedAggregates};
 use crate::store_key::StoreKey;
 use crate::store_retriever::StoreRetriever;
 
 #[substreams::handlers::map]
-pub fn map_aggregation_data(block: eth::Block, unique_deltas: store::Deltas<DeltaI64>, pre_aggregation_store: store::StoreGetBigInt) -> AggregateData {
+pub fn map_aggregation_data(block: eth::Block, unique_deltas: store::Deltas<DeltaInt64>, pre_aggregation_store: store::StoreGetBigInt) -> Result<AggregateData, ()> {
     let block_handler = BlockHandler::new(&block);
     let mut store_retriever = StoreRetriever::new(&pre_aggregation_store, None, None);
 
@@ -70,5 +70,5 @@ pub fn map_aggregation_data(block: eth::Block, unique_deltas: store::Deltas<Delt
         aggregation_data.new_unique_authors = Some(BigInt::from(new_unique_authors).into());
     }
 
-    aggregation_data
+    Ok(aggregation_data)
 }

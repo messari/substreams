@@ -1,7 +1,6 @@
 use substreams::scalar::BigInt;
 use substreams_ethereum::pb::eth::v2::balance_change::Reason;
 use substreams_ethereum::pb::eth::v2::{self as eth, BalanceChange};
-use substreams_ethereum::scalar::BigIntSign;
 
 use crate::utils::{BigIntDeserializeExt, get_latest_day, get_latest_hour};
 use ethabi::ethereum_types::Address;
@@ -76,14 +75,6 @@ impl<'a> BlockHandler<'a> {
     }
 
     pub fn gas_used(&self) -> BigInt {
-        if let Some(header) = self.0.header.as_ref() {
-            BigInt::from(header.gas_used)
-        } else {
-            BigInt::zero()
-        }
-    }
-
-    pub fn chunks(&self) -> BigInt {
         if let Some(header) = self.0.header.as_ref() {
             BigInt::from(header.gas_used)
         } else {

@@ -1,5 +1,4 @@
-use std::fmt::{Display, Formatter};
-
+#[derive(Clone)]
 pub(crate) enum StoreKey {
     // Pre-aggregation keys
     Transactions,

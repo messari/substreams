@@ -20,51 +20,71 @@ binaries:
     file: ../target/wasm32-unknown-unknown/release/messari_networks_substreams.wasm
 
 modules:
-  - name: store_cumulative_values
+  - name: unique_tracking
+    kind: store
+    updatePolicy: set
+    valueType: int64
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+
+  - name: days_and_hours_pre_aggregations
     kind: store
     updatePolicy: add
     valueType: bigint
     inputs:
       - source: sf.ethereum.type.v2.Block
+      - store: unique_tracking
+        mode: deltas
 
-  # - name: store_known_block_authors
-  #   kind: store
-  #   updatePolicy: set_if_not_exists
-  #   valueType: bytes
-  #   inputs:
-  #     - source: sf.ethereum.type.v2.Block
-  
-  - name: store_daily_snapshots
-    kind: store
-    updatePolicy: set
-    valueType: proto:messari.network.v1.DailySnapshots
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-
-  - name: store_hourly_snapshots
-    kind: store
-    updatePolicy: set
-    valueType: proto:messari.network.v1.HourlySnapshots
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-
-  - name: store_network
-    kind: store
-    updatePolicy: set
-    valueType: proto:messari.network.v1.Network
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - store: store_cumulative_values
-
-  - name: map_network
+  - name: map_aggregation_data
     kind: map
-    initialBlock: 13000000
     inputs:
       - source: sf.ethereum.type.v2.Block
-      - store: store_network
-      # - store: store_daily_snapshots
-      # - store: store_hourly_snapshots
-      # - store: store_cumulative_values
-      # - store: store_known_block_authors
+      - store: unique_tracking
+        mode: deltas
+      - store: days_and_hours_pre_aggregations
     output:
-      type: proto:messari.network.v1.Network
+      type: proto:aggregate_data
+
+  - name: store_mean_and_variance_contributions
+    kind: store
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: map_aggregation_data
+
+  - name: store_max_values
+    kind: store
+    updatePolicy: max
+    valueType: bigint
+    inputs:
+      - map: map_aggregation_data
+
+  - name: store_min_values
+    kind: store
+    updatePolicy: min
+    valueType: bigint
+    inputs:
+      - map: map_aggregation_data
+
+  - name: store_non_aggregation_data
+    kind: store
+    updatePolicy: set
+    valueType: bigint
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+
+  - name: map_entity_changes
+    kind: map
+    inputs:
+      - map: map_aggregation_data
+      - store: store_mean_and_variance_contributions
+        mode: deltas
+      - store: store_mean_and_variance_contributions
+      - store: store_max_values
+      - store: store_min_values
+      - store: store_non_aggregation_data
+        mode: deltas
+      - store: store_non_aggregation_data
+    output:
+      type: proto:substreams.entity.v1.EntityChanges

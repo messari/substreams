@@ -1,8 +1,7 @@
-use ethabi::ethereum_types::Address;
-use substreams::store;
-use substreams::store::{StoreSet, StoreSetIfNotExists};
+use substreams::store::StoreSet;
 use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams::store::StoreSetBigInt;
+use substreams::store::StoreNew;
 
 use crate::block_handler::BlockHandler;
 use crate::store_key::StoreKey;
