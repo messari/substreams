@@ -47,9 +47,7 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
             }
 
             let base_asset = match utils::TOKENS.get(base_quote[0]) {
-                Some(base) => {
-                    substreams_helper::erc20::get_erc20_token(base.to_string()).unwrap()
-                }
+                Some(base) => substreams_helper::erc20::get_erc20_token(base.to_string()).unwrap(),
                 _ => {
                     log::info!(
                         "Cannot find token mapping for base: {}",

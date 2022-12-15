@@ -155,4 +155,8 @@ lazy_static::lazy_static! {
         "4fabb145d64652a948d72533023f6e7a623c7c53", // BUSD
         "6b175474e89094c44da98b954eedeac495271d0f" // DAI
     ];
+
+    pub static ref WHIITELISTED_FACTORIES: &'static [&'static str] = &[
+        "5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f", // Uniswap v2 Factory
+    ];
 }

@@ -1,7 +1,7 @@
 mod abi;
-mod pb;
 mod keyer;
-mod utils;
 mod modules;
+mod pb;
+mod utils;
 
 pub use modules::*;

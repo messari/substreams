@@ -7,11 +7,18 @@ use crate::abi::factory;
 use crate::keyer;
 use crate::pb::erc20::v1::Erc20Token;
 use crate::pb::uniswap::v1::PairCreatedEvent;
+use crate::utils;
 
 #[substreams::handlers::store]
 fn store_pair_created_events(block: eth::Block, output: StoreSetProto<PairCreatedEvent>) {
     for log in block.logs() {
         if let Some(event) = factory::events::PairCreated::match_and_decode(log) {
+            let factory_address = Hex(log.address()).to_string();
+
+            if !utils::WHIITELISTED_FACTORIES.contains(&factory_address.as_str()) {
+                continue;
+            }
+
             let token0_asset =
                 substreams_helper::erc20::get_erc20_token(Hex(&event.token0).to_string()).unwrap();
             let token1_asset =
@@ -31,7 +38,7 @@ fn store_pair_created_events(block: eth::Block, output: StoreSetProto<PairCreate
                     decimals: token1_asset.decimals,
                 }),
                 pair: Hex(event.pair.clone()).to_string(),
-                factory: Hex(log.address()).to_string(),
+                factory: factory_address,
             };
 
             output.set(
