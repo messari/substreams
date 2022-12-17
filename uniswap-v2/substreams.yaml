@@ -9,12 +9,11 @@ imports:
 protobuf:
   files:
     - common.proto
+    - erc20.proto
     - dex_amm.proto
     - uniswap.proto
-    - erc20.proto
   importPaths:
     - ../common/proto
-    - ./proto/v1
     - ./proto/v2
 
 binaries:
@@ -23,79 +22,49 @@ binaries:
     file: ../target/wasm32-unknown-unknown/release/substreams_uniswap_v2.wasm
 
 modules:
-  - name: map_pair_created_events
-    kind: map
-    initialBlock: 10000835
+  - name: initialize_pool
+    kind: store
+    initialBlock: 10008300
+    updatePolicy: set_if_not_exists
+    valueType: proto:messari.dex_amm.v1.Pool
     inputs:
       - source: sf.ethereum.type.v2.Block
-    output:
-      type: proto:messari.uniswap.v2.PairCreatedEvents
 
-  - name: store_pair_created_events
+  - name: pool_transfers
     kind: store
-    updatePolicy: set
-    valueType: proto:messari.uniswap.v2.PairCreatedEvents
-    inputs:
-      - map: map_pair_created_events
-
-  - name: map_pools
-    kind: map
-    inputs:
-      - map: map_pair_created_events
-    output:
-      type: proto:messari.dex_amm.v1.Pools
-
-  - name: store_pools
-    kind: store
-    updatePolicy: set
-    valueType: proto:messari.dex_amm.v1.Pools
-    inputs:
-      - map: map_pools
-
-  - name: map_mint_events
-    kind: map
-    initialBlock: 10000835
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - store: store_pools
-    output:
-      type: proto:messari.uniswap.v2.MintEvents
-
-  - name: map_block_to_transfers
-    kind: map
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-    output:
-      type: proto:messari.erc20.v1.TransferEvents
-
-  - name: store_transfers
-    kind: store
-    updatePolicy: set
-    valueType: proto:messari.erc20.v1.TransferEvents
-    inputs:
-      - map: map_block_to_transfers
-
-  - name: map_swap_events
-    kind: map
-    initialBlock: 10000835
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - store: store_pools
-    output:
-      type: proto:messari.uniswap.v2.SwapEvents
-
-  - name: store_swap_events
-    kind: store
-    initialBlock: 10000835
-    updatePolicy: set
-    valueType: proto:messari.uniswap.v2.SwapEvent
-    inputs:
-      - map: map_swap_events
-
-  - name: store_swap_count
-    kind: store
-    initialBlock: 10000835
     updatePolicy: add
-    valueType: int64
+    valueType: bigint
     inputs:
-      - map: map_swap_events
+      - source: sf.ethereum.type.v2.Block
+      - store: initialize_pool
+
+  - name: store_pool_deposits
+    kind: store
+    initialBlock: 10008300
+    updatePolicy: set
+    valueType: proto:messari.dex_amm.v1.UsageEvent
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: initialize_pool
+      - store: pool_transfers
+        mode: deltas
+  
+  - name: store_pool_withdraws
+    kind: store
+    initialBlock: 10008300
+    updatePolicy: set
+    valueType: proto:messari.dex_amm.v1.UsageEvent
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: initialize_pool
+      - store: pool_transfers
+        mode: deltas
+  
+  - name: store_pool_swaps
+    kind: store
+    initialBlock: 10008300
+    updatePolicy: set
+    valueType: proto:messari.dex_amm.v1.UsageEvent
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: initialize_pool
