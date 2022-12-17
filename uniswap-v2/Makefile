@@ -11,7 +11,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_liquidity_pool_entity -s 10008300 --debug-modules-output=store_input_token_balances,store_output_token_supply
-.PHONY: pack
-pack:
-	substreams pack ./substreams.yaml
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml store_swap_count -s 15800000
