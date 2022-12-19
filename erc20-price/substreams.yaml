@@ -11,6 +11,7 @@ protobuf:
     - erc20.proto
     - chainlink.proto
     - erc20_price.proto
+    - uniswap.proto
   importPaths:
     - ./proto/v1
     - ../common/proto
@@ -31,7 +32,7 @@ modules:
 
   - name: store_chainlink_aggregator
     kind: store
-    initialBlock: 10606500
+    initialBlock: 10040530
     updatePolicy: set_if_not_exists
     valueType: proto:messari.chainlink.v1.Aggregator
     inputs:
@@ -39,9 +40,27 @@ modules:
 
   - name: store_chainlink_price
     kind: store
-    initialBlock: 10606500 
+    initialBlock: 10040530
     updatePolicy: set
     valueType: proto:messari.erc20_price.v1.Erc20Price
     inputs:
       - source: sf.ethereum.type.v2.Block
       - store: store_chainlink_aggregator
+  
+  - name: store_pair_created_events
+    kind: store
+    initialBlock: 10040530
+    updatePolicy: set_if_not_exists
+    valueType: proto:messari.uniswap.v1.PairCreatedEvent
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+  
+  - name: store_uniswap_price
+    kind: store
+    initialBlock: 10040530
+    updatePolicy: set
+    valueType: proto:messari.erc20_price.v1.Erc20Price
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_chainlink_price
+      - store: store_pair_created_events
