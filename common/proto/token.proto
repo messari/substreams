@@ -1,30 +1,31 @@
 syntax = "proto3";
 
-package messari.erc20.v1;
+package messari.token.v1;
 
-message ERC20Tokens {
-  repeated ERC20Token items = 1;
+message Tokens {
+  repeated Token items = 1;
 }
 
-message ERC20Token {
+message Token {
   string address = 1;
   string name = 2;
   string symbol = 3;
   uint64 decimals = 4;
 }
 
-message TransferEvents {
-  repeated TransferEvent items = 1;
+message Transfers {
+  repeated Transfer items = 1;
 }
 
-message TransferEvent {
+message Transfer {
   string tx_hash = 1;
-  uint32 log_index = 2;
-  uint64 log_ordinal = 3;
-  string token_address = 4;
+  optional uint32 log_index = 2;
+  optional uint64 log_ordinal = 3;
+  Token token = 4;
   string from = 5;
   string to = 6;
   string amount = 7; // BigInt, in token's native amount
+  optional string reason = 8;
 }
 
 message TokenBalance {
