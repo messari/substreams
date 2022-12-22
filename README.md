@@ -43,6 +43,7 @@
 | ENS Look Up      | 🔨 | ENS records for lookup and reverse lookup  |
 | Uniswap v2       | 🔨 | Substreams for Uniswap v2                  |
 | Compound v2      | 🔨 | Substreams for Compound v2                 |
+| SOL Balance      | 🛠 | SOL balance for every Solana address       |
 
 ## Workflow
 
