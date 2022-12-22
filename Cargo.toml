@@ -11,7 +11,7 @@ members = [
     "substreams-helper",
     "uniswap-v2",
     "solana-sample",
-d    "sol-balance",
+    "sol-balance",
 ]
 exclude = ["messari-cli"]
 
