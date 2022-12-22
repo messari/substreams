@@ -8,9 +8,9 @@ imports:
 
 protobuf:
   files:
-    - eth_balance.proto
+    - token.proto
   importPaths:
-    - proto/v1
+    - ../common/proto/token.proto
 
 binaries:
   default:
@@ -18,9 +18,23 @@ binaries:
     file: "../target/wasm32-unknown-unknown/release/eth_balance.wasm"
 
 modules:
-  - name: store_balance
-    kind: store
-    updatePolicy: set
-    valueType: string
+  - name: map_account_balances
+    kind: map
     inputs:
       - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:messari.token.v1.Account
+
+  - name: map_transfers
+    kind: map
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+        type: proto:messari.token.v1.Transfers
+
+  - name: store_transfers
+    kind: store
+    updatePolicy: add
+    valueType: int64
+    inputs:
+      - map: map_transfers
