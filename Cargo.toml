@@ -11,13 +11,14 @@ members = [
     "substreams-helper",
     "uniswap-v2",
     "solana-sample",
+d    "sol-balance",
 ]
 exclude = ["messari-cli"]
 
 [workspace.dependencies]
 substreams = "0.3.2"
 substreams-ethereum = "0.6.2"
-substreams-solana = "0.1.0"
+substreams-solana = "0.2.0"
 
 [build]
 target = "wasm32-unknown-unknown"

@@ -10,6 +10,7 @@ build-all:
 	$(MAKE) -C network build
 	$(MAKE) -C solana-sample build
 	$(MAKE) -C eth-balance build
+	$(MAKE) -C sol-balance build
 
 .PHONY: run-all
 run-all:
@@ -18,6 +19,7 @@ run-all:
 	$(MAKE) -C erc20-market-cap run
 	$(MAKE) -C erc721 run
 	$(MAKE) -C network run
+	$(MAKE) -C sol-balance run
 
 .PHONY: test
 test:
