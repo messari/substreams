@@ -63,3 +63,7 @@ message Account {
   repeated TokenBalance balances = 2;
 }
 ```
+
+### How to Use
+
+TODO
