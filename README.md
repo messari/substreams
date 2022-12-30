@@ -1,4 +1,12 @@
-# Messari Substreams
+# Messari Substreams &bull; [![GitHub license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/messari/substreams/blob/master/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/messari/substreams/compare) [![Issues Report](https://img.shields.io/badge/issues-report-yellow.svg)](https://github.com/messari/substreams/issues/new)
+
+<p align="center">
+  <img src="./docs/images/logos/messari-logo.png" alt="Messari Logo" width="460" />
+</p>
+
+Messari substreams aim to contextualize on chain data using [streamingfast](https://www.streamingfast.io/)'s [substreams](https://substreams.streamingfast.io/) 🚀
+
+> Learn more about messari substream development in our [`./docs`](./docs) 
 
 ## Pre-requisites
 

@@ -25,15 +25,21 @@ message Transfer {
   string from = 5;
   string to = 6;
   string amount = 7; // BigInt, in token's native amount
-  optional string reason = 8;
+  optional string amount_usd = 8;
+  optional string reason = 9;
 }
 
 message TokenBalance {
-  string token_address = 1;
+  Token token = 1;
   string balance = 2; // BigInt, in token's native amount
 }
 
 message Account {
   string address = 1;
   repeated TokenBalance balances = 2;
+}
+
+// TODO: do we need this?
+message Accounts {
+  repeated Account items = 1;
 }
