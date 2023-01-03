@@ -30,3 +30,14 @@ pub mod erc20_price {
         pub use super::super::erc20_price_v1::*;
     }
 }
+
+#[rustfmt::skip]
+#[allow(unused_imports, dead_code)]
+#[path = "../target/pb/messari.uniswap.v1.rs"]
+pub(self) mod uniswap_v1;
+
+pub mod uniswap {
+    pub mod v1 {
+        pub use super::super::uniswap_v1::*;
+    }
+}
