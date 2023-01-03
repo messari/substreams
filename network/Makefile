@@ -4,4 +4,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e api-dev.streamingfast.io:443 substreams.yaml unique_tracking -s 0 -t +50
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_entity_changes -s 1 -t +10000

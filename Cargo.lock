@@ -12,19 +12,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "android_system_properties"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "819e7219dbd41043ac279b19830f2efc897156490d7fd6ea916720117ee66311"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "anyhow"
-version = "1.0.65"
+version = "1.0.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98161a4e3e2184da77bb14f02184cdd111e83bbbcc9979dfee3c44b9a85f5602"
+checksum = "2cb2f989d18dd141ab8ae82f64d1a8cdd37e0840f73a406896cf5e99502fab61"
 
 [[package]]
 name = "arrayvec"
@@ -125,21 +116,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "chrono"
-version = "0.4.22"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfd4d1b31faaa3a89d7934dbded3111da0d2ef28e3ebccdb4f0179f5929d1ef1"
-dependencies = [
- "iana-time-zone",
- "js-sys",
- "num-integer",
- "num-traits",
- "time",
- "wasm-bindgen",
- "winapi",
-]
-
-[[package]]
 name = "cmake"
 version = "0.1.49"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -155,18 +131,12 @@ dependencies = [
  "anyhow",
  "ethabi",
  "num-bigint",
- "prost 0.11.2",
+ "prost 0.11.5",
  "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
  "tiny-keccak",
 ]
-
-[[package]]
-name = "core-foundation-sys"
-version = "0.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5827cebf4670468b8772dd191856768aedcb1b0278a04f989f7766351917b9dc"
 
 [[package]]
 name = "crunchy"
@@ -208,7 +178,7 @@ dependencies = [
  "ethabi",
  "hex-literal",
  "lazy_static",
- "prost 0.11.2",
+ "prost 0.11.5",
  "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
@@ -222,7 +192,7 @@ dependencies = [
  "anyhow",
  "ethabi",
  "hex-literal",
- "prost 0.11.2",
+ "prost 0.11.5",
  "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
@@ -237,7 +207,7 @@ dependencies = [
  "ethabi",
  "hex-literal",
  "num-bigint",
- "prost 0.11.2",
+ "prost 0.11.5",
  "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
@@ -340,7 +310,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "js-sys",
  "libc",
- "wasi 0.11.0+wasi-snapshot-preview1",
+ "wasi",
  "wasm-bindgen",
 ]
 
@@ -367,19 +337,6 @@ name = "hex-literal"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ebdb29d2ea9ed0083cd8cece49bbd968021bd99b0849edb4a9a7ee0fdf6a4e0"
-
-[[package]]
-name = "iana-time-zone"
-version = "0.1.50"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd911b35d940d2bd0bea0f9100068e5b97b51a1cbe13d13382f132e0365257a0"
-dependencies = [
- "android_system_properties",
- "core-foundation-sys",
- "js-sys",
- "wasm-bindgen",
- "winapi",
-]
 
 [[package]]
 name = "impl-codec"
@@ -502,29 +459,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8452105ba047068f40ff7093dd1d9da90898e63dd61736462e9cdda6a90ad3c3"
 
 [[package]]
-name = "messari_networks_substreams"
-version = "0.0.1"
+name = "multimap"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
+
+[[package]]
+name = "network"
+version = "0.1.0"
 dependencies = [
  "anyhow",
- "chrono",
  "ethabi",
  "hex-literal",
- "lazy_static",
- "prost 0.11.2",
- "prost-types 0.11.1",
+ "prost 0.11.5",
  "substreams 0.5.0",
  "substreams-common",
  "substreams-entity-change",
  "substreams-ethereum",
  "substreams-helper",
- "thiserror",
 ]
-
-[[package]]
-name = "multimap"
-version = "0.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
 
 [[package]]
 name = "num-bigint"
@@ -668,12 +621,12 @@ dependencies = [
 
 [[package]]
 name = "prost"
-version = "0.11.2"
+version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0841812012b2d4a6145fae9a6af1534873c32aa67fff26bd09f8fa42c83f95a"
+checksum = "c01db6702aa05baa3f57dec92b8eeeeb4cb19e894e73996b32a4093289e54592"
 dependencies = [
  "bytes",
- "prost-derive 0.11.0",
+ "prost-derive 0.11.5",
 ]
 
 [[package]]
@@ -711,7 +664,7 @@ dependencies = [
  "log",
  "multimap",
  "petgraph",
- "prost 0.11.2",
+ "prost 0.11.5",
  "prost-types 0.11.1",
  "regex",
  "tempfile",
@@ -733,9 +686,9 @@ dependencies = [
 
 [[package]]
 name = "prost-derive"
-version = "0.11.0"
+version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7345d5f0e08c0536d7ac7229952590239e77abf0a0100a1b1d890add6ea96364"
+checksum = "c8842bad1a5419bca14eac663ba798f6bc19c413c2fdceb5f3ba3b0932d96720"
 dependencies = [
  "anyhow",
  "itertools",
@@ -761,7 +714,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4dfaa718ad76a44b3415e6c4d53b17c8f99160dcb3a99b10470fce8ad43f6e3e"
 dependencies = [
  "bytes",
- "prost 0.11.2",
+ "prost 0.11.5",
 ]
 
 [[package]]
@@ -974,7 +927,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "pad",
- "prost 0.11.2",
+ "prost 0.11.5",
  "prost-build 0.11.1",
  "prost-types 0.11.1",
  "substreams-macro 0.5.0",
@@ -986,7 +939,7 @@ dependencies = [
 name = "substreams-common"
 version = "0.1.0"
 dependencies = [
- "prost 0.11.2",
+ "prost 0.11.5",
  "regex",
  "substreams 0.5.0",
  "substreams-ethereum",
@@ -1000,7 +953,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c81fb0794efb438c5743c821ec76528c38878010c30d4a79d70799eac68837f6"
 dependencies = [
  "base64",
- "prost 0.11.2",
+ "prost 0.11.5",
  "prost-types 0.11.1",
  "substreams 0.5.0",
 ]
@@ -1013,7 +966,7 @@ dependencies = [
  "ethabi",
  "getrandom",
  "hex-literal",
- "prost 0.11.2",
+ "prost 0.11.5",
  "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
@@ -1027,7 +980,7 @@ dependencies = [
  "anyhow",
  "ethabi",
  "hex-literal",
- "prost 0.11.2",
+ "prost 0.11.5",
  "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
@@ -1073,7 +1026,7 @@ dependencies = [
  "ethabi",
  "getrandom",
  "num-bigint",
- "prost 0.11.2",
+ "prost 0.11.5",
  "prost-build 0.11.1",
  "prost-types 0.11.1",
  "substreams 0.5.0",
@@ -1105,7 +1058,7 @@ dependencies = [
  "hex-literal",
  "num-bigint",
  "pad",
- "prost 0.11.2",
+ "prost 0.11.5",
  "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
@@ -1170,7 +1123,7 @@ dependencies = [
  "hex",
  "hex-literal",
  "pad",
- "prost 0.11.2",
+ "prost 0.11.5",
  "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
@@ -1229,17 +1182,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "time"
-version = "0.1.44"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6db9e6914ab8b1ae1c260a4ae7a49b6c5611b40328a735b21862567685e73255"
-dependencies = [
- "libc",
- "wasi 0.10.0+wasi-snapshot-preview1",
- "winapi",
-]
-
-[[package]]
 name = "tiny-keccak"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1292,12 +1234,6 @@ name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
-
-[[package]]
-name = "wasi"
-version = "0.10.0+wasi-snapshot-preview1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f"
 
 [[package]]
 name = "wasi"

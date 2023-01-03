@@ -6,11 +6,11 @@ use substreams::store::StoreNew;
 use crate::aggregator::Aggregator;
 use crate::pb::aggregate_data::AggregateData;
 use crate::store_key::StoreKey;
-use crate::utils::get_latest_day;
+use crate::utils::{get_latest_day, get_latest_hour};
 
 #[substreams::handlers::store]
 pub fn store_mean_and_variance_contributions(aggregate_data: AggregateData, mut aggregation_store: store::StoreAddBigInt) {
-    let mut aggregator = Aggregator::new(aggregation_store, get_latest_day(aggregate_data.timestamp), get_latest_day(aggregate_data.timestamp));
+    let mut aggregator = Aggregator::new(aggregation_store, get_latest_day(aggregate_data.timestamp), get_latest_hour(aggregate_data.timestamp));
 
     let difficulty: BigInt = aggregate_data.difficulty.unwrap().into();
     let gas_used: BigInt = aggregate_data.gas_used.unwrap().into();

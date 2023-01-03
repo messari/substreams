@@ -1,27 +1,20 @@
 specVersion: v0.1.0
 package:
-  name: "messari_networks_substreams"
+  name: messari_networks_substreams
   version: v0.1.0
 
 imports:
-  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
-
-protobuf:
-  files:
-    - network.proto
-    - aggregate_data.proto
-  importPaths:
-    - ./proto/v1
-    - ./proto
+  eth: "https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg"
 
 binaries:
   default:
     type: wasm/rust-v1
-    file: ../target/wasm32-unknown-unknown/release/messari_networks_substreams.wasm
+    file: "../target/wasm32-unknown-unknown/release/network.wasm"
 
 modules:
   - name: unique_tracking
     kind: store
+    initialBlock: 1
     updatePolicy: set
     valueType: int64
     inputs:
@@ -38,6 +31,7 @@ modules:
 
   - name: map_aggregation_data
     kind: map
+    initialBlock: 1
     inputs:
       - source: sf.ethereum.type.v2.Block
       - store: unique_tracking
@@ -48,6 +42,7 @@ modules:
 
   - name: store_mean_and_variance_contributions
     kind: store
+    initialBlock: 1
     updatePolicy: add
     valueType: bigint
     inputs:
@@ -55,6 +50,7 @@ modules:
 
   - name: store_max_values
     kind: store
+    initialBlock: 1
     updatePolicy: max
     valueType: bigint
     inputs:
@@ -62,6 +58,7 @@ modules:
 
   - name: store_min_values
     kind: store
+    initialBlock: 1
     updatePolicy: min
     valueType: bigint
     inputs:
@@ -69,6 +66,7 @@ modules:
 
   - name: store_non_aggregation_data
     kind: store
+    initialBlock: 1
     updatePolicy: set
     valueType: bigint
     inputs:
@@ -76,6 +74,7 @@ modules:
 
   - name: map_entity_changes
     kind: map
+    initialBlock: 1
     inputs:
       - map: map_aggregation_data
       - store: store_mean_and_variance_contributions
@@ -88,3 +87,11 @@ modules:
       - store: store_non_aggregation_data
     output:
       type: proto:substreams.entity.v1.EntityChanges
+
+protobuf:
+  files:
+    - network.proto
+    - aggregate_data.proto
+  importPaths:
+    - ./proto/v1
+    - ./proto

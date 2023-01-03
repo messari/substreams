@@ -1,5 +1,5 @@
 #[rustfmt::skip]
-#[allow(unused_imports)]
+#[allow(unused_imports, dead_code)]
 #[path = "../target/pb/messari.erc721.v1.rs"]
 pub(self) mod erc721_v1;
 

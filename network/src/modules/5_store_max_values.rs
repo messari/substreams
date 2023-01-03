@@ -24,13 +24,13 @@ pub fn store_max_values(aggregate_data: AggregateData, max_value_store: store::S
     max_store.update_hourly_and_daily_values(StoreKey::BlockSize, &aggregate_data.block_size.unwrap().into());
     max_store.update_hourly_and_daily_values(StoreKey::BlockInterval, &aggregate_data.block_interval.unwrap().into());
     if let Some(daily_aggregated_data) = aggregate_data.daily_aggregated_data.as_ref() {
-        max_store.update_hourly_and_daily_values(StoreKey::DailyUniqueAuthors, &daily_aggregated_data.unique_authors.as_ref().unwrap().clone().into());
-        max_store.update_hourly_and_daily_values(StoreKey::DailySupply, &daily_aggregated_data.supply.as_ref().unwrap().clone().into());
-        max_store.update_hourly_and_daily_values(StoreKey::DailyTransactions, &daily_aggregated_data.transactions.as_ref().unwrap().clone().into());
+        max_store.update_total_value(StoreKey::DailyUniqueAuthors, &daily_aggregated_data.unique_authors.as_ref().unwrap().clone().into());
+        max_store.update_total_value(StoreKey::DailySupply, &daily_aggregated_data.supply.as_ref().unwrap().clone().into());
+        max_store.update_total_value(StoreKey::DailyTransactions, &daily_aggregated_data.transactions.as_ref().unwrap().clone().into());
     }
     if let Some(hourly_aggregated_data) = aggregate_data.hourly_aggregated_data.as_ref() {
-        max_store.update_hourly_and_daily_values(StoreKey::HourlyUniqueAuthors, &hourly_aggregated_data.unique_authors.as_ref().unwrap().clone().into());
-        max_store.update_hourly_and_daily_values(StoreKey::HourlySupply, &hourly_aggregated_data.supply.as_ref().unwrap().clone().into());
-        max_store.update_hourly_and_daily_values(StoreKey::HourlyTransactions, &hourly_aggregated_data.transactions.as_ref().unwrap().clone().into());
+        max_store.update_total_value(StoreKey::HourlyUniqueAuthors, &hourly_aggregated_data.unique_authors.as_ref().unwrap().clone().into());
+        max_store.update_total_value(StoreKey::HourlySupply, &hourly_aggregated_data.supply.as_ref().unwrap().clone().into());
+        max_store.update_total_value(StoreKey::HourlyTransactions, &hourly_aggregated_data.transactions.as_ref().unwrap().clone().into());
     }
 }

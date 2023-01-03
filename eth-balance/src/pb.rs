@@ -1,5 +1,5 @@
 #[rustfmt::skip]
-#[allow(unused_imports)]
+#[allow(unused_imports, dead_code)]
 #[path = "../target/pb/messari.eth_balance.v1.rs"]
 pub(self) mod eth_balance_v1;
 

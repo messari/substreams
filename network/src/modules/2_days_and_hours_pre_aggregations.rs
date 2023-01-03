@@ -17,7 +17,7 @@ pub fn days_and_hours_pre_aggregations(block: eth::Block, unique_deltas: store::
 
     aggregator.store_day_and_hour_sum_contributions(StoreKey::Transactions, block_handler.transactions());
     aggregator.store_day_and_hour_sum_contributions(StoreKey::Supply, block_handler.supply());
-    aggregator.store_day_sum_contribution(StoreKey::Blocks, BigInt::one());
+    aggregator.store_day_and_hour_sum_contributions(StoreKey::Blocks, BigInt::one());
 
     for unique_delta in unique_deltas.deltas.into_iter() {
         if unique_delta.key.starts_with("d") && unique_delta.operation == Operation::Create {

@@ -88,6 +88,18 @@ impl<'a> StatsRetriever<'a> {
         }
     }
 
+    pub(crate) fn get_zero_stats(&self) -> Stats {
+        Stats {
+            id: self.entity_id.clone(),
+            count: Some(BigInt::zero().into()),
+            mean: Some(BigInt::zero().into()),
+            max: Some(BigInt::zero().into()),
+            min: Some(BigInt::zero().into()),
+            sum: Some(BigInt::zero().into()),
+            variance: Some(BigInt::zero().into()),
+        }
+    }
+
     pub(crate) fn get_empty_day_stats(&self, count_key: StoreKey) -> Stats {
         let count = self.aggregation_retriever.get_day_sum(count_key);
 

@@ -1,26 +1,22 @@
 [package]
-name = "messari_networks_substreams"
-version = "0.0.1"
+name = "network"
+version = "0.1.0"
 description = "Substreams for Messari tracked networks"
 edition = "2021"
-# repository = "https://github.com/messari/substreams/erc20-market-cap"
-
-[lib]
-crate-type = ["cdylib"]
+repository = "https://github.com/messari/substreams/network"
 
 [dependencies]
-chrono = "0.4.22"
-ethabi = "17.0"
-prost = "^0.11.0"
-prost-types = "0.11.1"
-hex-literal = "0.3.4"
-substreams = { workspace = true }
-substreams-ethereum = { workspace = true }
 substreams-helper = { path = "../substreams-helper" }
-thiserror = "1.0.37"
-lazy_static = "1.4.0"
+substreams-ethereum = { workspace = true }
+substreams = { workspace = true }
+ethabi = "17.2.0"
+hex-literal = "0.3.4"
+prost = "0.11.5"
 substreams-entity-change = "0.3.0"
 
 [build-dependencies]
-anyhow = "1"
+anyhow = "1.0.68"
 substreams-common = { path = "../common" }
+
+[lib]
+crate-type = ["cdylib"]

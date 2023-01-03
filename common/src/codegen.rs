@@ -16,7 +16,7 @@ const NO_VERSION_SET: &str = "NO_VERSION_SET";
 #[derive(thiserror::Error, Debug)]
 pub enum Error {}
 
-pub fn generate_abi(out_dir: Option<&str>) -> Result<(), Error> {
+fn generate_abi(out_dir: Option<&str>) -> Result<(), Error> {
     let mut abi_filenames = dir_filenames("./abi");
     if abi_filenames.len() == 0 {
         return Ok(());
@@ -60,7 +60,7 @@ pub fn generate_abi(out_dir: Option<&str>) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
+fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     let out_dir = out_dir.unwrap_or(DEFAULT_OUTPUT_DIR);
     let pb_file = current_dir().unwrap().join("src").join("pb.rs");
     let tmp_dir = current_dir().unwrap().join("target").join("tmp");
