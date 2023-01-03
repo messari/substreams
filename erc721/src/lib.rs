@@ -19,9 +19,7 @@ const TRACKED_CONTRACT: [u8; 20] = hex!("bc4ca0eda7647a8ab7c2061c2e118a18a936f13
 
 /// Extracts transfer events from the contract
 #[substreams::handlers::map]
-fn block_to_transfers(
-    blk: pbeth::v2::Block,
-) -> Result<erc721::Transfers, substreams::errors::Error> {
+fn block_to_transfers(blk: pbeth::v2::Block) -> Result<erc721::Transfers, substreams::errors::Error> {
     let mut transfers: Vec<erc721::Transfer> = vec![];
     for trx in blk.transaction_traces {
         transfers.extend(trx.receipt.unwrap().logs.iter().filter_map(|log| {
@@ -29,14 +27,12 @@ fn block_to_transfers(
             if log.address != TRACKED_CONTRACT {
                 None
             } else {
-                abi::erc721::events::Transfer::match_and_decode(log).map(|transfer| {
-                    erc721::Transfer {
-                        trx_hash: trx.hash.clone(),
-                        from: transfer.from,
-                        to: transfer.to,
-                        token_id: transfer.token_id.to_u64(),
-                        ordinal: log.block_index as u64,
-                    }
+                abi::erc721::events::Transfer::match_and_decode(log).map(|transfer| erc721::Transfer {
+                    trx_hash: trx.hash.clone(),
+                    from: transfer.from,
+                    to: transfer.to,
+                    token_id: transfer.token_id.to_u64(),
+                    ordinal: log.block_index as u64,
                 })
             }
         }));

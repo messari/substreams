@@ -36,9 +36,7 @@ fn code_len(call: &pbeth::v2::Call) -> usize {
 
 /// Extracts erc20 contract deployments from the blocks
 #[substreams::handlers::map]
-fn map_block_to_erc20_contracts(
-    block: pbeth::v2::Block,
-) -> Result<common::Addresses, substreams::errors::Error> {
+fn map_block_to_erc20_contracts(block: pbeth::v2::Block) -> Result<common::Addresses, substreams::errors::Error> {
     let mut erc20_contracts = common::Addresses { items: vec![] };
 
     for call_view in block.calls() {
@@ -66,9 +64,7 @@ fn map_block_to_erc20_contracts(
 
 /// Extracts transfer events from the blocks
 #[substreams::handlers::map]
-fn map_block_to_transfers(
-    block: pbeth::v2::Block,
-) -> Result<erc20::TransferEvents, substreams::errors::Error> {
+fn map_block_to_transfers(block: pbeth::v2::Block) -> Result<erc20::TransferEvents, substreams::errors::Error> {
     // NOTE: Update TRACKED_CONTRACT to the address of the contract you want to track
     const TRACKED_CONTRACT: Address = hex!("c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"); // WETH
 
@@ -99,11 +95,7 @@ fn map_block_to_transfers(
 fn store_transfers(transfers: erc20::TransferEvents, output: store::StoreSetRaw) {
     log::info!("Stored events {}", transfers.items.len());
     for transfer in transfers.items {
-        output.set(
-            transfer.log_ordinal,
-            Hex::encode(&transfer.token_address),
-            &proto::encode(&transfer).unwrap(),
-        );
+        output.set(transfer.log_ordinal, Hex::encode(&transfer.token_address), &proto::encode(&transfer).unwrap());
     }
 }
 
@@ -111,11 +103,7 @@ fn store_transfers(transfers: erc20::TransferEvents, output: store::StoreSetRaw)
 fn store_balance(transfers: erc20::TransferEvents, output: store::StoreAddBigInt) {
     log::info!("Stored events {}", transfers.items.len());
     for transfer in transfers.items {
-        output.add(
-            transfer.log_ordinal,
-            keyer::account_balance_key(&transfer.to),
-            &BigInt::from_str(transfer.amount.as_str()).unwrap(),
-        );
+        output.add(transfer.log_ordinal, keyer::account_balance_key(&transfer.to), &BigInt::from_str(transfer.amount.as_str()).unwrap());
 
         if Hex::decode(transfer.from.clone()).unwrap() != NULL_ADDRESS {
             output.add(
@@ -128,12 +116,7 @@ fn store_balance(transfers: erc20::TransferEvents, output: store::StoreAddBigInt
 }
 
 #[substreams::handlers::store]
-fn store_balance_usd(
-    transfers: erc20::TransferEvents,
-    balances: store::StoreGetBigInt,
-    prices: StoreGetProto<Erc20Price>,
-    output: store::StoreSetBigDecimal,
-) {
+fn store_balance_usd(transfers: erc20::TransferEvents, balances: store::StoreGetBigInt, prices: StoreGetProto<Erc20Price>, output: store::StoreSetBigDecimal) {
     for transfer in transfers.items {
         let mut token_price = BigDecimal::zero();
         let mut token_decimals = 0;

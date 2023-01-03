@@ -1,6 +1,7 @@
 #[rustfmt::skip]
+#[allow(unused_imports, dead_code)]
 #[path = "../target/pb/messari.compound.v1.rs"]
-pub(in crate::pb) mod compound_v1;
+pub(self) mod compound_v1;
 
 pub mod compound {
     pub mod v1 {

@@ -14,23 +14,14 @@ use substreams_ethereum::Event;
 use substreams_helper::types::Source;
 
 #[substreams::handlers::store]
-fn store_uniswap_price(
-    block: eth::Block,
-    chainlink_prices: StoreGetProto<Erc20Price>,
-    store: StoreGetProto<PairCreatedEvent>,
-    output: StoreSetProto<Erc20Price>,
-) {
+fn store_uniswap_price(block: eth::Block, chainlink_prices: StoreGetProto<Erc20Price>, store: StoreGetProto<PairCreatedEvent>, output: StoreSetProto<Erc20Price>) {
     for log in block.logs() {
         if let Some(event) = pair::events::Sync::match_and_decode(log) {
             let pair_address = Hex(log.address()).to_string();
 
             if let Some(pair) = store.get_last(keyer::pair_info_key(&pair_address)) {
-                let reserve0 = event
-                    .reserve0
-                    .to_decimal(pair.token0.as_ref().unwrap().decimals);
-                let reserve1 = event
-                    .reserve1
-                    .to_decimal(pair.token1.as_ref().unwrap().decimals);
+                let reserve0 = event.reserve0.to_decimal(pair.token0.as_ref().unwrap().decimals);
+                let reserve1 = event.reserve1.to_decimal(pair.token1.as_ref().unwrap().decimals);
 
                 // TODO: Add a check for mininmum liquidity threshhold.
 
@@ -45,16 +36,10 @@ fn store_uniswap_price(
                             source: Source::UniswapFeeds as i32,
                         };
 
-                        output.set(
-                            log.ordinal(),
-                            keyer::uniswap_asset_key(&pair.token0.as_ref().unwrap().address),
-                            &erc20price,
-                        );
+                        output.set(log.ordinal(), keyer::uniswap_asset_key(&pair.token0.as_ref().unwrap().address), &erc20price);
                     }
                     address if utils::TOKENS.get("ETH").unwrap().eq(&address) => {
-                        let eth_price = match chainlink_prices.get_last(keyer::chainlink_asset_key(
-                            &pair.token0.as_ref().unwrap().address,
-                        )) {
+                        let eth_price = match chainlink_prices.get_last(keyer::chainlink_asset_key(&pair.token0.as_ref().unwrap().address)) {
                             Some(price) => BigDecimal::from_str(price.price_usd.as_str()).unwrap(),
                             None => BigDecimal::zero(),
                         };
@@ -72,11 +57,7 @@ fn store_uniswap_price(
                             source: Source::UniswapFeeds as i32,
                         };
 
-                        output.set(
-                            log.ordinal(),
-                            keyer::uniswap_asset_key(&pair.token0.as_ref().unwrap().address),
-                            &erc20price,
-                        );
+                        output.set(log.ordinal(), keyer::uniswap_asset_key(&pair.token0.as_ref().unwrap().address), &erc20price);
                     }
                     _ => {}
                 }
@@ -92,16 +73,10 @@ fn store_uniswap_price(
                             source: Source::UniswapFeeds as i32,
                         };
 
-                        output.set(
-                            log.ordinal(),
-                            keyer::uniswap_asset_key(&pair.token1.as_ref().unwrap().address),
-                            &erc20price,
-                        );
+                        output.set(log.ordinal(), keyer::uniswap_asset_key(&pair.token1.as_ref().unwrap().address), &erc20price);
                     }
                     address if utils::TOKENS.get("ETH").unwrap().eq(&address) => {
-                        let eth_price = match chainlink_prices.get_last(keyer::chainlink_asset_key(
-                            &pair.token1.as_ref().unwrap().address,
-                        )) {
+                        let eth_price = match chainlink_prices.get_last(keyer::chainlink_asset_key(&pair.token1.as_ref().unwrap().address)) {
                             Some(price) => BigDecimal::from_str(price.price_usd.as_str()).unwrap(),
                             None => BigDecimal::zero(),
                         };
@@ -118,11 +93,7 @@ fn store_uniswap_price(
                             source: Source::UniswapFeeds as i32,
                         };
 
-                        output.set(
-                            log.ordinal(),
-                            keyer::uniswap_asset_key(&pair.token1.as_ref().unwrap().address),
-                            &erc20price,
-                        );
+                        output.set(log.ordinal(), keyer::uniswap_asset_key(&pair.token1.as_ref().unwrap().address), &erc20price);
                     }
                     _ => {}
                 }

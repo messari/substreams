@@ -39,31 +39,19 @@ struct NetworkConfig {
     usd_denominations: [u8; 20],
 }
 
-pub fn get_price(
-    network: types::Network,
-    block_number: u64,
-    token_address: Vec<u8>,
-) -> Result<BigDecimal, String> {
+pub fn get_price(network: types::Network, block_number: u64, token_address: Vec<u8>) -> Result<BigDecimal, String> {
     let network_config = match network {
         types::Network::Ethereum => CONFIG.ethereum,
     };
 
     via_yearn_lens_oracle(&network_config, block_number, token_address.clone())
-        .or_else(|| {
-            via_chainlink_feed_registry(&network_config, block_number, token_address.clone())
-        })
+        .or_else(|| via_chainlink_feed_registry(&network_config, block_number, token_address.clone()))
         .or_else(|| via_curve_calculations(&network_config, block_number, token_address.clone()))
-        .or_else(|| {
-            via_sushiswap_calculations(&network_config, block_number, token_address.clone())
-        })
+        .or_else(|| via_sushiswap_calculations(&network_config, block_number, token_address.clone()))
         .ok_or("price error".to_string())
 }
 
-fn via_yearn_lens_oracle(
-    network_config: &NetworkConfig,
-    block_number: u64,
-    token_address: Vec<u8>,
-) -> Option<BigDecimal> {
+fn via_yearn_lens_oracle(network_config: &NetworkConfig, block_number: u64, token_address: Vec<u8>) -> Option<BigDecimal> {
     if block_number < network_config.yearn_lens_oracle_start_block {
         None
     } else {
@@ -78,11 +66,7 @@ fn via_yearn_lens_oracle(
 }
 
 /// Reference: https://docs.chain.link/docs/feed-registry
-fn via_chainlink_feed_registry(
-    network_config: &NetworkConfig,
-    block_number: u64,
-    token_address: Vec<u8>,
-) -> Option<BigDecimal> {
+fn via_chainlink_feed_registry(network_config: &NetworkConfig, block_number: u64, token_address: Vec<u8>) -> Option<BigDecimal> {
     if block_number < network_config.chainlink_feed_registry_start_block {
         None
     } else {
@@ -105,11 +89,7 @@ fn via_chainlink_feed_registry(
     }
 }
 
-fn via_curve_calculations(
-    network_config: &NetworkConfig,
-    block_number: u64,
-    token_address: Vec<u8>,
-) -> Option<BigDecimal> {
+fn via_curve_calculations(network_config: &NetworkConfig, block_number: u64, token_address: Vec<u8>) -> Option<BigDecimal> {
     if block_number < network_config.curve_calculations_start_block {
         None
     } else {
@@ -125,11 +105,7 @@ fn via_curve_calculations(
     }
 }
 
-fn via_sushiswap_calculations(
-    network_config: &NetworkConfig,
-    block_number: u64,
-    token_address: Vec<u8>,
-) -> Option<BigDecimal> {
+fn via_sushiswap_calculations(network_config: &NetworkConfig, block_number: u64, token_address: Vec<u8>) -> Option<BigDecimal> {
     if block_number < network_config.sushiswap_calculations_start_block {
         None
     } else {

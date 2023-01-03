@@ -12,22 +12,13 @@ use crate::pb::chainlink::v1::Aggregator;
 use crate::pb::erc20_price::v1::Erc20Price;
 
 #[substreams::handlers::store]
-fn store_chainlink_price(
-    block: eth::Block,
-    store: StoreGetProto<Aggregator>,
-    output: StoreSetProto<Erc20Price>,
-) {
+fn store_chainlink_price(block: eth::Block, store: StoreGetProto<Aggregator>, output: StoreSetProto<Erc20Price>) {
     for log in block.logs() {
         if let Some(event) = chainlink_aggregator::events::AnswerUpdated::match_and_decode(log) {
             let aggregator_address = Hex(log.address()).to_string();
 
-            if let Some(aggregator) =
-                store.get_last(keyer::chainlink_aggregator_key(&aggregator_address))
-            {
-                if ["USD", "DAI", "USDC", "USDT"]
-                    .contains(&aggregator.quote_asset.unwrap().symbol.as_str())
-                    .not()
-                {
+            if let Some(aggregator) = store.get_last(keyer::chainlink_aggregator_key(&aggregator_address)) {
+                if ["USD", "DAI", "USDC", "USDT"].contains(&aggregator.quote_asset.unwrap().symbol.as_str()).not() {
                     // TODO: add logic for handling `ETH` quote.
                     continue;
                 }
@@ -42,11 +33,7 @@ fn store_chainlink_price(
                     source: Source::ChainlinkAggregators as i32,
                 };
 
-                output.set(
-                    log.ordinal(),
-                    keyer::chainlink_asset_key(token_address),
-                    &erc20price,
-                );
+                output.set(log.ordinal(), keyer::chainlink_asset_key(token_address), &erc20price);
             }
         }
     }

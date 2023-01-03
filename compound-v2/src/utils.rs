@@ -92,13 +92,7 @@ fn method_signature(method: &str) -> Vec<u8> {
 // The result could mean either eth or usd, depending on the block_number
 // We delegate the check to get_underlying_price_usd
 // TODO: consider removing getPrice given it always return 0 for block_number < 7710795
-fn get_underlying_price_eth_or_usd(
-    ctoken_address: Vec<u8>,
-    underlying_address: Vec<u8>,
-    oracle: Vec<u8>,
-    block_number: u64,
-    underlying_decimals: u64,
-) -> Result<BigDecimal, String> {
+fn get_underlying_price_eth_or_usd(ctoken_address: Vec<u8>, underlying_address: Vec<u8>, oracle: Vec<u8>, block_number: u64, underlying_decimals: u64) -> Result<BigDecimal, String> {
     if block_number < 7710795 {
         // oracle gains new schema from this block on
         rpc::fetch(rpc::RpcCallParams {
@@ -113,30 +107,15 @@ fn get_underlying_price_eth_or_usd(
             method: "getUnderlyingPrice(address)".to_string(),
             args: vec![ctoken_address],
         })
-        .map(|x| {
-            bytes_to_bigdecimal(x.as_ref())
-                .div(exponent_to_big_decimal(18 - underlying_decimals + 18))
-        })
+        .map(|x| bytes_to_bigdecimal(x.as_ref()).div(exponent_to_big_decimal(18 - underlying_decimals + 18)))
     }
 }
 
 // Based on official subgraph of Compound V2 https://github.com/graphprotocol/compound-v2-subgraph/blob/master/src/mappings/markets.ts
 // Rule 1: after block 10678764 price is calculated based on USD instead of ETH
 // Rule 2: use sai until usdc is listed in the market
-pub fn get_underlying_price_usd(
-    ctoken_address: Vec<u8>,
-    underlying_address: Vec<u8>,
-    oracle: Vec<u8>,
-    block_number: u64,
-    underlying_decimals: u64,
-) -> Result<BigDecimal, String> {
-    let price_res = get_underlying_price_eth_or_usd(
-        ctoken_address,
-        underlying_address,
-        oracle.clone(),
-        block_number,
-        underlying_decimals,
-    );
+pub fn get_underlying_price_usd(ctoken_address: Vec<u8>, underlying_address: Vec<u8>, oracle: Vec<u8>, block_number: u64, underlying_decimals: u64) -> Result<BigDecimal, String> {
+    let price_res = get_underlying_price_eth_or_usd(ctoken_address, underlying_address, oracle.clone(), block_number, underlying_decimals);
     if block_number > 10678764 {
         price_res
     } else {

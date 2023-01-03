@@ -1,0 +1,33 @@
+syntax = "proto3";
+package aggregate_data;
+
+message BigInt {
+    bytes bytes = 1;
+}
+
+message PreCalculatedAggregates {
+    string timestamp = 1; // Timestamp for the given day/hour that this aggregated data is associated with
+    BigInt blocks = 2; // Only used for daily tracking and not hourly
+    BigInt unique_authors = 3;
+    BigInt supply = 4;
+    BigInt transactions = 5;
+}
+
+message AggregateData {
+    int64 timestamp = 1;
+    BigInt new_unique_authors = 2;
+    BigInt difficulty = 3;
+    BigInt gas_used = 4;
+    BigInt gas_limit = 5;
+    BigInt burnt_fees = 6;
+    BigInt rewards = 7;
+    BigInt block_size = 8;
+    BigInt chunks = 9; // Only tracked for NEAR protocol
+    BigInt supply = 10;
+    BigInt transactions = 11;
+    BigInt gas_price = 12;
+    BigInt block_interval = 13;
+
+    optional PreCalculatedAggregates daily_aggregated_data = 14;
+    optional PreCalculatedAggregates hourly_aggregated_data = 15;
+}

@@ -12,24 +12,12 @@ use substreams_helper::math;
 fn map_market_cap(prices: Erc20Prices) -> Result<Erc20MarketCaps, substreams::errors::Error> {
     let mut items = vec![];
 
-    for Erc20Price {
-        price_usd, token, ..
-    } in prices.items.iter()
-    {
-        let price = math::decimal_from_str(price_usd)
-            .map_err(|e| substreams::errors::Error::Unexpected(e.to_string()))?;
+    for Erc20Price { price_usd, token, .. } in prices.items.iter() {
+        let price = math::decimal_from_str(price_usd).map_err(|e| substreams::errors::Error::Unexpected(e.to_string()))?;
         let token_address_hex = format!("0x{}", Hex::encode(&token.as_ref().unwrap().address));
 
-        let Erc20Token {
-            total_supply,
-            decimals,
-            ..
-        } = erc20::get_erc20_token(token_address_hex.clone()).ok_or(
-            substreams::errors::Error::Unexpected(format!(
-                "Failed to get token info for address: {}",
-                token_address_hex
-            )),
-        )?;
+        let Erc20Token { total_supply, decimals, .. } =
+            erc20::get_erc20_token(token_address_hex.clone()).ok_or(substreams::errors::Error::Unexpected(format!("Failed to get token info for address: {}", token_address_hex)))?;
 
         let market_cap = price.clone() * total_supply.to_decimal(decimals);
 

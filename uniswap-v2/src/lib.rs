@@ -30,20 +30,12 @@ trait BlockExt {
 
 impl BlockExt for eth::Block {
     fn timestamp(&self) -> u64 {
-        self.header
-            .as_ref()
-            .unwrap()
-            .timestamp
-            .as_ref()
-            .unwrap()
-            .seconds as u64
+        self.header.as_ref().unwrap().timestamp.as_ref().unwrap().seconds as u64
     }
 }
 
 #[substreams::handlers::map]
-fn map_pair_created_events(
-    block: eth::Block,
-) -> Result<uniswap::PairCreatedEvents, substreams::errors::Error> {
+fn map_pair_created_events(block: eth::Block) -> Result<uniswap::PairCreatedEvents, substreams::errors::Error> {
     let mut pair_created_events = uniswap::PairCreatedEvents { items: vec![] };
 
     for log in block.logs() {
@@ -67,10 +59,7 @@ fn map_pair_created_events(
 }
 
 #[substreams::handlers::store]
-fn store_pair_created_events(
-    pair_created_events: uniswap::PairCreatedEvents,
-    output: store::StoreSetRaw,
-) {
+fn store_pair_created_events(pair_created_events: uniswap::PairCreatedEvents, output: store::StoreSetRaw) {
     log::info!("Stored events {}", pair_created_events.items.len());
     for event in pair_created_events.items {
         output.set(0, Hex::encode(&event.pair), &proto::encode(&event).unwrap());
@@ -78,9 +67,7 @@ fn store_pair_created_events(
 }
 
 #[substreams::handlers::map]
-fn map_pools(
-    pair_created_events: uniswap::PairCreatedEvents,
-) -> Result<dex_amm::Pools, substreams::errors::Error> {
+fn map_pools(pair_created_events: uniswap::PairCreatedEvents) -> Result<dex_amm::Pools, substreams::errors::Error> {
     let mut pools = dex_amm::Pools { items: vec![] };
 
     for event in pair_created_events.items {
@@ -95,11 +82,7 @@ fn map_pools(
                 total_value_locked: "0".to_string(),
             })
         } else {
-            log::info!(
-                "Failed to fetch token for {} {}",
-                Hex(&event.token0),
-                Hex(&event.token1)
-            );
+            log::info!("Failed to fetch token for {} {}", Hex(&event.token0), Hex(&event.token1));
         }
     }
 
@@ -116,10 +99,7 @@ fn store_pools(pools: dex_amm::Pools, output: store::StoreSetRaw) {
 }
 
 #[substreams::handlers::map]
-fn map_mint_events(
-    block: eth::Block,
-    pools_store: StoreGetRaw,
-) -> Result<uniswap::MintEvents, substreams::errors::Error> {
+fn map_mint_events(block: eth::Block, pools_store: StoreGetRaw) -> Result<uniswap::MintEvents, substreams::errors::Error> {
     let mut mint_events = uniswap::MintEvents { items: vec![] };
 
     for log in block.logs() {
@@ -130,11 +110,7 @@ fn map_mint_events(
         if let Some(event) = pair::events::Mint::match_and_decode(log) {
             // Check if pool has been created
             if pools_store.get_last(pool_key).is_none() {
-                log::info!(
-                    "invalid swap. pool does not exist. pool address {} transaction {}",
-                    pool_address,
-                    tx_hash
-                );
+                log::info!("invalid swap. pool does not exist. pool address {} transaction {}", pool_address, tx_hash);
                 continue;
             }
 
@@ -153,10 +129,7 @@ fn map_mint_events(
 }
 
 #[substreams::handlers::map]
-fn map_swap_events(
-    block: eth::Block,
-    pools_store: StoreGetRaw,
-) -> Result<uniswap::SwapEvents, substreams::errors::Error> {
+fn map_swap_events(block: eth::Block, pools_store: StoreGetRaw) -> Result<uniswap::SwapEvents, substreams::errors::Error> {
     let mut swap_events = uniswap::SwapEvents { items: vec![] };
 
     for log in block.logs() {
@@ -167,11 +140,7 @@ fn map_swap_events(
         if let Some(event) = pair::events::Swap::match_and_decode(log) {
             // Check if pool has been created
             if pools_store.get_last(pool_key).is_none() {
-                log::info!(
-                    "invalid swap. pool does not exist. pool address {} transaction {}",
-                    pool_address,
-                    tx_hash
-                );
+                log::info!("invalid swap. pool does not exist. pool address {} transaction {}", pool_address, tx_hash);
                 continue;
             }
 

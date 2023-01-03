@@ -19,10 +19,8 @@ fn store_pair_created_events(block: eth::Block, output: StoreSetProto<PairCreate
                 continue;
             }
 
-            let token0_asset =
-                substreams_helper::erc20::get_erc20_token(Hex(&event.token0).to_string()).unwrap();
-            let token1_asset =
-                substreams_helper::erc20::get_erc20_token(Hex(&event.token1).to_string()).unwrap();
+            let token0_asset = substreams_helper::erc20::get_erc20_token(Hex(&event.token0).to_string()).unwrap();
+            let token1_asset = substreams_helper::erc20::get_erc20_token(Hex(&event.token1).to_string()).unwrap();
 
             let pair_created_event = PairCreatedEvent {
                 token0: Some(Erc20Token {
@@ -41,11 +39,7 @@ fn store_pair_created_events(block: eth::Block, output: StoreSetProto<PairCreate
                 factory: factory_address,
             };
 
-            output.set(
-                log.ordinal(),
-                keyer::pair_info_key(&pair_created_event.pair),
-                &pair_created_event,
-            );
+            output.set(log.ordinal(), keyer::pair_info_key(&pair_created_event.pair), &pair_created_event);
         }
     }
 }

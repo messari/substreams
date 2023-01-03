@@ -33,9 +33,7 @@ pub fn decimal_from_str(price_str: &str) -> Result<BigDecimal, Error> {
 
 pub fn decimal_from_hex_be_bytes(price_bytes: &Vec<u8>) -> BigDecimal {
     let big_uint_amount = BigUint::from_bytes_be(price_bytes.as_slice()); // TODO: Get rid of BigUint dependency
-    BigDecimal::from_str(big_uint_amount.to_string().as_str())
-        .unwrap()
-        .with_prec(100)
+    BigDecimal::from_str(big_uint_amount.to_string().as_str()).unwrap().with_prec(100)
 }
 
 pub fn exponent_to_big_decimal(decimals: u8) -> BigDecimal {
@@ -49,12 +47,7 @@ pub fn exponent_to_big_decimal(decimals: u8) -> BigDecimal {
 }
 
 pub fn divide_by_decimals(big_float_amount: BigDecimal, decimals: u64) -> BigDecimal {
-    let bd = BigDecimal::from_str(
-        "1".pad_to_width_with_char((decimals + 1) as usize, '0')
-            .as_str(),
-    )
-    .unwrap()
-    .with_prec(100);
+    let bd = BigDecimal::from_str("1".pad_to_width_with_char((decimals + 1) as usize, '0').as_str()).unwrap().with_prec(100);
 
     big_float_amount.div(bd).with_prec(100)
 }

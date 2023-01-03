@@ -14,30 +14,20 @@ use crate::{keyer, utils};
 #[substreams::handlers::store]
 fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregator>) {
     for call in block.calls() {
-        if let Some(decoded_call) = price_feed::functions::ConfirmAggregator::match_and_decode(call)
-        {
-            let decimals = chainlink_aggregator::functions::Decimals {}
-                .call(decoded_call.aggregator.to_vec())
-                .unwrap_or(BigInt::zero());
-            let description = chainlink_aggregator::functions::Description {}
-                .call(decoded_call.aggregator.to_vec())
-                .unwrap_or(String::new());
+        if let Some(decoded_call) = price_feed::functions::ConfirmAggregator::match_and_decode(call) {
+            let decimals = chainlink_aggregator::functions::Decimals {}.call(decoded_call.aggregator.to_vec()).unwrap_or(BigInt::zero());
+            let description = chainlink_aggregator::functions::Description {}.call(decoded_call.aggregator.to_vec()).unwrap_or(String::new());
 
             let base_quote: Vec<&str> = description.split(" / ").collect();
 
             if base_quote.len() != 2 {
-                log::info!(
-                    "[ChainlinkAggregator] Unexpected Description: {}",
-                    description
-                );
+                log::info!("[ChainlinkAggregator] Unexpected Description: {}", description);
                 continue;
             }
 
             let mut aggregator_address = decoded_call.aggregator;
 
-            let nested_aggregator = (chainlink_aggregator::functions::Aggregator {})
-                .call(aggregator_address.to_vec())
-                .unwrap_or(Vec::<u8>::new());
+            let nested_aggregator = (chainlink_aggregator::functions::Aggregator {}).call(aggregator_address.to_vec()).unwrap_or(Vec::<u8>::new());
 
             if nested_aggregator.is_empty().not() {
                 // In `AggregatorFacade` contracts, the aggregator contract is nested two times.
@@ -49,23 +39,15 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
             let base_asset = match utils::TOKENS.get(base_quote[0]) {
                 Some(base) => substreams_helper::erc20::get_erc20_token(base.to_string()).unwrap(),
                 _ => {
-                    log::info!(
-                        "Cannot find token mapping for base: {}",
-                        base_quote[0].to_string()
-                    );
+                    log::info!("Cannot find token mapping for base: {}", base_quote[0].to_string());
                     continue;
                 }
             };
 
             let quote_asset = match utils::TOKENS.get(base_quote[1]) {
-                Some(quote) => {
-                    substreams_helper::erc20::get_erc20_token(quote.to_string()).unwrap()
-                }
+                Some(quote) => substreams_helper::erc20::get_erc20_token(quote.to_string()).unwrap(),
                 _ => {
-                    log::info!(
-                        "Cannot find token mapping for quote: {}",
-                        base_quote[1].to_string()
-                    );
+                    log::info!("Cannot find token mapping for quote: {}", base_quote[1].to_string());
                     continue;
                 }
             };
@@ -88,11 +70,7 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
                 decimals: decimals.to_u64(),
             };
 
-            output.set(
-                0,
-                keyer::chainlink_aggregator_key(&aggregator.address),
-                &aggregator,
-            );
+            output.set(0, keyer::chainlink_aggregator_key(&aggregator.address), &aggregator);
         }
     }
 }
