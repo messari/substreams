@@ -2,9 +2,9 @@ use substreams::pb::substreams::store_delta::Operation;
 use substreams::pb::substreams::StoreDelta;
 use substreams::scalar::BigInt;
 use substreams::store;
+use substreams::store::StoreGetBigInt;
 use substreams::store::{DeltaBytes, DeltaInt64, StoreGet};
 use substreams_ethereum::pb::eth::v2::{self as eth};
-use substreams::store::StoreGetBigInt;
 
 use crate::block_handler::BlockHandler;
 use crate::pb::aggregate_data::{AggregateData, PreCalculatedAggregates};
@@ -79,24 +79,30 @@ pub fn map_aggregation_data(block: eth::Block, buggy_deltas: store::Deltas<Delta
 }
 
 fn get_non_buggy_deltas(buggy_deltas: store::Deltas<DeltaBytes>) -> store::Deltas<DeltaInt64> {
-    store::Deltas::<DeltaInt64>::new(buggy_deltas.deltas.into_iter().filter_map(|delta| {
-        let old_value = if delta.operation == Operation::Create {
-            0_i64.to_string().into_bytes()
-        } else {
-            if delta.new_value == delta.old_value {
-                // THEN IT'S NOT ACTUALLY A DELTA!!!!!
-                return None;
-            }
+    store::Deltas::<DeltaInt64>::new(
+        buggy_deltas
+            .deltas
+            .into_iter()
+            .filter_map(|delta| {
+                let old_value = if delta.operation == Operation::Create {
+                    0_i64.to_string().into_bytes()
+                } else {
+                    if delta.new_value == delta.old_value {
+                        // THEN IT'S NOT ACTUALLY A DELTA!!!!!
+                        return None;
+                    }
 
-            delta.old_value
-        };
+                    delta.old_value
+                };
 
-        Some(StoreDelta {
-            operation: delta.operation as i32,
-            ordinal: delta.ordinal,
-            key: delta.key,
-            old_value,
-            new_value: delta.new_value
-        })
-    }).collect())
+                Some(StoreDelta {
+                    operation: delta.operation as i32,
+                    ordinal: delta.ordinal,
+                    key: delta.key,
+                    old_value,
+                    new_value: delta.new_value,
+                })
+            })
+            .collect(),
+    )
 }

@@ -33,7 +33,7 @@ pub(crate) enum StoreKey {
     HourlyUniqueAuthors,
     HourlySupply,
     HourlyTransactions,
-    GasPrice
+    GasPrice,
 }
 
 impl StoreKey {

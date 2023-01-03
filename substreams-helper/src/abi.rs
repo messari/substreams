@@ -22,4 +22,3 @@ pub mod sushiswap_calculations;
 #[allow(unused_imports)]
 #[path = "../target/abi/yearn_lens_oracle.rs"]
 pub mod yearn_lens_oracle;
-

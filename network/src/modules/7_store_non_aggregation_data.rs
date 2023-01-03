@@ -1,7 +1,7 @@
-use substreams::store::StoreSet;
-use substreams_ethereum::pb::eth::v2::{self as eth};
-use substreams::store::StoreSetBigInt;
 use substreams::store::StoreNew;
+use substreams::store::StoreSet;
+use substreams::store::StoreSetBigInt;
+use substreams_ethereum::pb::eth::v2::{self as eth};
 
 use crate::block_handler::BlockHandler;
 use crate::store_key::StoreKey;

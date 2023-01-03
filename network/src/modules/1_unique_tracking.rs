@@ -1,7 +1,7 @@
-use substreams::store::StoreSet;
-use substreams_ethereum::pb::eth::v2::{self as eth};
-use substreams::store::StoreSetInt64;
 use substreams::store::StoreNew;
+use substreams::store::StoreSet;
+use substreams::store::StoreSetInt64;
+use substreams_ethereum::pb::eth::v2::{self as eth};
 
 use crate::block_handler::BlockHandler;
 use crate::utils::i64_to_str;

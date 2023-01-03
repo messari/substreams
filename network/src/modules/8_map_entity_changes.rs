@@ -2,10 +2,10 @@ use prost::Message;
 use substreams::pb::substreams::store_delta;
 use substreams::scalar::BigInt;
 use substreams::store;
+use substreams::store::StoreGetBigInt;
 use substreams::store::{DeltaBigInt, StoreGet};
 use substreams_entity_change::pb::entity::entity_change::Operation;
 use substreams_entity_change::pb::entity::{EntityChange, EntityChanges};
-use substreams::store::StoreGetBigInt;
 
 use crate::pb::aggregate_data::AggregateData;
 use crate::stats_retriever::StatsRetriever;
@@ -32,22 +32,28 @@ pub fn map_entity_changes(
     let mut entity_changes = vec![network_entity];
 
     if is_new_day {
-        entity_changes.push(create_daily_snapshot_entity_change(&aggregate_data, &mut stats_retriever, &non_aggregation_deltas, &non_aggregation_store))
+        entity_changes.push(create_daily_snapshot_entity_change(
+            &aggregate_data,
+            &mut stats_retriever,
+            &non_aggregation_deltas,
+            &non_aggregation_store,
+        ))
     }
 
     if is_new_hour {
-        entity_changes.push(create_hourly_snapshot_entity_change(&aggregate_data, &mut stats_retriever, &non_aggregation_deltas, &non_aggregation_store))
+        entity_changes.push(create_hourly_snapshot_entity_change(
+            &aggregate_data,
+            &mut stats_retriever,
+            &non_aggregation_deltas,
+            &non_aggregation_store,
+        ))
     }
 
     Ok(EntityChanges { entity_changes })
 }
 
 /// Returns network entity change and also if it is the time to create a day or hour snapshot. Return is in form => (network_entity_change, create_day_snapshot, create_hour_snapshot)
-fn get_network_entity_change(
-    stats_retriever: &mut StatsRetriever,
-    non_aggregation_deltas: &store::Deltas<DeltaBigInt>,
-    aggregation_deltas: &store::Deltas<DeltaBigInt>,
-) -> (EntityChange, bool, bool) {
+fn get_network_entity_change(stats_retriever: &mut StatsRetriever, non_aggregation_deltas: &store::Deltas<DeltaBigInt>, aggregation_deltas: &store::Deltas<DeltaBigInt>) -> (EntityChange, bool, bool) {
     const ENTITY_ID: &str = "MAINNET";
     stats_retriever.set_entity_id(ENTITY_ID.to_string());
     let mut network_entity_change = EntityChange::new("network", ENTITY_ID, 0, Operation::Update);
@@ -63,20 +69,36 @@ fn get_network_entity_change(
     let mut is_new_hour = false;
     for store_delta in aggregation_deltas.deltas.iter() {
         match &store_delta.key {
-            key if key == &StoreKey::CumulativeUniqueAuthors.get_total_sum_key() => {network_entity_change.change("cumulative_unique_authors", store_delta);},
+            key if key == &StoreKey::CumulativeUniqueAuthors.get_total_sum_key() => {
+                network_entity_change.change("cumulative_unique_authors", store_delta);
+            }
             key if key == &StoreKey::BlockHeight.get_total_sum_key() => {
                 if store_delta.operation == store_delta::Operation::Create {
                     is_first_block = true;
                 }
                 network_entity_change.change("block_height", store_delta);
             }
-            key if key == &StoreKey::CumulativeDifficulty.get_total_sum_key() => {network_entity_change.change("cumulative_difficulty", store_delta);},
-            key if key == &StoreKey::CumulativeGasUsed.get_total_sum_key() => {network_entity_change.change("cumulative_gas_used", store_delta);},
-            key if key == &StoreKey::CumulativeBurntFees.get_total_sum_key() => {network_entity_change.change("cumulative_burnt_fees", store_delta);},
-            key if key == &StoreKey::CumulativeRewards.get_total_sum_key() => {network_entity_change.change("cumulative_rewards", store_delta);},
-            key if key == &StoreKey::CumulativeTransactions.get_total_sum_key() => {network_entity_change.change("cumulative_transactions", store_delta);},
-            key if key == &StoreKey::CumulativeSize.get_total_sum_key() => {network_entity_change.change("cumulative_size", store_delta);},
-            key if key == &StoreKey::TotalSupply.get_total_sum_key() => {network_entity_change.change("total_supply", store_delta);},
+            key if key == &StoreKey::CumulativeDifficulty.get_total_sum_key() => {
+                network_entity_change.change("cumulative_difficulty", store_delta);
+            }
+            key if key == &StoreKey::CumulativeGasUsed.get_total_sum_key() => {
+                network_entity_change.change("cumulative_gas_used", store_delta);
+            }
+            key if key == &StoreKey::CumulativeBurntFees.get_total_sum_key() => {
+                network_entity_change.change("cumulative_burnt_fees", store_delta);
+            }
+            key if key == &StoreKey::CumulativeRewards.get_total_sum_key() => {
+                network_entity_change.change("cumulative_rewards", store_delta);
+            }
+            key if key == &StoreKey::CumulativeTransactions.get_total_sum_key() => {
+                network_entity_change.change("cumulative_transactions", store_delta);
+            }
+            key if key == &StoreKey::CumulativeSize.get_total_sum_key() => {
+                network_entity_change.change("cumulative_size", store_delta);
+            }
+            key if key == &StoreKey::TotalSupply.get_total_sum_key() => {
+                network_entity_change.change("total_supply", store_delta);
+            }
             key if key == &StoreKey::NumDays.get_total_sum_key() => is_new_day = true,
             key if key == &StoreKey::NumHours.get_total_sum_key() => is_new_hour = true,
             _ => {}
@@ -129,7 +151,12 @@ fn get_network_entity_change(
     (network_entity_change, is_new_day, is_new_hour)
 }
 
-fn create_daily_snapshot_entity_change(aggregate_data: &AggregateData, stats_retriever: &mut StatsRetriever, non_aggregation_deltas: &store::Deltas<DeltaBigInt>, non_aggregation_store: &StoreGetBigInt) -> EntityChange {
+fn create_daily_snapshot_entity_change(
+    aggregate_data: &AggregateData,
+    stats_retriever: &mut StatsRetriever,
+    non_aggregation_deltas: &store::Deltas<DeltaBigInt>,
+    non_aggregation_store: &StoreGetBigInt,
+) -> EntityChange {
     let entity_id = (get_latest_day(aggregate_data.timestamp) - 1).to_string();
     stats_retriever.set_entity_id(entity_id.clone());
     let mut day_snapshot_entity_change = EntityChange::new("daily_snapshot", entity_id.as_ref(), 0, Operation::Create);
@@ -153,8 +180,10 @@ fn create_daily_snapshot_entity_change(aggregate_data: &AggregateData, stats_ret
 
     // Because we have gone a full block past the last block of the day we need to adjust all the aggregated data to account for this.
     let block_height_at_start_of_day = store_retriever.get_total_sum(StoreKey::BlockHeight) - store_retriever.get_day_sum(StoreKey::BlocksAcrossDay) - BigInt::one();
-    let cumulative_difficulty_up_to_start_of_day = store_retriever.get_total_sum(StoreKey::CumulativeDifficulty) - store_retriever.get_day_sum(StoreKey::Difficulty) - aggregate_data.difficulty.as_ref().unwrap().clone().into();
-    let cumulative_gas_used_up_to_start_of_day = store_retriever.get_total_sum(StoreKey::CumulativeGasUsed) - store_retriever.get_day_sum(StoreKey::GasUsed) - aggregate_data.gas_used.as_ref().unwrap().clone().into();
+    let cumulative_difficulty_up_to_start_of_day =
+        store_retriever.get_total_sum(StoreKey::CumulativeDifficulty) - store_retriever.get_day_sum(StoreKey::Difficulty) - aggregate_data.difficulty.as_ref().unwrap().clone().into();
+    let cumulative_gas_used_up_to_start_of_day =
+        store_retriever.get_total_sum(StoreKey::CumulativeGasUsed) - store_retriever.get_day_sum(StoreKey::GasUsed) - aggregate_data.gas_used.as_ref().unwrap().clone().into();
     let cumulative_unique_authors_up_to_end_of_day = store_retriever.get_total_sum(StoreKey::CumulativeUniqueAuthors) - aggregate_data.new_unique_authors.as_ref().unwrap().clone().into();
     let cumulative_burnt_fees_up_to_end_of_day = store_retriever.get_total_sum(StoreKey::CumulativeBurntFees) - aggregate_data.burnt_fees.as_ref().unwrap().clone().into();
     let cumulative_rewards_up_to_end_of_day = store_retriever.get_total_sum(StoreKey::CumulativeRewards) - aggregate_data.rewards.as_ref().unwrap().clone().into();
@@ -193,7 +222,12 @@ fn create_daily_snapshot_entity_change(aggregate_data: &AggregateData, stats_ret
     day_snapshot_entity_change
 }
 
-fn create_hourly_snapshot_entity_change(aggregate_data: &AggregateData, stats_retriever: &mut StatsRetriever, non_aggregation_deltas: &store::Deltas<DeltaBigInt>, non_aggregation_store: &StoreGetBigInt) -> EntityChange {
+fn create_hourly_snapshot_entity_change(
+    aggregate_data: &AggregateData,
+    stats_retriever: &mut StatsRetriever,
+    non_aggregation_deltas: &store::Deltas<DeltaBigInt>,
+    non_aggregation_store: &StoreGetBigInt,
+) -> EntityChange {
     let entity_id = (get_latest_hour(aggregate_data.timestamp) - 1).to_string();
     stats_retriever.set_entity_id(entity_id.clone());
     let mut hour_snapshot_entity_change = EntityChange::new("hourly_snapshot", entity_id.as_ref(), 0, Operation::Create);
@@ -217,8 +251,10 @@ fn create_hourly_snapshot_entity_change(aggregate_data: &AggregateData, stats_re
 
     // Because we have gone a full block past the last block of the day we need to adjust all the aggregated data to account for this.
     let block_height_at_start_of_hour = store_retriever.get_total_sum(StoreKey::BlockHeight) - store_retriever.get_hour_sum(StoreKey::BlocksAcrossHour) - BigInt::one();
-    let cumulative_difficulty_up_to_start_of_hour = store_retriever.get_total_sum(StoreKey::CumulativeDifficulty) - store_retriever.get_hour_sum(StoreKey::Difficulty) - aggregate_data.difficulty.as_ref().unwrap().clone().into();
-    let cumulative_gas_used_up_to_start_of_hour = store_retriever.get_total_sum(StoreKey::CumulativeGasUsed) - store_retriever.get_hour_sum(StoreKey::GasUsed) - aggregate_data.gas_used.as_ref().unwrap().clone().into();
+    let cumulative_difficulty_up_to_start_of_hour =
+        store_retriever.get_total_sum(StoreKey::CumulativeDifficulty) - store_retriever.get_hour_sum(StoreKey::Difficulty) - aggregate_data.difficulty.as_ref().unwrap().clone().into();
+    let cumulative_gas_used_up_to_start_of_hour =
+        store_retriever.get_total_sum(StoreKey::CumulativeGasUsed) - store_retriever.get_hour_sum(StoreKey::GasUsed) - aggregate_data.gas_used.as_ref().unwrap().clone().into();
     let cumulative_unique_authors_up_to_end_of_hour = store_retriever.get_total_sum(StoreKey::CumulativeUniqueAuthors) - aggregate_data.new_unique_authors.as_ref().unwrap().clone().into();
     let cumulative_burnt_fees_up_to_end_of_hour = store_retriever.get_total_sum(StoreKey::CumulativeBurntFees) - aggregate_data.burnt_fees.as_ref().unwrap().clone().into();
     let cumulative_rewards_up_to_end_of_hour = store_retriever.get_total_sum(StoreKey::CumulativeRewards) - aggregate_data.rewards.as_ref().unwrap().clone().into();
@@ -231,7 +267,10 @@ fn create_hourly_snapshot_entity_change(aggregate_data: &AggregateData, stats_re
         .change("hourly_blocks", store_retriever.get_hour_sum(StoreKey::BlocksAcrossHour))
         .change("timestamp", BigInt::from(aggregate_data.timestamp))
         .change("cumulative_unique_authors", cumulative_unique_authors_up_to_end_of_hour)
-        .change("hourly_unique_authors", stats_retriever.get_total_stats(StoreKey::HourlyUniqueAuthors, StoreKey::NumHours).encode_to_vec())
+        .change(
+            "hourly_unique_authors",
+            stats_retriever.get_total_stats(StoreKey::HourlyUniqueAuthors, StoreKey::NumHours).encode_to_vec(),
+        )
         .change("cumulative_difficulty", cumulative_difficulty_up_to_start_of_hour)
         .change("hourly_difficulty", stats_retriever.get_hour_stats(StoreKey::Difficulty, StoreKey::BlocksAcrossHour).encode_to_vec())
         .change("cumulative_gas_used", cumulative_gas_used_up_to_start_of_hour)
@@ -259,13 +298,17 @@ fn create_hourly_snapshot_entity_change(aggregate_data: &AggregateData, stats_re
 
 fn get_proper_deltas(incorrect_deltas: store::Deltas<DeltaBigInt>) -> store::Deltas<DeltaBigInt> {
     store::Deltas::<DeltaBigInt> {
-        deltas: incorrect_deltas.deltas.into_iter().filter_map(|delta| {
-            if delta.operation == substreams::pb::substreams::store_delta::Operation::Update && delta.old_value == delta.new_value {
-                // THEN IT'S NOT ACTUALLY A DELTA!!!!!
-                None
-            } else {
-                Some(delta)
-            }
-        }).collect()
+        deltas: incorrect_deltas
+            .deltas
+            .into_iter()
+            .filter_map(|delta| {
+                if delta.operation == substreams::pb::substreams::store_delta::Operation::Update && delta.old_value == delta.new_value {
+                    // THEN IT'S NOT ACTUALLY A DELTA!!!!!
+                    None
+                } else {
+                    Some(delta)
+                }
+            })
+            .collect(),
     }
 }

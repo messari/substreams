@@ -2,7 +2,7 @@ use substreams::scalar::BigInt;
 use substreams_ethereum::pb::eth::v2::balance_change::Reason;
 use substreams_ethereum::pb::eth::v2::{self as eth, BalanceChange};
 
-use crate::utils::{BigIntDeserializeExt, get_latest_day, get_latest_hour};
+use crate::utils::{get_latest_day, get_latest_hour, BigIntDeserializeExt};
 use ethabi::ethereum_types::Address;
 
 pub struct BlockHandler<'a>(&'a eth::Block);
@@ -157,7 +157,7 @@ fn is_a_reward(balance_change: &BalanceChange) -> bool {
         Reason::RewardFeeReset as i32,
         Reason::RewardMineBlock as i32,
         Reason::RewardMineUncle as i32,
-        Reason::RewardTransactionFee as i32
+        Reason::RewardTransactionFee as i32,
     ];
 
     REWARD_REASONS.contains(&balance_change.reason)

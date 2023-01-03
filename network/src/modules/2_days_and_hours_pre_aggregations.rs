@@ -2,9 +2,9 @@ use substreams::pb::substreams::store_delta::Operation;
 use substreams::scalar::BigInt;
 use substreams::store;
 use substreams::store::DeltaBytes;
-use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams::store::StoreAddBigInt;
 use substreams::store::StoreNew;
+use substreams_ethereum::pb::eth::v2::{self as eth};
 
 use crate::aggregator::Aggregator;
 use crate::block_handler::BlockHandler;

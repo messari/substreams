@@ -22,11 +22,11 @@ mod store_non_aggregation_data;
 #[path = "8_map_entity_changes.rs"]
 mod map_entity_changes;
 
-pub use unique_tracking::unique_tracking;
 pub use days_and_hours_pre_aggregations::days_and_hours_pre_aggregations;
 pub use map_aggregation_data::map_aggregation_data;
 pub use map_entity_changes::map_entity_changes;
 pub use store_max_values::store_max_values;
 pub use store_mean_and_variance_contributions::store_mean_and_variance_contributions;
-pub use store_non_aggregation_data::store_non_aggregation_data;
 pub use store_min_values::store_min_values;
+pub use store_non_aggregation_data::store_non_aggregation_data;
+pub use unique_tracking::unique_tracking;
