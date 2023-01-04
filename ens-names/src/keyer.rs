@@ -1,7 +1,7 @@
-pub fn ens_domain_key(asset_address: &String) -> String {
-    format!("domain:{}", asset_address)
+pub fn ens_domain_key(ens_hash: &String) -> String {
+    format!("domain:{}", ens_hash)
 }
 
-pub fn ens_registrant_key(address: &String) -> String {
-    format!("registrant:{}", address)
+pub fn ens_registrant_key(registrant_address: &String) -> String {
+    format!("registrant:{}", registrant_address)
 }
