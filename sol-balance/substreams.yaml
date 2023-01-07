@@ -8,9 +8,9 @@ imports:
 
 protobuf:
   files:
-    - sol_balance.proto
+    - sol.token.proto
   importPaths:
-    - proto/v1
+    - ../common/proto
 
 binaries:
   default:
@@ -18,9 +18,10 @@ binaries:
     file: "../target/wasm32-unknown-unknown/release/sol_balance.wasm"
 
 modules:
-  - name: store_balance
-    kind: store
-    updatePolicy: set
-    valueType: string
+  - name: map_balances
+    kind: map
+    initialBlock: 0
     inputs:
       - source: sf.solana.type.v1.Block
+    output:
+      type: proto:messari.sol.token.Account
