@@ -11,6 +11,7 @@ message Token {
   string name = 2;
   string symbol = 3;
   uint64 decimals = 4;
+  optional string total_supply = 5;
 }
 
 message Transfers {
@@ -39,7 +40,6 @@ message Account {
   repeated TokenBalance balances = 2;
 }
 
-// TODO: do we need this?
 message Accounts {
   repeated Account items = 1;
 }

@@ -20,10 +20,6 @@ substreams = "0.3.2"
 substreams-ethereum = "0.6.2"
 substreams-solana = "0.1.0"
 
-# TODO: I get a warning when this is uncommented
-#[build]
-#target = "wasm32-unknown-unknown"
-
 [profile.release]
 lto = true
 opt-level = 's'
