@@ -24,4 +24,4 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:messari.token.Account
+      type: proto:messari.evm.token.Account
