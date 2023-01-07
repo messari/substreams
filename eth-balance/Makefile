@@ -8,4 +8,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_balances
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_balances -s 46977 -t 46980

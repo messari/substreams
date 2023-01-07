@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 import "common.proto";
-import "token.proto";
+import "erc20.proto";
 
 package messari.dex_amm.v1;
 

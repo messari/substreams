@@ -46,12 +46,12 @@ fn map_balances(block: pbeth::v2::Block) -> Result<token::Accounts, substreams::
 
 fn get_eth_token() -> token::Token {
     let eth_token = Token {
-        address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE".to_string(), // TODO: do we need to append "address: "?
+        address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE".to_string(),
         name: "Ethereum".to_string(),
         symbol: "ETH".to_string(),
         decimals: 18 as u64,
+        total_supply: None,
     };
-    // let tokens = vec![eth_token.clone()]; // TODO: does this set the Tokens protbuf definition
 
     eth_token
 }
