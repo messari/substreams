@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package messari.sol.token.v1;
+
+message Transfers {
+  repeated Transfer transfers = 1;
+}
+
+message Transfer {
+  string signature = 1;
+  uint64 ordinal = 2;
+  string from = 3;
+  string to = 4;
+  TokenAccount token = 5;
+  uint64 native_amount = 6;
+  uint64 amount = 7;
+}
+
+message Tokens {
+  repeated TokenAccount tokens = 1;
+}
+
+message TokenAccount {
+  string address = 1;
+  string name = 2;
+  string symbol = 3;
+  string decimals = 4;
+  string owner = 5;
+  string mint = 6;
+}
+
+message Balance {
+  TokenAccount token = 1;
+  string balance = 2;
+}
+
+message Account {
+  string account_id = 1;
+  repeated Balance balances = 2;
+}
+
+message Accounts {
+  repeated Account items = 1;
+}
