@@ -1,10 +1,13 @@
 use substreams::store::StoreSet;
+use crate::pb::token::v1::Token;
+use pb::token::v1 as proto;
 use substreams_solana::pb::sol as solana;
 use bs58;
 use prost::Message;
+use substreams_solana::pb;
 
-#[substreams::handlers::store]
-fn store_balance(block: solana::v1::Block, output: StoreSet) {
+#[substreams::handlers::map]
+fn map(block: solana::v1::Block) -> Result<proto:> {
     for tx in block.transactions {
         if let Some(meta) = tx.meta {
             if let Some(_) = meta.err {
