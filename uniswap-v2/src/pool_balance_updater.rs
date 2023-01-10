@@ -7,28 +7,42 @@ use substreams_ethereum::NULL_ADDRESS;
 
 use crate::store_key::StoreKey;
 
-pub(crate) struct PoolBalanceRetriever<'a> {
+pub(crate) struct PoolBalanceUpdater<'a> {
     pool: String,
     store: &'a StoreAddBigInt,
 }
 
-impl<'a> PoolBalanceRetriever<'a> {
+impl<'a> PoolBalanceUpdater<'a> {
     pub fn new(pool: String, store: &'a StoreAddBigInt) -> Self {
-        PoolBalanceRetriever { pool, store }
+        PoolBalanceUpdater { pool, store }
     }
 
-    pub fn is_null_address(&self, user: &Vec<u8>) -> bool {
-        *user == NULL_ADDRESS
+    pub fn update_pool_token_supply(&self, from: &Vec<u8>, to: &Vec<u8>, value: &BigInt) {
+        if *from == NULL_ADDRESS {
+            self.store.add(
+                0,
+                StoreKey::PoolTokenSupply.get_unique_pool_key(&self.pool),
+                value.deref(),
+            )
+        }
+
+        if *to == NULL_ADDRESS {
+            self.store.add(
+                0,
+                StoreKey::PoolTokenSupply.get_unique_pool_key(&self.pool),
+                value.neg(),
+            )
+        }
     }
 
-    pub fn store_user_balance(&self, user: Vec<u8>, value: &BigInt) {
-        if self.is_null_address(&user) {
+    pub fn update_user_balance(&self, user: &Vec<u8>, value: &BigInt) {
+        if *user == NULL_ADDRESS {
             return;
         }
 
         self.store.add(
             0,
-            StoreKey::UserBalance.get_user_balance_key(&self.pool, &Hex(&user).to_string()),
+            StoreKey::UserBalance.get_user_balance_key(&self.pool, &Hex(user).to_string()),
             value.deref(),
         )
     }
