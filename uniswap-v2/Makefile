@@ -1,7 +1,9 @@
 .PHONY: build
 build:
+	$(MAKE) -C ../erc20-price build
+	$(MAKE) -C ../erc20-price pack
 	cargo build --target wasm32-unknown-unknown --release
 
 .PHONY: run
 run:
-	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml store_pool_deposits,store_pool_withdraws,store_pool_swaps -s 10008300
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_pool_events -s 10008300
