@@ -5,17 +5,16 @@ package:
 
 imports:
   eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+  erc20Price: ../erc20-price/target/erc20-price-substreams-v0.1.0.spkg
 
 protobuf:
   files:
     - common.proto
-    - dex_amm.proto
-    - uniswap.proto
     - erc20.proto
+    - uniswap.proto
   importPaths:
-    - ../common/proto
     - ./proto/v1
-    - ./proto/v2
+    - ../common/proto
 
 binaries:
   default:
@@ -23,79 +22,88 @@ binaries:
     file: ../target/wasm32-unknown-unknown/release/substreams_uniswap_v2.wasm
 
 modules:
-  - name: map_pair_created_events
+  - name: map_pools_created
     kind: map
-    initialBlock: 10000835
+    initialBlock: 10008300
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:messari.uniswap.v2.PairCreatedEvents
+      type: proto:messari.uniswap.v2.Pools
 
-  - name: store_pair_created_events
+  - name: initialize_pool
     kind: store
-    updatePolicy: set
-    valueType: proto:messari.uniswap.v2.PairCreatedEvents
+    initialBlock: 10008300
+    updatePolicy: set_if_not_exists
+    valueType: proto:messari.uniswap.v2.Pool
     inputs:
-      - map: map_pair_created_events
+      - map: map_pools_created
 
-  - name: map_pools
-    kind: map
-    inputs:
-      - map: map_pair_created_events
-    output:
-      type: proto:messari.dex_amm.v1.Pools
-
-  - name: store_pools
+  - name: store_pool_user_balance
     kind: store
-    updatePolicy: set
-    valueType: proto:messari.dex_amm.v1.Pools
-    inputs:
-      - map: map_pools
-
-  - name: map_mint_events
-    kind: map
-    initialBlock: 10000835
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - store: store_pools
-    output:
-      type: proto:messari.uniswap.v2.MintEvents
-
-  - name: map_block_to_transfers
-    kind: map
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-    output:
-      type: proto:messari.erc20.v1.TransferEvents
-
-  - name: store_transfers
-    kind: store
-    updatePolicy: set
-    valueType: proto:messari.erc20.v1.TransferEvents
-    inputs:
-      - map: map_block_to_transfers
-
-  - name: map_swap_events
-    kind: map
-    initialBlock: 10000835
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - store: store_pools
-    output:
-      type: proto:messari.uniswap.v2.SwapEvents
-
-  - name: store_swap_events
-    kind: store
-    initialBlock: 10000835
-    updatePolicy: set
-    valueType: proto:messari.uniswap.v2.SwapEvent
-    inputs:
-      - map: map_swap_events
-
-  - name: store_swap_count
-    kind: store
-    initialBlock: 10000835
+    initialBlock: 10008300
     updatePolicy: add
-    valueType: int64
+    valueType: bigint
     inputs:
-      - map: map_swap_events
+      - source: sf.ethereum.type.v2.Block
+      - store: initialize_pool
+
+  - name: map_pool_events
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: initialize_pool
+      - store: store_pool_user_balance
+        mode: deltas
+      - store: store_usd_prices
+    output:
+      type: proto:messari.uniswap.v2.Events
+  
+  - name: protocol_usage_metrics
+    kind: store
+    initialBlock: 10008300
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - map: map_pools_created
+      - map: map_pool_events
+
+  - name: store_tokens_whitelist_pools
+    kind: store
+    initialBlock: 10008300
+    updatePolicy: append
+    valueType: string
+    inputs:
+      - map: map_pools_created
+
+  - name: store_pool_native_tvl
+    kind: store
+    initialBlock: 10008300
+    updatePolicy: set
+    valueType: bigint
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: initialize_pool
+
+  - name: store_usd_prices
+    kind: store
+    initialBlock: 10008300
+    updatePolicy: set
+    valueType: bigdecimal
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: initialize_pool
+      - store: store_pool_user_balance
+      - store: store_tokens_whitelist_pools
+      - store: store_pool_native_tvl
+      - store: erc20Price:store_chainlink_price
+  
+  - name: store_swaps_volume
+    kind: store
+    updatePolicy: set
+    valueType: bigdecimal
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - store: initialize_pool
+      - map: map_pool_events
