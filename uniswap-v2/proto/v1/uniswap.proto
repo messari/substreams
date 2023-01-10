@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+import "erc20.proto";
+package messari.uniswap.v2;
+
+message Pools {
+  repeated Pool pools = 1;
+}
+
+message Pool {
+  // Smart contract address of the pool
+  string address = 1;
+
+  // Name of liquidity pool (e.g. Curve.fi DAI/USDC/USDT)
+  string name = 2;
+
+  // Symbol of liquidity pool (e.g. 3CRV)
+  string symbol = 3;
+
+  // Tokens that need to be deposited to take a position in protocol. e.g. WETH and USDC to deposit into the WETH-USDC pool. Array to account for multi-asset pools like Curve and Balancer.
+  messari.erc20.v1.ERC20Tokens input_tokens = 4;
+
+  // Token that is minted to track ownership of position in protocol
+  messari.erc20.v1.ERC20Token output_token = 5;
+
+  // Creation timestamp
+  uint64 created_timestamp = 6;
+
+  // Creation block number
+  uint64 created_block_number = 7;
+}
+
+message Events {
+  repeated Event events = 1;
+}
+
+message Event {
+  oneof type {
+    Deposit deposit = 1;
+    Withdraw withdraw = 2;
+    Swap swap = 3;
+  }
+
+  // Transaction hash of the transaction that emitted this event.
+  string hash = 100;
+
+  // Event log index. For transactions that don't emit event, create arbitrary index starting from 0,
+  uint64 logIndex = 101;
+
+  // Address that received the tokens.
+  string to = 102;
+
+  // Address that sent the tokens.
+  string from = 103;
+
+  // Block number of this event.
+  uint64 block_number = 104;
+
+  // Timestamp of this event.
+  uint64 timestamp = 105;
+
+  // The pool involving this transaction.
+  string pool = 106;
+}
+
+
+message Deposit {
+  // Amount of input tokens in the token's native unit.
+  repeated uint64 input_token_amounts = 1;
+
+  // Amount of output tokens in the token's native unit.
+  optional uint64 output_token_amount = 2;
+
+  // USD-normalized value of the transaction of the underlying (e.g. sum of tokens deposited into a pool).
+  string amount_USD = 3;
+}
+
+message Withdraw {
+  // Amount of input tokens in the token's native unit.
+  repeated uint64 input_token_amounts = 12;
+
+  // Amount of output tokens in the token's native unit.
+  optional uint64 output_token_amount = 13;
+
+  // USD-normalized value of the transaction of the underlying (e.g. sum of tokens deposited into a pool).
+  string amount_USD = 14;
+}
+
+message Swap {
+  // Token deposited into pool.
+  messari.erc20.v1.ERC20Token token_in = 1;
+
+  // Amount of token deposited into pool in native units.
+  uint64 amount_in = 2;
+
+  // Amount of token deposited into pool in USD.
+  string amount_in_USD = 3;
+
+  // Token withdrawn from pool.
+  messari.erc20.v1.ERC20Token token_out = 4;
+
+  // Amount of token withdrawn from pool in native units.
+  uint64 amount_out = 5;
+
+  // Amount of token withdrawn from pool in USD.
+  string amount_out_USD = 6;
+}
