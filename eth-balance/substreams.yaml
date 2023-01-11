@@ -8,7 +8,7 @@ imports:
 
 protobuf:
   files:
-    - evm.token.proto
+    - evm_token.proto
   importPaths:
     - ../common/proto
 
