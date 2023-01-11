@@ -1,12 +1,14 @@
 #[rustfmt::skip]
 pub mod pb;
 
-use crate::pb::token::v1::Token;
+use crate::pb::evm_token::v1::Token;
 use num_bigint;
-use pb::token::v1 as token;
+use pb::evm_token::v1 as token;
 use substreams::scalar::BigInt;
 use substreams::Hex;
 use substreams_ethereum::pb::eth as pbeth;
+use substreams_helper::token::get_eth_token;
+
 
 #[substreams::handlers::map]
 fn map_balances(block: pbeth::v2::Block) -> Result<token::Accounts, substreams::errors::Error> {
@@ -25,8 +27,10 @@ fn map_balances(block: pbeth::v2::Block) -> Result<token::Accounts, substreams::
                     })
                     .unwrap_or(BigInt::zero());
                 let new_token_balance = vec![token::TokenBalance {
-                    token: Some(get_eth_token()),
+                    token: get_eth_token(),
                     balance: new_value.to_string(),
+                    block_number: block.number,
+                    timestamp: block.header.timestamp
                 }];
                 let account = token::Account {
                     address: Hex(&balance_change.address).to_string(),
@@ -38,20 +42,4 @@ fn map_balances(block: pbeth::v2::Block) -> Result<token::Accounts, substreams::
     }
 
     Ok(token::Accounts { items: accounts })
-}
-
-//////////////////////////
-//// Helper Functions ////
-//////////////////////////
-
-fn get_eth_token() -> token::Token {
-    let eth_token = Token {
-        address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE".to_string(),
-        name: "Ethereum".to_string(),
-        symbol: "ETH".to_string(),
-        decimals: 18 as u64,
-        total_supply: None,
-    };
-
-    eth_token
 }
