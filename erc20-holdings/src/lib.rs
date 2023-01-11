@@ -46,6 +46,7 @@ fn map_block_to_erc20_contracts(
         if call.call_type == pbeth::v2::CallType::Create as i32 {
             // skipping contracts that are too short to be an erc20 token
             if code_len(call) < 150 {
+                // contract byte code < 150 bytes
                 continue;
             }
 
