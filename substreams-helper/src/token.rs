@@ -1,4 +1,4 @@
-
+use crate::pb::evm_token::v1::Token;
 
 pub fn get_eth_token() -> Option<Token> {
     let eth_token = Token {

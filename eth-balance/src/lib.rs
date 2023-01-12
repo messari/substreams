@@ -1,14 +1,12 @@
 #[rustfmt::skip]
 pub mod pb;
 
-use crate::pb::evm_token::v1::Token;
 use num_bigint;
 use pb::evm_token::v1 as token;
 use substreams::scalar::BigInt;
 use substreams::Hex;
 use substreams_ethereum::pb::eth as pbeth;
 use substreams_helper::token::get_eth_token;
-
 
 #[substreams::handlers::map]
 fn map_balances(block: pbeth::v2::Block) -> Result<token::Accounts, substreams::errors::Error> {
@@ -30,7 +28,14 @@ fn map_balances(block: pbeth::v2::Block) -> Result<token::Accounts, substreams::
                     token: get_eth_token(),
                     balance: new_value.to_string(),
                     block_number: block.number,
-                    timestamp: block.header.timestamp
+                    timestamp: block
+                        .header
+                        .as_ref()
+                        .unwrap()
+                        .timestamp
+                        .as_ref()
+                        .unwrap()
+                        .seconds as u64,
                 }];
                 let account = token::Account {
                     address: Hex(&balance_change.address).to_string(),
