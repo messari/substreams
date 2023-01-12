@@ -42,3 +42,7 @@ message Account {
 message Accounts {
   repeated Account items = 1;
 }
+
+message OuterString {
+  string inner_string = 1;
+}
