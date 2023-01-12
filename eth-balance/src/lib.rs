@@ -2,13 +2,16 @@
 pub mod pb;
 
 use num_bigint;
+use pb::evm_token::v1 as token;
 use substreams::scalar::BigInt;
-use substreams::store::{StoreNew, StoreSet, StoreSetRaw};
-use substreams::{store, Hex};
+use substreams::Hex;
 use substreams_ethereum::pb::eth as pbeth;
+use substreams_helper::token::get_eth_token;
 
-#[substreams::handlers::store]
-fn store_balance(block: pbeth::v2::Block, output: store::StoreSetRaw) {
+#[substreams::handlers::map]
+fn map_balances(block: pbeth::v2::Block) -> Result<token::Accounts, substreams::errors::Error> {
+    let mut accounts = vec![];
+
     for transaction in &block.transaction_traces {
         for call in &transaction.calls {
             for balance_change in &call.balance_changes {
@@ -21,13 +24,27 @@ fn store_balance(block: pbeth::v2::Block, output: store::StoreSetRaw) {
                             .into()
                     })
                     .unwrap_or(BigInt::zero());
-
-                output.set(
-                    transaction.end_ordinal,
-                    format!("Address:{}", Hex(&balance_change.address).to_string()),
-                    &new_value.to_string(),
-                )
+                let new_token_balance = vec![token::TokenBalance {
+                    token: get_eth_token(),
+                    balance: new_value.to_string(),
+                    block_number: block.number,
+                    timestamp: block
+                        .header
+                        .as_ref()
+                        .unwrap()
+                        .timestamp
+                        .as_ref()
+                        .unwrap()
+                        .seconds as u64,
+                }];
+                let account = token::Account {
+                    address: Hex(&balance_change.address).to_string(),
+                    balances: new_token_balance,
+                };
+                accounts.push(account);
             }
         }
     }
+
+    Ok(token::Accounts { items: accounts })
 }

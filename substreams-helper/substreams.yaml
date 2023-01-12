@@ -1,6 +1,6 @@
 specVersion: v0.1.0
 package:
-  name: eth_balance
+  name: substreams_helper
   version: v0.1.0
 
 imports:
@@ -15,13 +15,4 @@ protobuf:
 binaries:
   default:
     type: wasm/rust-v1
-    file: "../target/wasm32-unknown-unknown/release/eth_balance.wasm"
-
-modules:
-  - name: map_balances
-    kind: map
-    initialBlock: 0
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-    output:
-      type: proto:messari.evm.token.Account
+    file: "../target/wasm32-unknown-unknown/release/substreams_helper.wasm"

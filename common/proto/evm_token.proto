@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package messari.evm_token.v1;
+
+message Tokens {
+  repeated Token items = 1;
+}
+
+message Token {
+  string address = 1;
+  string name = 2;
+  string symbol = 3;
+  uint64 decimals = 4;
+  optional string total_supply = 5;
+}
+
+message Transfers {
+  repeated Transfer items = 1;
+}
+
+message Transfer {
+  string tx_hash = 1;
+  uint32 log_index = 2;
+  uint64 log_ordinal = 3;
+  Token token = 4;
+  string from = 5;
+  string to = 6;
+  string amount = 7; // BigInt, in token's native amount
+  optional string amount_usd = 8;
+}
+
+// spot balance of the given token
+message TokenBalance {
+  Token token = 1;
+  string balance = 2; // BigInt, in token's native amount
+  uint64 block_number = 3;
+  uint64 timestamp = 4;
+}
+
+message Account {
+  string address = 1;
+  repeated TokenBalance balances = 2;
+}
+
+message Accounts {
+  repeated Account items = 1;
+}
