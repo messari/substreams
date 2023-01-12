@@ -1,4 +1,4 @@
-use substream
+
 
 pub fn get_eth_token() -> Option<Token> {
     let eth_token = Token {
