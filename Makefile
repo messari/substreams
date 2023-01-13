@@ -11,6 +11,7 @@ build-all:
 	$(MAKE) -C solana-sample build
 	$(MAKE) -C eth-balance build
 	$(MAKE) -C sol-balance build
+	$(MAKE) -C ens-names build
 
 .PHONY: run-all
 run-all:
@@ -20,6 +21,7 @@ run-all:
 	$(MAKE) -C erc721 run
 	$(MAKE) -C network run
 	$(MAKE) -C sol-balance run
+	$(MAKE) -C ens-names run
 
 .PHONY: test
 test:
