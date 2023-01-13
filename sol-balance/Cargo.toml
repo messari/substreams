@@ -1,7 +1,7 @@
 [package]
 name = "sol-balance"
 version = "0.1.0"
-description = "Messari's standardized substream for wallets sol balance"
+description = "Messari's substream for solana SOL balances"
 edition = "2021"
 repository = "https://github.com/messari/substreams"
 

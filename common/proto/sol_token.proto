@@ -31,7 +31,9 @@ message TokenAccount {
 
 message Balance {
   TokenAccount token = 1;
-  string balance = 2;
+  string balance = 2; // BigInt in token's native units
+  uint64 block_number = 3;
+  uint64 timestamp = 4;
 }
 
 message Account {
