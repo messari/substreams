@@ -77,6 +77,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "bs58"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
+
+[[package]]
 name = "bumpalo"
 version = "3.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -912,6 +918,22 @@ checksum = "e2904bea16a1ae962b483322a1c7b81d976029203aea1f461e51cd7705db7ba9"
 dependencies = [
  "digest",
  "keccak",
+]
+
+[[package]]
+name = "sol-balance"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bs58",
+ "ethabi",
+ "hex-literal",
+ "num-bigint",
+ "prost 0.11.2",
+ "substreams 0.0.11",
+ "substreams-common",
+ "substreams-helper",
+ "substreams-solana",
 ]
 
 [[package]]
