@@ -10,6 +10,10 @@ mod store_registrant_ens;
 #[path = "4_store_registrant_address.rs"]
 mod store_registrant_address;
 
+#[path = "5_ens_jsonl_out.rs"]
+mod ens_jsonl_out;
+
+pub use ens_jsonl_out::ens_jsonl_out;
 pub use map_domain::map_domain;
 pub use store_ens_record::store_ens_record;
 pub use store_registrant_address::store_registrant_address;
