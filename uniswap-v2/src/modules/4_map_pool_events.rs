@@ -12,7 +12,7 @@ use crate::pb::uniswap::v2::{
     Deposit as DepositEvent, Swap as SwapEvent, Withdraw as WithdrawEvent,
 };
 use crate::pb::uniswap::v2::{Event as PoolEvent, Events, Pool};
-use crate::pool_balance_updater::get_user_balance_diff;
+use crate::balance_updater::get_user_balance_diff;
 use crate::store_key::StoreKey;
 use crate::utils;
 
@@ -64,11 +64,12 @@ pub fn map_pool_events(
 
                 events.push(PoolEvent {
                     hash: Hex(&log.receipt.transaction.hash).to_string(),
-                    log_index: log.index() as u64,
+                    log_index: log.index() as i64,
+                    log_ordinal: log.ordinal() as i64,
+                    block_number: block.number as i64,
+                    timestamp: block.timestamp_seconds() as i64,
                     to: pool.address.clone(),
                     from: user_address,
-                    block_number: block.number,
-                    timestamp: block.timestamp_seconds(),
                     pool: pool.address.clone(),
                     r#type: Some(Deposit(DepositEvent {
                         input_token_amounts: vec![mint_event.amount0, mint_event.amount1]
@@ -118,11 +119,12 @@ pub fn map_pool_events(
 
                 events.push(PoolEvent {
                     hash: Hex(&log.receipt.transaction.hash).to_string(),
-                    log_index: log.index() as u64,
+                    log_index: log.index() as i64,
+                    log_ordinal: log.ordinal() as i64,
+                    block_number: block.number as i64,
+                    timestamp: block.timestamp_seconds() as i64,
                     to: pool.address.clone(),
                     from: user_address,
-                    block_number: block.number,
-                    timestamp: block.timestamp_seconds(),
                     pool: pool.address.clone(),
                     r#type: Some(Withdraw(WithdrawEvent {
                         input_token_amounts: vec![burn_event.amount0, burn_event.amount1]
@@ -197,11 +199,12 @@ pub fn map_pool_events(
 
                 events.push(PoolEvent {
                     hash: Hex(&log.receipt.transaction.hash).to_string(),
-                    log_index: log.index() as u64,
+                    log_index: log.index() as i64,
+                    log_ordinal: log.ordinal() as i64,
+                    block_number: block.number as i64,
+                    timestamp: block.timestamp_seconds() as i64,
                     to: pool.address.clone(),
                     from: user_address,
-                    block_number: block.number,
-                    timestamp: block.timestamp_seconds(),
                     pool: pool.address.clone(),
                     r#type: Some(Swap(SwapEvent {
                         token_in: swapped_tokens.token_in,

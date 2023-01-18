@@ -1,11 +1,12 @@
 mod abi;
+mod aggregator;
 mod modules;
 mod pb;
-mod pool_balance_updater;
-mod pool_retriever;
+mod balance_updater;
 mod prices;
+mod retriever;
 mod store_key;
-mod token_retriever;
+mod store_retriever;
 mod utils;
 
 pub use modules::*;

@@ -17,6 +17,7 @@ pad = "0.1"
 substreams.workspace = true
 substreams-ethereum.workspace = true
 substreams-helper = { path = "../substreams-helper" }
+substreams-entity-change = "0.3.0"
 
 [build-dependencies]
 anyhow = "1"

@@ -58,16 +58,36 @@ modules:
       - store: store_usd_prices
     output:
       type: proto:messari.uniswap.v2.Events
-  
-  - name: protocol_usage_metrics
+
+  - name: store_unique_tracking
     kind: store
-    initialBlock: 10008300
-    updatePolicy: add
+    updatePolicy: set
     valueType: bigint
     inputs:
       - source: sf.substreams.v1.Clock
       - map: map_pools_created
       - map: map_pool_events
+
+  - name: store_metrics_pre_aggregations
+    kind: store
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - map: map_pool_events
+      - store: store_unique_tracking
+        mode: deltas
+
+  - name: map_metrics_aggregator
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - store: store_unique_tracking
+        mode: deltas
+      - store: store_metrics_pre_aggregations
+    output:
+      type: proto:messari.uniswap.v2.MetricsSnapshot
 
   - name: store_tokens_whitelist_pools
     kind: store
@@ -107,3 +127,15 @@ modules:
       - source: sf.substreams.v1.Clock
       - store: initialize_pool
       - map: map_pool_events
+
+  - name: store_pool_tvl
+    kind: store
+    initialBlock: 10008300
+    updatePolicy: set
+    valueType: bigdecimal
+    inputs:
+      - store: initialize_pool
+      - store: store_pool_native_tvl
+      - store: store_pool_native_tvl
+        mode: deltas
+      - store: store_usd_prices

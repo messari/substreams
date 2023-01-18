@@ -7,7 +7,7 @@ use substreams_ethereum::Event;
 
 use crate::abi::pair;
 use crate::pb::uniswap::v2::Pool;
-use crate::pool_balance_updater::PoolBalanceUpdater;
+use crate::balance_updater::PoolBalanceUpdater;
 use crate::store_key::StoreKey;
 
 #[substreams::handlers::store]

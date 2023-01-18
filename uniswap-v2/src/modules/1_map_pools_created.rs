@@ -4,7 +4,7 @@ use substreams_ethereum::Event;
 
 use crate::abi::factory;
 use crate::pb::uniswap::v2::{Pool, Pools};
-use crate::pool_retriever::PoolRetriever;
+use crate::retriever::PoolRetriever;
 
 #[substreams::handlers::map]
 pub fn map_pools_created(block: eth::Block) -> Result<Pools, Error> {
@@ -21,8 +21,8 @@ pub fn map_pools_created(block: eth::Block) -> Result<Pools, Error> {
                 symbol: pool_retriever.get_symbol(),
                 input_tokens: pool_retriever.get_input_tokens(),
                 output_token: pool_retriever.get_output_token(),
-                created_timestamp: block.timestamp_seconds(),
-                created_block_number: block.number,
+                created_timestamp: block.timestamp_seconds() as i64,
+                created_block_number: block.number as i64,
             });
         }
     }
