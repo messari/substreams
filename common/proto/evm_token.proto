@@ -20,28 +20,23 @@ message Transfers {
 
 message Transfer {
   string tx_hash = 1;
-  uint32 log_index = 2;
-  uint64 log_ordinal = 3;
-  Token token = 4;
-  string from = 5;
+  uint64 block_number = 2;
+  uint64 timestamp = 3;
+  uint32 log_index = 4;
+  Token token = 5;
   string to = 6;
-  string amount = 7; // BigInt, in token's native amount
-  optional string amount_usd = 8;
+  string from = 7;
+  string amount = 8; // BigInt, in token's native amount
+  optional string amount_usd = 9;
+  repeated TokenBalance balance_changes = 10;
 }
 
-// spot balance of the given token
+// balance changes
 message TokenBalance {
-  Token token = 1;
-  string balance = 2; // BigInt, in token's native amount
-  uint64 block_number = 3;
-  uint64 timestamp = 4;
-}
-
-message Account {
-  string address = 1;
-  repeated TokenBalance balances = 2;
-}
-
-message Accounts {
-  repeated Account items = 1;
+  uint64 log_ordinal = 1;
+  Token token = 2;
+  string address = 3; // account address of the balance change
+  string old_balance = 4; // BigInt, in token's native amount
+  string new_balance = 5; // BigInt, in token's native amount
+  optional int32 reason = 6;
 }

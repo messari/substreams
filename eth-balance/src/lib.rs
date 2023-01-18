@@ -6,45 +6,46 @@ use pb::evm_token::v1 as token;
 use substreams::scalar::BigInt;
 use substreams::Hex;
 use substreams_ethereum::pb::eth as pbeth;
-use substreams_helper::token::get_eth_token;
+use substreams_helper::token as token_helper;
 
 #[substreams::handlers::map]
-fn map_balances(block: pbeth::v2::Block) -> Result<token::Accounts, substreams::errors::Error> {
-    let mut accounts = vec![];
+fn map_balances(block: pbeth::v2::Block) -> Result<token::Transfers, substreams::errors::Error> {
+    let mut transfers = vec![];
 
     for transaction in &block.transaction_traces {
+        let mut balance_changes = vec![];
         for call in &transaction.calls {
             for balance_change in &call.balance_changes {
-                // TODO: replace this with substreams::scalar::BigInt once the wrapper is integrated
-                let new_value = balance_change
-                    .new_value
-                    .as_ref()
-                    .map(|value| {
-                        num_bigint::BigInt::from_bytes_be(num_bigint::Sign::Plus, &value.bytes)
-                            .into()
-                    })
-                    .unwrap_or(BigInt::zero());
-                let new_token_balance = vec![token::TokenBalance {
-                    token: get_eth_token(),
-                    balance: new_value.to_string(),
-                    block_number: block.number,
-                    timestamp: block
-                        .header
-                        .as_ref()
-                        .unwrap()
-                        .timestamp
-                        .as_ref()
-                        .unwrap()
-                        .seconds as u64,
-                }];
-                let account = token::Account {
+                balance_changes.push(token::TokenBalance {
+                    log_ordinal: balance_change.ordinal,
+                    token: token_helper::get_eth_token(),
                     address: Hex(&balance_change.address).to_string(),
-                    balances: new_token_balance,
-                };
-                accounts.push(account);
+                    old_balance: token_helper::bigint_to_string(balance_change.old_value.clone()),
+                    new_balance: token_helper::bigint_to_string(balance_change.new_value.clone()),
+                    reason: Some(balance_change.reason),
+                });
             }
         }
+        transfers.push(token::Transfer {
+            tx_hash: Hex(&transaction.hash).to_string(),
+            block_number: block.number,
+            timestamp: block
+                .header
+                .as_ref()
+                .unwrap()
+                .timestamp
+                .as_ref()
+                .unwrap()
+                .seconds as u64,
+            log_index: transaction.index,
+            token: token_helper::get_eth_token(),
+            to: Hex(&transaction.to).to_string(),
+            from: Hex(&transaction.from).to_string(),
+            amount: token_helper::bigint_to_string(transaction.value.clone()),
+            amount_usd: None,
+            balance_changes: balance_changes,
+        });
     }
 
-    Ok(token::Accounts { items: accounts })
+    Ok(token::Transfers { items: transfers })
 }
