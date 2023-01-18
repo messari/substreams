@@ -1,6 +1,6 @@
 use substreams::scalar::BigInt;
+use substreams::store::StoreNew;
 use substreams::store::{StoreGet, StoreGetProto, StoreSet, StoreSetBigInt};
-use substreams::store::{StoreNew};
 use substreams::Hex;
 use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams_ethereum::Event;
@@ -24,18 +24,16 @@ pub fn store_pool_native_tvl(
             if let Some(pool) =
                 pool_store.get_last(StoreKey::Pool.get_unique_pool_key(&pool_address))
             {
-                let input_tokens = pool.input_tokens.unwrap().items;
-
                 output.set(
                     log.ordinal(),
                     StoreKey::InputTokenBalance
-                        .get_pool_token_balance_key(&pool_address, &input_tokens[0].address),
+                        .get_pool_token_balance_key(&pool_address, pool.token0_address()),
                     &amount0,
                 );
                 output.set(
                     log.ordinal(),
                     StoreKey::InputTokenBalance
-                        .get_pool_token_balance_key(&pool_address, &input_tokens[1].address),
+                        .get_pool_token_balance_key(&pool_address, pool.token1_address()),
                     &amount1,
                 );
             }

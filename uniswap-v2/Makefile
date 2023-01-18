@@ -4,4 +4,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml store_pool_deposits,store_pool_withdraws,store_pool_swaps -s 10008300
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_metrics_aggregator -s 10008300

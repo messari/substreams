@@ -24,10 +24,10 @@ message Pool {
   messari.erc20.v1.ERC20Token output_token = 5;
 
   // Creation timestamp
-  uint64 created_timestamp = 6;
+  int64 created_timestamp = 6;
 
   // Creation block number
-  uint64 created_block_number = 7;
+  int64 created_block_number = 7;
 }
 
 message Events {
@@ -45,24 +45,26 @@ message Event {
   string hash = 100;
 
   // Event log index. For transactions that don't emit event, create arbitrary index starting from 0,
-  uint64 logIndex = 101;
+  int64 log_index = 101;
+
+  // Event log index. For transactions that don't emit event, create arbitrary index starting from 0,
+  int64 log_ordinal = 102;
 
   // Address that received the tokens.
-  string to = 102;
+  string to = 103;
 
   // Address that sent the tokens.
-  string from = 103;
+  string from = 104;
 
   // Block number of this event.
-  uint64 block_number = 104;
+  int64 block_number = 105;
 
   // Timestamp of this event.
-  uint64 timestamp = 105;
+  int64 timestamp = 106;
 
   // The pool involving this transaction.
-  string pool = 106;
+  string pool = 107;
 }
-
 
 message Deposit {
   // Amount of input tokens in the token's native unit.
@@ -104,4 +106,57 @@ message Swap {
 
   // Amount of token withdrawn from pool in USD.
   string amount_out_USD = 6;
+}
+
+message UsageMetricsDailySnapshot {
+  // Number of unique daily active users
+  int64 daily_active_users = 1;
+
+  // Total number of transactions occurred in a day. Transactions include all entities that implement the Event interface.
+  int64 daily_transaction_count = 2;
+
+  // Total number of deposits (add liquidity) in a day
+  int64 daily_deposit_count = 3;
+
+  // Total number of withdrawals (remove liquidity) in a day
+  int64 daily_withdraw_count = 4;
+
+  // Total number of trades (swaps) in a day
+  int64 daily_swap_count = 5;
+}
+
+message UsageMetricsHourlySnapshot {
+  // Number of unique hourly active users "
+  int64 hourly_active_users = 1;
+
+  // Total number of transactions occurred in an hour. Transactions include all entities that implement the Event interface.
+  int64 hourly_transaction_count = 2;
+
+  // Total number of deposits (add liquidity) in an hour
+  int64 hourly_deposit_count = 3;
+
+  // Total number of withdrawals (remove liquidity) in an hour
+  int64 hourly_withdraw_count = 4;
+
+  // Total number of trades (swaps) in an hour
+  int64 hourly_swap_count = 5;
+}
+
+message MetricsSnapshot {
+  // Timestamp of this snapshot
+  int64 timestamp = 1;
+
+  // Number of cumulative unique users
+  int64 cumulative_unique_users = 2;
+
+  // Total number of pools
+  int64 cumulative_pool_count = 3;
+
+  // ##### Snapshots #####
+
+  // Daily usage metrics for this protocol
+  UsageMetricsDailySnapshot daily_usage_metrics = 4;
+
+  // Hourly usage metrics for this protocol
+  UsageMetricsHourlySnapshot hourly_usage_metrics = 5;
 }
