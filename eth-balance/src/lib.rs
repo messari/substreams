@@ -1,9 +1,8 @@
 #[rustfmt::skip]
 pub mod pb;
 
-use num_bigint;
-use pb::evm_token::v1 as token;
-use substreams::scalar::BigInt;
+use substreams_helper::pb::evm_token::v1 as token;
+// use pb::evm_token::v1 as token;
 use substreams::Hex;
 use substreams_ethereum::pb::eth as pbeth;
 use substreams_helper::token as token_helper;
