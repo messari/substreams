@@ -6,7 +6,7 @@ use substreams_solana::pb;
 use substreams_solana::pb::sol as solana;
 
 #[substreams::handlers::map]
-fn map_balances(block: solana::v1::Block) -> Result<token::Accounts, substreams::errors::Error> {
+fn map_balances(block: solana::v1::Block) -> Result<token::BalanceChanges, substreams::errors::Error> {
     let accounts = vec![];
     for tx in block.transactions {
         if let Some(meta) = tx.meta {

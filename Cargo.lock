@@ -929,7 +929,7 @@ dependencies = [
  "ethabi",
  "hex-literal",
  "num-bigint",
- "prost 0.11.2",
+ "prost 0.11.3",
  "substreams 0.0.11",
  "substreams-common",
  "substreams-helper",

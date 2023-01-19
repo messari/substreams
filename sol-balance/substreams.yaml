@@ -24,4 +24,4 @@ modules:
     inputs:
       - source: sf.solana.type.v1.Block
     output:
-      type: proto:messari.sol.token.Account
+      type: proto:messari.sol.token.BalanceChanges
