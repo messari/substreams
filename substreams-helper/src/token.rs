@@ -20,5 +20,6 @@ pub fn bigint_to_string(number: Option<pbeth::v2::BigInt>) -> String {
     number
         .as_ref()
         .map(|value| num_bigint::BigInt::from_bytes_be(num_bigint::Sign::Plus, &value.bytes))
-        .unwrap_or(BigInt::zero().into()).to_string()
+        .unwrap_or(BigInt::zero().into())
+        .to_string()
 }
