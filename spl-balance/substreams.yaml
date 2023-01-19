@@ -1,0 +1,21 @@
+specVersion: v0.1.0
+package:
+  name: spl_balance
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+
+protobuf:
+  files:
+    - sol_token.proto
+  importPaths:
+    - ../common/proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/spl-balance.wasm"
+
+modules:
+# TODO

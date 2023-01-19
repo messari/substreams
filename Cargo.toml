@@ -12,6 +12,7 @@ members = [
     "uniswap-v2",
     "solana-sample",
     "ens-names",
+    "spl-balance",
 ]
 exclude = ["messari-cli"]
 
