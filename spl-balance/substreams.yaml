@@ -18,4 +18,10 @@ binaries:
     file: "../target/wasm32-unknown-unknown/release/spl-balance.wasm"
 
 modules:
-# TODO
+  - name: map_balances
+    kind: map
+    initialBlock: 0
+    inputs:
+      - source: sf.solana.type.v1.Block
+    output:
+      type: proto:solana.spl.v1.BalanceChanges

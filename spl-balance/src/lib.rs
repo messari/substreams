@@ -6,8 +6,10 @@ use substreams::scalar::BigInt;
 use substreams::store::{StoreNew, StoreSet, StoreSetRaw};
 use substreams::{store, Hex};
 use substreams_ethereum::pb::eth as pbeth;
+use substreams_solana::pb::sol as solana;
+use pb::sol_token::v1 as proto;
 
-#[substreams::handlers::store]
-fn store_balance(block: pbeth::v2::Block, output: store::StoreSetRaw) {
+#[substreams::handlers::map]
+fn map_balances(block: solana::v1::Block) -> Result<proto::BalanceChanges, substreams::errors::Error> {
 
 }

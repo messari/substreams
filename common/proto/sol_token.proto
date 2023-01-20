@@ -25,7 +25,6 @@ message Transfer {
   string mint = 5;
   uint64 native_amount = 6;
   uint64 amount = 7;
-  BalanceChanges balance_changes = 8;
 }
 
 message BalanceChanges {
@@ -36,7 +35,7 @@ message BalanceChanges {
 message TokenBalance {
   TokenAccount token = 1;
   uint64 block_height = 2;
-  string address = 3; // account address of the balance change
+  string account = 3; // account address of the balance change
   string old_balance = 4; // BigInt, in token's native amount
   string new_balance = 5; // BigInt, in token's native amount
 }
