@@ -15,12 +15,11 @@ protobuf:
 binaries:
   default:
     type: wasm/rust-v1
-    file: "../target/wasm32-unknown-unknown/release/spl-balance.wasm"
+    file: "../target/wasm32-unknown-unknown/release/spl_balance.wasm"
 
 modules:
   - name: map_balances
     kind: map
-    initialBlock: 0
     inputs:
       - source: sf.solana.type.v1.Block
     output:

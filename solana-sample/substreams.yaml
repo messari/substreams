@@ -15,6 +15,6 @@ modules:
     - name: store_test
       kind: store
       updatePolicy: set
-      valueType: bytes
+      valueType: string
       inputs:
         - source: sf.solana.type.v1.Block

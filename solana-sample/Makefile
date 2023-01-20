@@ -4,4 +4,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e mainnet.sol.streamingfast.io:443 substreams.yaml store_test -s 0 -t +10
+	substreams run -e mainnet.sol.streamingfast.io:443 substreams.yaml store_test -s 100
