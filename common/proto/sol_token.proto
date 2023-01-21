@@ -2,17 +2,6 @@ syntax = "proto3";
 
 package messari.sol_token.v1;
 
-message Mints {
-  repeated Mint mints = 1;
-}
-
-message Mint {
-  string address = 1;
-  uint32 decimals = 2;
-  string mint_authority = 3;
-  string freeze_authority = 4;
-}
-
 message Transfers {
   repeated Transfer transfers = 1;
 }
@@ -21,7 +10,7 @@ message Transfer {
   string signature = 1;
   string from = 2;
   string to = 3;
-  TokenAccount token = 4;
+  Token token = 4;
   string mint = 5;
   uint64 native_amount = 6;
   uint64 amount = 7;
@@ -33,22 +22,24 @@ message BalanceChanges {
 
 // balance change
 message TokenBalance {
-  TokenAccount token = 1;
-  uint64 block_height = 2;
-  string account = 3; // account address of the balance change
-  string old_balance = 4; // BigInt, in token's native amount
-  string new_balance = 5; // BigInt, in token's native amount
+  Token token = 1;
+  string transaction_id = 2;
+  uint64 block_height = 3;
+  string account = 4; // account address of the balance change
+  string pre_balance = 5; // BigInt, in token's native amount
+  string post_balance = 6; // BigInt, in token's native amount
 }
 
 message Tokens {
-  repeated TokenAccount tokens = 1;
+  repeated Token tokens = 1;
 }
 
-message TokenAccount {
+message Token {
   string address = 1;
-  string name = 2;
-  string symbol = 3;
+  optional string name = 2;
+  optional string symbol = 3;
   string decimals = 4;
-  string owner = 5;
-  string mint = 6;
+  string mint_authority = 5;
+  string freeze_authority = 6;
+  string block_created = 7;
 }
