@@ -8,10 +8,10 @@ imports:
 
 protobuf:
   files:
-    - evm_token.proto
+    - eth_balance.proto
     -
   importPaths:
-    - ../common/proto
+    - ../eth-balance/proto
 
 binaries:
   default:

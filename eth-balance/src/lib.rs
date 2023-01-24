@@ -1,10 +1,8 @@
-#[rustfmt::skip]
 pub mod pb;
 
-use substreams_helper::pb::evm_token::v1 as token;
-// use pb::evm_token::v1 as token;
 use substreams::Hex;
 use substreams_ethereum::pb::eth as pbeth;
+use substreams_helper::pb::evm_token::v1 as token;
 use substreams_helper::token as token_helper;
 
 #[substreams::handlers::map]
@@ -26,7 +24,7 @@ fn map_balances(block: pbeth::v2::Block) -> Result<token::Transfers, substreams:
             }
         }
         transfers.push(token::Transfer {
-            tx_hash: Hex(&transaction.hash).to_string(),
+            tx_hash: Hex::encode(&transaction.hash),
             block_number: block.number,
             timestamp: block
                 .header
@@ -38,8 +36,8 @@ fn map_balances(block: pbeth::v2::Block) -> Result<token::Transfers, substreams:
                 .seconds as u64,
             log_index: transaction.index,
             token: token_helper::get_eth_token(),
-            to: Hex(&transaction.to).to_string(),
-            from: Hex(&transaction.from).to_string(),
+            to: Hex::encode(&transaction.to),
+            from: Hex::encode(&transaction.from),
             amount: token_helper::bigint_to_string(transaction.value.clone()),
             amount_usd: None,
             balance_changes: balance_changes,

@@ -8,14 +8,14 @@ pub fn get_eth_token() -> Option<Token> {
         address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE".to_string(),
         name: "Ethereum".to_string(),
         symbol: "ETH".to_string(),
-        decimals: 18 as u64,
-        total_supply: None,
+        decimals: 18_u64,
     };
 
     Some(eth_token)
 }
 
 // TODO: replace this with substreams::scalar::BigInt once the wrapper is integrated
+// TODO: make this an impl of fmt::Display
 pub fn bigint_to_string(number: Option<pbeth::v2::BigInt>) -> String {
     number
         .as_ref()
