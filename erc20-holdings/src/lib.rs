@@ -25,7 +25,7 @@ use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
 use substreams_helper::keyer::chainlink_asset_key;
 use substreams_helper::types::Address;
 
-fn code_len(call: &pbeth::v2::Call) -> usize {
+fn contract_bytecode_len(call: &pbeth::v2::Call) -> usize {
     let mut len = 0;
     for code_change in &call.code_changes {
         len += code_change.new_code.len()
@@ -45,7 +45,7 @@ fn map_block_to_erc20_contracts(
         let call = call_view.call;
         if call.call_type == pbeth::v2::CallType::Create as i32 {
             // skipping contracts that are too short to be an erc20 token
-            if code_len(call) < 150 {
+            if contract_bytecode_len(call) < 150 {
                 continue;
             }
 
@@ -56,7 +56,7 @@ fn map_block_to_erc20_contracts(
                 continue;
             }
 
-            log::info!("Create {}, len {}", address, code_len(call));
+            log::info!("Create {}, len {}", address, contract_bytecode_len(call));
             erc20_contracts.items.push(common::Address { address });
         }
     }
