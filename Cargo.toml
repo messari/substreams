@@ -17,7 +17,7 @@ members = [
 exclude = ["messari-cli"]
 
 [workspace.dependencies]
-substreams = "0.5.1"
+substreams = "0.3.2"
 substreams-ethereum = "0.6.2"
 substreams-solana = "0.2.0"
 

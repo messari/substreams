@@ -33,20 +33,22 @@ fn map_balances(
                 // pre.owner = user address
                 // pre.mint = token address
                 if let Some(pre_token_amount) = &pre_balance.ui_token_amount {
-                    pre_balance_amount = pre_token_amount.amount;
+                    pre_balance_amount = &pre_token_amount.amount;
                 }
                 if let Some(post_token_amount) = &post_balance.ui_token_amount {
-                    post_balance_amount = post_token_amount.amount;
+                    post_balance_amount = &post_token_amount.amount;
                 }
 
-                balance_changes.push(proto::TokenBalance {
-                    token: proto::Token {}, // TODO: this should be fed from store_tokens using pre.mint
-                    transaction_id: bs58::encode(&transaction.signatures[0]).into_string(),
-                    block_height: block.block_height.block_height,
-                    account: pre_balance.owner,
-                    pre_balance: pre_balance_amount,
-                    post_balance: post_balance_amount,
-                });
+                log::info!("{} {} {}", pre_balance_amount, post_balance_amount, meta.pre_token_balances.len());
+
+                // balance_changes.push(proto::TokenBalance {
+                //     token: proto::Token {}, // TODO: this should be fed from store_tokens using pre.mint
+                //     transaction_id: bs58::encode(&transaction.signatures[0]).into_string(),
+                //     block_height: block.block_height.block_height,
+                //     account: pre_balance.owner,
+                //     pre_balance: pre_balance_amount,
+                //     post_balance: post_balance_amount,
+                // });
             }
         }
     }
@@ -54,7 +56,7 @@ fn map_balances(
     Ok(balance_changes)
 }
 
-#[substreams::handlers::store]
-fn store_tokens(block: solana::v1::Block, output: store::StoreSet) {
-    // TODO
-}
+// #[substreams::handlers::store]
+// fn store_tokens(block: solana::v1::Block, output: store::StoreSet) {
+//     // TODO
+// }
