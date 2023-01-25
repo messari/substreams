@@ -17,4 +17,4 @@ modules:
       updatePolicy: set
       valueType: string
       inputs:
-        - source: sf.solana.type.v1.Block
+        - source: sf.solana.type.v2.Block

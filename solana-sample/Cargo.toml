@@ -7,12 +7,11 @@ repository = "https://github.com/messari/substreams/solana-sample"
 
 [dependencies]
 getrandom = { version = "0.2", features = ["js"] }
-substreams = "0.0.11"
-substreams-solana = "0.1.0"
+substreams = { workspace = true }
+substreams-solana = { workspace = true }
 ethabi = "17.2.0"
 hex-literal = "0.3.4"
-prost = { version = "0.10.1" }
-prost-types = "0.10.1"
+prost = "0.11.0"
 
 [lib]
 crate-type = ["cdylib"]
