@@ -4,4 +4,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e mainnet.sol.streamingfast.io:443 substreams.yaml store_balance -s 10000 -t +10001
+	substreams run -e mainnet.sol.streamingfast.io:443 substreams.yaml map_balances -s 174257750 -t +1

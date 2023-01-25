@@ -930,10 +930,10 @@ dependencies = [
  "hex-literal",
  "num-bigint",
  "prost 0.11.3",
- "substreams 0.0.11",
+ "substreams 0.3.2",
  "substreams-common",
  "substreams-helper",
- "substreams-solana",
+ "substreams-solana 0.2.0",
 ]
 
 [[package]]
@@ -947,7 +947,7 @@ dependencies = [
  "prost-build 0.10.4",
  "prost-types 0.10.1",
  "substreams 0.0.11",
- "substreams-solana",
+ "substreams-solana 0.1.0",
 ]
 
 [[package]]
@@ -1175,6 +1175,17 @@ dependencies = [
  "prost-build 0.10.4",
  "prost-types 0.10.1",
  "substreams 0.0.12",
+]
+
+[[package]]
+name = "substreams-solana"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5e5ad4a64b8af93729ca06debc69b2c72eaec3ee44872dd593e16dfcc56dae7"
+dependencies = [
+ "prost 0.11.3",
+ "prost-build 0.11.1",
+ "prost-types 0.11.1",
 ]
 
 [[package]]

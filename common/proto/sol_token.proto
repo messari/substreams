@@ -37,8 +37,8 @@ message TokenBalance {
   TokenAccount token = 1;
   uint64 block_height = 2;
   string address = 3; // account address of the balance change
-  string old_balance = 4; // BigInt, in token's native amount
-  string new_balance = 5; // BigInt, in token's native amount
+  string pre_balance = 4; // BigInt, in token's native amount
+  string post_balance = 5; // BigInt, in token's native amount
 }
 
 message Tokens {
@@ -49,7 +49,7 @@ message TokenAccount {
   string address = 1;
   string name = 2;
   string symbol = 3;
-  string decimals = 4;
+  uint64 decimals = 4;
   string owner = 5;
   string mint = 6;
 }

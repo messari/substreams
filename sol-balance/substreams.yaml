@@ -20,7 +20,6 @@ binaries:
 modules:
   - name: map_balances
     kind: map
-    initialBlock: 0
     inputs:
       - source: sf.solana.type.v1.Block
     output:
