@@ -24,10 +24,11 @@ message BalanceChanges {
 // balance change
 message TokenBalance {
   TokenAccount token = 1;
-  uint64 block_height = 2;
-  string address = 3; // account address of the balance change
-  string pre_balance = 4; // BigInt, in token's native amount
-  string post_balance = 5; // BigInt, in token's native amount
+  string transaction_id = 2;
+  uint64 block_height = 3;
+  string address = 4; // account address of the balance change
+  string pre_balance = 5; // BigInt, in token's native amount
+  string post_balance = 6; // BigInt, in token's native amount
 }
 
 message Tokens {

@@ -25,6 +25,7 @@ fn map_balances(
                         }
                         balances.push(proto::TokenBalance {
                             token: get_sol_token(),
+                            transaction_id: bs58::encode(&transaction.signatures[0]).into_string(),
                             block_height: block.block_height.as_ref().unwrap().block_height,
                             address: account_id,
                             pre_balance: meta.pre_balances[i].to_string(),
