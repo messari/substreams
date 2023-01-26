@@ -7,6 +7,7 @@ mod protocols;
 mod template_files;
 mod terminal_interface;
 mod utils;
+mod project_dir;
 
 use clap::Parser;
 

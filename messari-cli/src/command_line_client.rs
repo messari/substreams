@@ -7,6 +7,7 @@ use crate::commands::init::Init;
 #[command(author, version, about, long_about = None)]
 pub(crate) enum CommandLineClient {
     Init(Init),
+    #[command(subcommand)]
     Add(Add),
 }
 

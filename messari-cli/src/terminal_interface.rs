@@ -1,5 +1,5 @@
 use dialoguer::theme::ColorfulTheme;
-use dialoguer::{FuzzySelect, Input, Select};
+use dialoguer::{FuzzySelect, Input, MultiSelect, Select};
 use lazy_static::lazy_static;
 use strum::{IntoEnumIterator, VariantNames};
 
@@ -76,6 +76,20 @@ pub(crate) fn select_from_values<P: Into<String>, T: ToString + Clone>(
     };
 
     values[selection].clone()
+}
+
+pub(crate) fn select_multiple_from_values<P: Into<String>, T: ToString + Clone>(
+    prompt: P,
+    values: &[T],
+    default_to_all_selected: bool,
+) -> Vec<T> {
+    let selected_values = if default_to_all_selected {
+        MultiSelect::with_theme(get_dialogue_color_theme()).with_prompt(prompt).items(values).defaults(vec![true; values.len()].as_slice()).interact().unwrap()
+    } else {
+        MultiSelect::with_theme(get_dialogue_color_theme()).with_prompt(prompt).items(values).defaults(vec![true; values.len()].as_slice()).interact().unwrap()
+    };
+
+    selected_values.into_iter().map(|selected_value| values[selected_value].clone()).collect()
 }
 
 pub(crate) fn select_from_enum<P: Into<String>, T: IntoEnumIterator + VariantNames + Clone>(

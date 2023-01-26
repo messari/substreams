@@ -70,6 +70,7 @@ impl AbisArgs {
     }
 }
 
+#[derive(Debug)]
 pub(crate) enum AbiInfo {
     LocalFilePath(PathBuf),
     ContractAddress(String),
@@ -126,7 +127,7 @@ pub(crate) fn add_abis(
         let abi_info: AbiInfo = abi_string.as_str().into();
         abi_info.assert_compatible_with_protocol(&protocol_and_network_info.protocol);
         let abi_file_contents = get_abi_file_contents(
-            abi_info,
+            &abi_info,
             &protocol_and_network_info.protocol.protocol_type,
             &protocol_and_network_info.network,
         );
@@ -138,7 +139,7 @@ pub(crate) fn add_abis(
         if let Some(contract_names) = contract_names {
             for (abi_info, contract_name) in abi_infos.into_iter().zip(contract_names.into_iter()) {
                 let abi_file_contents = get_abi_file_contents(
-                    abi_info,
+                    &abi_info,
                     &protocol_and_network_info.protocol.protocol_type,
                     &protocol_and_network_info.network,
                 );
@@ -149,7 +150,7 @@ pub(crate) fn add_abis(
         } else {
             for abi_info in abi_infos {
                 let abi_file_contents = get_abi_file_contents(
-                    abi_info,
+                    &abi_info,
                     &protocol_and_network_info.protocol.protocol_type,
                     &protocol_and_network_info.network,
                 );
@@ -182,7 +183,7 @@ pub(crate) fn add_abis(
         abi_info.assert_compatible_with_protocol(&protocol_and_network_info.protocol);
 
         let abi_file_contents = get_abi_file_contents(
-            abi_info,
+            &abi_info,
             &protocol_and_network_info.protocol.protocol_type,
             &protocol_and_network_info.network,
         );
@@ -193,8 +194,8 @@ pub(crate) fn add_abis(
     }
 }
 
-fn get_abi_file_contents(
-    abi_info: AbiInfo,
+pub(crate) fn get_abi_file_contents(
+    abi_info: &AbiInfo,
     protocol_type: &ProtocolType,
     network: &String,
 ) -> String {
@@ -211,7 +212,7 @@ fn get_abi_file_contents(
 }
 
 fn download_abi(
-    contract_address: String,
+    contract_address: &String,
     protocol_type: &ProtocolType,
     network: &String,
 ) -> String {
