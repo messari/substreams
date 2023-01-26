@@ -18,6 +18,7 @@ binaries:
     file: "../target/wasm32-unknown-unknown/release/sol_balance.wasm"
 
 modules:
+  # get the SOL balance change of each account in each transaction in a block
   - name: map_balances
     kind: map
     inputs:

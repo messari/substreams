@@ -2,17 +2,6 @@ syntax = "proto3";
 
 package messari.sol_token.v1;
 
-message Mints {
-  repeated Mint mints = 1;
-}
-
-message Mint {
-  string address = 1;
-  uint32 decimals = 2;
-  string mint_authority = 3;
-  string freeze_authority = 4;
-}
-
 message Transfers {
   repeated Transfer transfers = 1;
 }
@@ -50,6 +39,6 @@ message TokenAccount {
   string name = 2;
   string symbol = 3;
   uint64 decimals = 4;
-  string owner = 5;
-  string mint = 6;
+  string freeze_authority = 5;
+  string mint_authority = 6;
 }
