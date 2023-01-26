@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package messari.evm_token.v1;
+package messari.eth_balance.v1;
 
 message Tokens {
   repeated Token items = 1;

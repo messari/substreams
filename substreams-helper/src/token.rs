@@ -1,4 +1,4 @@
-use crate::pb::evm_token::v1::Token;
+use crate::pb::eth_balance::v1::Token;
 use num_bigint;
 use substreams::scalar::BigInt;
 use substreams_ethereum::pb::eth as pbeth;

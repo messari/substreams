@@ -2,7 +2,7 @@ pub mod pb;
 
 use substreams::Hex;
 use substreams_ethereum::pb::eth as pbeth;
-use substreams_helper::pb::evm_token::v1 as token;
+use substreams_helper::pb::eth_balance::v1 as token;
 use substreams_helper::token as token_helper;
 
 #[substreams::handlers::map]
