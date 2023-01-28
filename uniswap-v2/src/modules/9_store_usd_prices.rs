@@ -10,9 +10,9 @@ use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams_ethereum::Event;
 
 use crate::abi::pair;
+use crate::common::constants::STABLE_COINS;
 use crate::pb::erc20_price::v1::Erc20Price;
 use crate::pb::uniswap::v2::Pool;
-use crate::prices::STABLE_COINS;
 use crate::store_key::StoreKey;
 
 #[substreams::handlers::store]
@@ -95,7 +95,7 @@ pub fn find_usd_price_per_token(
         };
 
         let pool_liquidity = match pool_liquidities_store
-            .get_last(StoreKey::PoolTokenSupply.get_unique_pool_key(pool_address))
+            .get_last(StoreKey::PoolOutputTokenSupply.get_unique_pool_key(pool_address))
         {
             Some(value) => value,
             None => BigInt::zero(),

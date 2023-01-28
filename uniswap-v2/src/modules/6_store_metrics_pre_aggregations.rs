@@ -15,10 +15,9 @@ pub fn store_metrics_pre_aggregations(
     unique_users_deltas: Deltas<DeltaBigInt>,
     pre_aggregation_store: StoreAddBigInt,
 ) {
-    let mut aggregator = Aggregator::new(
-        None,
-        Some(pre_aggregation_store),
-        clock.timestamp.unwrap().seconds,
+    let mut aggregator = Aggregator::<StoreAddBigInt>::new(
+        pre_aggregation_store,
+        Some(clock.timestamp.unwrap().seconds),
     );
 
     for unique_delta in unique_users_deltas.deltas.into_iter() {

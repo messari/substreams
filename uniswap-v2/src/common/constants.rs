@@ -1,3 +1,12 @@
+pub const PROTOCOL_ID: &str = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+pub const PROTOCOL_NAME: &str = "Uniswap V2";
+pub const PROTOCOL_SLUG: &str = "uniswap-v2";
+pub const NETWORK: &str = "MAINNET";
+pub const PROTOCOL_TYPE: &str = "DEX";
+pub const PROTOCOL_SCHEMA_VERSION: &str = "1.0.0";
+pub const PROTOCOL_SUBSTREAM_VERSION: &str = "1.0.0";
+pub const PROTOCOL_METHODOLOGY_VERSION: &str = "1.0.0";
+
 pub const STABLE_COINS: [&str; 6] = [
     "6b175474e89094c44da98b954eedeac495271d0f",
     "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",

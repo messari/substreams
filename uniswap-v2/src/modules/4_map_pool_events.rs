@@ -8,13 +8,22 @@ use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams_ethereum::Event;
 
 use crate::abi::pair;
+use crate::balance_updater::get_user_balance_diff;
+use crate::pb::erc20::v1::Erc20Token;
+use crate::pb::uniswap::v2::{self as uniswap, Event as PoolEvent, Events, Pool};
 use crate::pb::uniswap::v2::{
     Deposit as DepositEvent, Swap as SwapEvent, Withdraw as WithdrawEvent,
 };
-use crate::pb::uniswap::v2::{Event as PoolEvent, Events, Pool};
-use crate::balance_updater::get_user_balance_diff;
 use crate::store_key::StoreKey;
-use crate::utils;
+
+pub struct SwappedTokens {
+    pub token_in: Option<Erc20Token>,
+    pub amount_in: BigInt,
+    pub amount_in_usd: BigDecimal,
+    pub token_out: Option<Erc20Token>,
+    pub amount_out: BigInt,
+    pub amount_out_usd: BigDecimal,
+}
 
 #[substreams::handlers::map]
 pub fn map_pool_events(
@@ -74,10 +83,10 @@ pub fn map_pool_events(
                     r#type: Some(Deposit(DepositEvent {
                         input_token_amounts: vec![mint_event.amount0, mint_event.amount1]
                             .iter()
-                            .map(|x| x.to_u64())
+                            .map(|x| Into::<uniswap::BigInt>::into(x.clone()))
                             .collect(),
-                        output_token_amount: output_token_minted_amount,
-                        amount_usd: (amount0_usd + amount1_usd).to_string(),
+                        output_token_amount: Some(output_token_minted_amount.into()),
+                        amount_usd: Some((amount0_usd + amount1_usd).into()),
                     })),
                 });
             }
@@ -129,10 +138,10 @@ pub fn map_pool_events(
                     r#type: Some(Withdraw(WithdrawEvent {
                         input_token_amounts: vec![burn_event.amount0, burn_event.amount1]
                             .iter()
-                            .map(|x| x.to_u64())
+                            .map(|x| Into::<uniswap::BigInt>::into(x.clone()))
                             .collect(),
-                        output_token_amount: output_token_minted_amount,
-                        amount_usd: (amount0_usd + amount1_usd).to_string(),
+                        output_token_amount: Some(output_token_minted_amount.into()),
+                        amount_usd: Some((amount0_usd + amount1_usd).into()),
                     })),
                 });
             }
@@ -160,38 +169,32 @@ pub fn map_pool_events(
                 };
 
                 let swapped_tokens = if swap_event.amount0_out.gt(&BigInt::zero()) {
-                    utils::SwappedTokens {
+                    SwappedTokens {
                         token_in: Some(pool_input_tokens[1].clone()),
-                        amount_in: swap_event.amount1_in.to_u64() - swap_event.amount1_out.to_u64(),
-                        amount_in_usd: BigInt::from(
-                            swap_event.amount1_in.to_u64() - swap_event.amount1_out.to_u64(),
-                        )
+                        amount_in: swap_event.amount1_in.clone() - swap_event.amount1_out.clone(),
+                        amount_in_usd: (swap_event.amount1_in.clone()
+                            - swap_event.amount1_out.clone())
                         .to_decimal(pool.clone().token1_ref().decimals)
                             * token1_usd_price,
                         token_out: Some(pool_input_tokens[0].clone()),
-                        amount_out: swap_event.amount0_out.to_u64()
-                            - swap_event.amount0_in.to_u64(),
-                        amount_out_usd: BigInt::from(
-                            swap_event.amount0_out.to_u64() - swap_event.amount0_in.to_u64(),
-                        )
+                        amount_out: swap_event.amount0_out.clone() - swap_event.amount0_in.clone(),
+                        amount_out_usd: (swap_event.amount0_out.clone()
+                            - swap_event.amount0_in.clone())
                         .to_decimal(pool.clone().token0_ref().decimals)
                             * token0_usd_price,
                     }
                 } else {
-                    utils::SwappedTokens {
+                    SwappedTokens {
                         token_in: Some(pool_input_tokens[0].clone()),
-                        amount_in: swap_event.amount0_in.to_u64() - swap_event.amount0_out.to_u64(),
-                        amount_in_usd: BigInt::from(
-                            swap_event.amount0_in.to_u64() - swap_event.amount0_out.to_u64(),
-                        )
+                        amount_in: swap_event.amount0_in.clone() - swap_event.amount0_out.clone(),
+                        amount_in_usd: (swap_event.amount0_in.clone()
+                            - swap_event.amount0_out.clone())
                         .to_decimal(pool.clone().token0_ref().decimals)
                             * token0_usd_price,
                         token_out: Some(pool_input_tokens[1].clone()),
-                        amount_out: swap_event.amount1_out.to_u64()
-                            - swap_event.amount1_in.to_u64(),
-                        amount_out_usd: BigInt::from(
-                            swap_event.amount1_out.to_u64() - swap_event.amount1_in.to_u64(),
-                        )
+                        amount_out: swap_event.amount1_out.clone() - swap_event.amount1_in.clone(),
+                        amount_out_usd: (swap_event.amount1_out.clone()
+                            - swap_event.amount1_in.clone())
                         .to_decimal(pool.clone().token1_ref().decimals)
                             * token1_usd_price,
                     }
@@ -208,11 +211,11 @@ pub fn map_pool_events(
                     pool: pool.address.clone(),
                     r#type: Some(Swap(SwapEvent {
                         token_in: swapped_tokens.token_in,
-                        amount_in: swapped_tokens.amount_in,
-                        amount_in_usd: swapped_tokens.amount_in_usd.to_string(),
+                        amount_in: Some(swapped_tokens.amount_in.into()),
+                        amount_in_usd: Some(swapped_tokens.amount_in_usd.into()),
                         token_out: swapped_tokens.token_out,
-                        amount_out: swapped_tokens.amount_out,
-                        amount_out_usd: swapped_tokens.amount_out_usd.to_string(),
+                        amount_out: Some(swapped_tokens.amount_out.into()),
+                        amount_out_usd: Some(swapped_tokens.amount_out_usd.into()),
                     })),
                 });
             }
