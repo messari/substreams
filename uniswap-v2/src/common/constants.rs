@@ -1,20 +1,19 @@
-pub const WETH_ADDRESS: &str = "c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
-pub const USDC_ADDRESS: &str = "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
-pub const UNISWAP_V2_FACTORY: &str = "5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f";
+pub const PROTOCOL_ID: &str = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+pub const PROTOCOL_NAME: &str = "Uniswap V2";
+pub const PROTOCOL_SLUG: &str = "uniswap-v2";
+pub const NETWORK: &str = "MAINNET";
+pub const PROTOCOL_TYPE: &str = "DEX";
+pub const PROTOCOL_SCHEMA_VERSION: &str = "1.0.0";
+pub const PROTOCOL_SUBSTREAM_VERSION: &str = "1.0.0";
+pub const PROTOCOL_METHODOLOGY_VERSION: &str = "1.0.0";
 
-pub const STABLE_COINS: [&str; 5] = [
-    "6b175474e89094c44da98b954eedeac495271d0f", // DAI
-    "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
-    "dac17f958d2ee523a2206206994597c13d831ec7", // USDT
-    "0000000000085d4780b73119b644ae5ecd22b376", // TUSD
-    "956f47f50a910163d8bf957cf5846d573e7f87ca", // FEI
-];
-
-pub const PAIR_COINS: [&str; 4] = [
-    "c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", // WETH
-    "6b175474e89094c44da98b954eedeac495271d0f", // DAI
-    "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
-    "dac17f958d2ee523a2206206994597c13d831ec7", // USDT
+pub const STABLE_COINS: [&str; 6] = [
+    "6b175474e89094c44da98b954eedeac495271d0f",
+    "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "dac17f958d2ee523a2206206994597c13d831ec7",
+    "0000000000085d4780b73119b644ae5ecd22b376",
+    "956f47f50a910163d8bf957cf5846d573e7f87ca",
+    "4dd28568d05f09b02220b09c2cb307bfd837cb95",
 ];
 
 pub const WHITELIST_TOKENS: [&str; 21] = [

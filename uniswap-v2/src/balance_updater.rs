@@ -17,11 +17,11 @@ impl<'a> PoolBalanceUpdater<'a> {
         PoolBalanceUpdater { pool, store }
     }
 
-    pub fn update_pool_token_supply(&self, from: &Vec<u8>, to: &Vec<u8>, value: &BigInt) {
+    pub fn update_output_token_supply(&self, from: &Vec<u8>, to: &Vec<u8>, value: &BigInt) {
         if *from == NULL_ADDRESS {
             self.store.add(
                 0,
-                StoreKey::PoolTokenSupply.get_unique_pool_key(&self.pool),
+                StoreKey::PoolOutputTokenSupply.get_unique_pool_key(&self.pool),
                 value.deref(),
             )
         }
@@ -29,7 +29,7 @@ impl<'a> PoolBalanceUpdater<'a> {
         if *to == NULL_ADDRESS {
             self.store.add(
                 0,
-                StoreKey::PoolTokenSupply.get_unique_pool_key(&self.pool),
+                StoreKey::PoolOutputTokenSupply.get_unique_pool_key(&self.pool),
                 value.neg(),
             )
         }
@@ -52,14 +52,14 @@ pub fn get_user_balance_diff(
     balance_deltas: &Deltas<DeltaBigInt>,
     pool_address: &String,
     user_address: &String,
-) -> Option<u64> {
-    let mut balance_diff = 0;
+) -> BigInt {
+    let mut balance_diff = BigInt::zero();
 
     for delta in balance_deltas.deltas.iter() {
         if delta.key == StoreKey::UserBalance.get_user_balance_key(pool_address, user_address) {
-            balance_diff = delta.new_value.to_u64() - delta.old_value.to_u64();
+            balance_diff = delta.new_value.clone() - delta.old_value.clone();
         }
     }
 
-    Some(balance_diff)
+    balance_diff
 }
