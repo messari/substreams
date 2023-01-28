@@ -23,14 +23,14 @@ modules:
     kind: map
     inputs:
       - source: sf.solana.type.v1.Block
-#      - source: store_tokens
+      - store: store_tokens
     output:
       type: proto:solana.spl.v1.BalanceChanges
 
   # stores all SPL tokens to retrieve
-#  - name: store_tokens
-#    kind: store
-#    updatePolicy: set
-#    valueType: proto:messari.sol_token.v1.Token
-#    inputs:
-#      - source: sf.solana.type.v1.Block
+  - name: store_tokens
+    kind: store
+    updatePolicy: set
+    valueType: proto:messari.sol_token.v1.Token
+    inputs:
+      - source: sf.solana.type.v1.Block

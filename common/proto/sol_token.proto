@@ -10,10 +10,11 @@ message Transfer {
   string signature = 1;
   string from = 2;
   string to = 3;
-  Token token = 4;
+  TokenAccount token = 4;
   string mint = 5;
   uint64 native_amount = 6;
   uint64 amount = 7;
+  BalanceChanges balance_changes = 8;
 }
 
 message BalanceChanges {
@@ -22,24 +23,23 @@ message BalanceChanges {
 
 // balance change
 message TokenBalance {
-  Token token = 1;
+  TokenAccount token = 1;
   string transaction_id = 2;
   uint64 block_height = 3;
-  string account = 4; // account address of the balance change
+  string address = 4; // account address of the balance change
   string pre_balance = 5; // BigInt, in token's native amount
   string post_balance = 6; // BigInt, in token's native amount
 }
 
 message Tokens {
-  repeated Token tokens = 1;
+  repeated TokenAccount tokens = 1;
 }
 
-message Token {
+message TokenAccount {
   string address = 1;
-  optional string name = 2;
-  optional string symbol = 3;
-  string decimals = 4;
-  string mint_authority = 5;
-  string freeze_authority = 6;
-  string block_created = 7;
+  string name = 2;
+  string symbol = 3;
+  uint64 decimals = 4;
+  string freeze_authority = 5;
+  string mint_authority = 6;
 }

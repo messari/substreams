@@ -1,7 +1,8 @@
-use substreams::store::StoreSet;
+use substreams::pb;
+use substreams::store::{StoreSetRaw, StoreSet, StoreNew};
 use substreams_solana::pb::sol as solana;
 
 #[substreams::handlers::store]
-fn store_test(block: solana::v1::Block, _output: StoreSet) {
-    _output.set(0, "block".to_string(), &format!("{:?}", block).as_bytes().to_vec());
+fn store_test(block: solana::v1::Block, _output: StoreSetRaw) {
+    _output.set(0, 0_u64, &block);
 }

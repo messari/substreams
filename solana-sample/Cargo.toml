@@ -5,16 +5,17 @@ description = "Sample substreams for Solana"
 edition = "2021"
 repository = "https://github.com/messari/substreams/solana-sample"
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 getrandom = { version = "0.2", features = ["js"] }
 substreams = { workspace = true }
 substreams-solana = { workspace = true }
 ethabi = "17.2.0"
 hex-literal = "0.3.4"
-prost = "0.11.0"
-
-[lib]
-crate-type = ["cdylib"]
+prost = "0.11.2"
 
 [build-dependencies]
-prost-build = "0.10.1"
+anyhow = "1"
+substreams-common = { path = "../common" }
