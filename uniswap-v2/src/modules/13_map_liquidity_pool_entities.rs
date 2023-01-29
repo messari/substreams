@@ -102,7 +102,7 @@ fn get_liquidity_pool_entity_change(
     let pool_address = &pool.address;
 
     let mut pool_entity_change =
-        EntityChange::new("DexAmmProtocol", pool_address, 0, Operation::Update);
+        EntityChange::new("LiquidityPool", pool_address, 0, Operation::Update);
 
     if !is_initialized {
         pool_entity_change.operation = Operation::Create as i32;
@@ -186,7 +186,7 @@ fn create_daily_snapshot_entity_change(
     );
 
     let mut day_snapshot_entity_change = EntityChange::new(
-        "daily_usage_metrics_snapshots",
+        "LiquidityPoolDailySnapshot",
         entity_id.as_ref(),
         0,
         Operation::Create,
@@ -282,7 +282,7 @@ fn create_hourly_snapshot_entity_change(
     );
 
     let mut hour_snapshot_entity_change = EntityChange::new(
-        "hourly_usage_metrics_snapshots",
+        "LiquidityPoolHourlySnapshot",
         entity_id.as_ref(),
         0,
         Operation::Create,

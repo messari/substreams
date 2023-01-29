@@ -22,9 +22,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.69"
+version = "1.0.71"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "224afbd727c3d6e4b90103ece64b8d1b67fbb1973b1046c2281eed3f3803f800"
+checksum = "9c7d0618f0e0b7e8ff11427422b64564d5fb0be1940354bfe2e0529b18a9d9b8"
 
 [[package]]
 name = "arrayvec"
@@ -156,7 +156,7 @@ dependencies = [
  "ethabi",
  "num-bigint",
  "prost 0.11.9",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
  "tiny-keccak",
@@ -209,7 +209,7 @@ dependencies = [
  "hex-literal",
  "prost 0.11.9",
  "serde_json",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
  "substreams-helper",
@@ -225,7 +225,7 @@ dependencies = [
  "hex-literal",
  "lazy_static",
  "prost 0.11.9",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
  "substreams-helper",
@@ -239,7 +239,7 @@ dependencies = [
  "ethabi",
  "hex-literal",
  "prost 0.11.9",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
  "substreams-helper",
@@ -254,7 +254,7 @@ dependencies = [
  "hex-literal",
  "num-bigint",
  "prost 0.11.9",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
  "substreams-helper",
@@ -270,7 +270,7 @@ dependencies = [
  "hex-literal",
  "num-bigint",
  "prost 0.11.9",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-common",
  "substreams-entity-change",
  "substreams-ethereum",
@@ -544,7 +544,7 @@ dependencies = [
  "hex-literal",
  "prost 0.11.9",
  "prost-types 0.11.1",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
  "substreams-helper",
@@ -994,9 +994,9 @@ dependencies = [
 
 [[package]]
 name = "substreams"
-version = "0.5.6"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0af4a883f8ce09c8b5c2560c2373d230b6fce37972833f96151c0a0469b2c3b4"
+checksum = "03f0ce01116b502301749fde9a2c9eecaea6853d11a917a25b21d2922df09775"
 dependencies = [
  "anyhow",
  "bigdecimal",
@@ -1008,7 +1008,7 @@ dependencies = [
  "prost 0.11.9",
  "prost-build 0.11.1",
  "prost-types 0.11.1",
- "substreams-macro 0.5.6",
+ "substreams-macro 0.5.0",
  "thiserror",
  "wee_alloc",
 ]
@@ -1019,7 +1019,7 @@ version = "0.1.0"
 dependencies = [
  "prost 0.11.9",
  "regex",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-ethereum",
  "thiserror",
 ]
@@ -1033,7 +1033,7 @@ dependencies = [
  "base64",
  "prost 0.11.9",
  "prost-types 0.11.1",
- "substreams 0.5.6",
+ "substreams 0.5.0",
 ]
 
 [[package]]
@@ -1045,7 +1045,7 @@ dependencies = [
  "getrandom",
  "hex-literal",
  "prost 0.11.9",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
  "substreams-helper",
@@ -1059,7 +1059,7 @@ dependencies = [
  "ethabi",
  "hex-literal",
  "prost 0.11.9",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
 ]
@@ -1071,7 +1071,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03a426822f6032fa28145cb2cb7661e70554da839a40ee08b6348f1479a44e1b"
 dependencies = [
  "getrandom",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-ethereum-abigen",
  "substreams-ethereum-core",
  "substreams-ethereum-derive",
@@ -1107,7 +1107,7 @@ dependencies = [
  "prost 0.11.9",
  "prost-build 0.11.1",
  "prost-types 0.11.1",
- "substreams 0.5.6",
+ "substreams 0.5.0",
 ]
 
 [[package]]
@@ -1138,7 +1138,7 @@ dependencies = [
  "pad",
  "prost 0.11.9",
  "prost-types 0.10.1",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-common",
  "substreams-ethereum",
  "thiserror",
@@ -1171,9 +1171,9 @@ dependencies = [
 
 [[package]]
 name = "substreams-macro"
-version = "0.5.6"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f70ab0d9112fa637daad274d1163277d292600e19ac5edb9219cb063110970a"
+checksum = "f5e4e6912204417a2565a5b16f23d67e3e6a5b51f246f00b0c13b40f48c44877"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1203,7 +1203,7 @@ dependencies = [
  "hex-literal",
  "pad",
  "prost 0.11.9",
- "substreams 0.5.6",
+ "substreams 0.5.0",
  "substreams-common",
  "substreams-entity-change",
  "substreams-ethereum",
