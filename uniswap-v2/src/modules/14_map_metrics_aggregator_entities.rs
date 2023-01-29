@@ -26,8 +26,8 @@ pub fn map_metrics_aggregator_entities(
     let mut entity_changes = vec![metrics_entity];
 
     if latest_timestamp.is_some() && latest_block_number.is_some() {
-        store_retriever.set_day_and_hour_timestamp(latest_timestamp.clone());
-        financial_store_retriever.set_day_and_hour_timestamp(latest_timestamp.clone());
+        store_retriever.set_store_retriever_timestamp(latest_timestamp.clone());
+        financial_store_retriever.set_store_retriever_timestamp(latest_timestamp.clone());
 
         entity_changes.push(create_daily_snapshot_entity_change(
             latest_timestamp.clone(),
@@ -100,11 +100,11 @@ fn get_protocol_entity_change(
     protocol_entity_change
         .change(
             "cumulative_unique_users",
-            store_retriever.get_cumulative_value(StoreKey::User),
+            store_retriever.get_protocol_specific_cumulative_field(StoreKey::User),
         )
         .change(
             "total_pool_count",
-            store_retriever.get_cumulative_value(StoreKey::PoolCount),
+            store_retriever.get_protocol_specific_cumulative_field(StoreKey::PoolCount),
         );
 
     protocol_entity_change
@@ -115,13 +115,13 @@ fn create_daily_snapshot_entity_change(
     latest_block_number: Option<BigInt>,
     store_retriever: &mut StoreRetriever<StoreGetBigInt>,
 ) -> EntityChange {
-    let entity_id = store_retriever.get_day_timestamp().to_string();
+    let entity_id = store_retriever.day_timestamp.unwrap().to_string();
 
     let mut day_snapshot_entity_change = EntityChange::new(
         "daily_usage_metrics_snapshots",
         entity_id.as_ref(),
         0,
-        Operation::Create,
+        Operation::Update,
     );
 
     day_snapshot_entity_change
@@ -129,31 +129,31 @@ fn create_daily_snapshot_entity_change(
         .change("protocol", constants::PROTOCOL_ID.to_string())
         .change(
             "daily_active_users",
-            store_retriever.get_daily_stats_value(StoreKey::ActiveUserCount),
+            store_retriever.get_protocol_specific_daily_field(StoreKey::ActiveUserCount),
         )
         .change(
             "cumulative_unique_users",
-            store_retriever.get_cumulative_value(StoreKey::PoolCount),
+            store_retriever.get_protocol_specific_cumulative_field(StoreKey::PoolCount),
         )
         .change(
             "daily_transaction_count",
-            store_retriever.get_daily_stats_value(StoreKey::TransactionCount),
+            store_retriever.get_protocol_specific_daily_field(StoreKey::TransactionCount),
         )
         .change(
             "daily_deposit_count",
-            store_retriever.get_daily_stats_value(StoreKey::DepositCount),
+            store_retriever.get_protocol_specific_daily_field(StoreKey::DepositCount),
         )
         .change(
             "daily_withdraw_count",
-            store_retriever.get_daily_stats_value(StoreKey::WithdrawCount),
+            store_retriever.get_protocol_specific_daily_field(StoreKey::WithdrawCount),
         )
         .change(
             "daily_swap_count",
-            store_retriever.get_daily_stats_value(StoreKey::SwapCount),
+            store_retriever.get_protocol_specific_daily_field(StoreKey::SwapCount),
         )
         .change(
             "total_pool_count",
-            store_retriever.get_cumulative_value(StoreKey::User),
+            store_retriever.get_protocol_specific_cumulative_field(StoreKey::User),
         )
         .change("block_number", latest_block_number.unwrap())
         .change("timestamp", latest_timestamp.unwrap());
@@ -166,13 +166,13 @@ fn create_hourly_snapshot_entity_change(
     latest_block_number: Option<BigInt>,
     store_retriever: &mut StoreRetriever<StoreGetBigInt>,
 ) -> EntityChange {
-    let entity_id = store_retriever.get_hour_timestamp().to_string();
+    let entity_id = store_retriever.hour_timestamp.unwrap().to_string();
 
     let mut hour_snapshot_entity_change = EntityChange::new(
         "hourly_usage_metrics_snapshots",
         entity_id.as_ref(),
         0,
-        Operation::Create,
+        Operation::Update,
     );
 
     hour_snapshot_entity_change
@@ -180,27 +180,27 @@ fn create_hourly_snapshot_entity_change(
         .change("protocol", constants::PROTOCOL_ID.to_string())
         .change(
             "hourly_active_users",
-            store_retriever.get_hourly_stats_value(StoreKey::ActiveUserCount),
+            store_retriever.get_protocol_specific_hourly_field(StoreKey::ActiveUserCount),
         )
         .change(
             "cumulative_unique_users",
-            store_retriever.get_cumulative_value(StoreKey::PoolCount),
+            store_retriever.get_protocol_specific_cumulative_field(StoreKey::PoolCount),
         )
         .change(
             "hourly_transaction_count",
-            store_retriever.get_hourly_stats_value(StoreKey::TransactionCount),
+            store_retriever.get_protocol_specific_hourly_field(StoreKey::TransactionCount),
         )
         .change(
             "hourly_deposit_count",
-            store_retriever.get_hourly_stats_value(StoreKey::DepositCount),
+            store_retriever.get_protocol_specific_hourly_field(StoreKey::DepositCount),
         )
         .change(
             "hourly_withdraw_count",
-            store_retriever.get_hourly_stats_value(StoreKey::WithdrawCount),
+            store_retriever.get_protocol_specific_hourly_field(StoreKey::WithdrawCount),
         )
         .change(
             "hourly_swap_count",
-            store_retriever.get_hourly_stats_value(StoreKey::SwapCount),
+            store_retriever.get_protocol_specific_hourly_field(StoreKey::SwapCount),
         )
         .change("block_number", latest_block_number.unwrap())
         .change("timestamp", latest_timestamp.unwrap());
@@ -213,13 +213,16 @@ fn create_daily_financial_snapshot_entity_change(
     latest_block_number: Option<BigInt>,
     financials_store_retriever: &mut StoreRetriever<StoreGetBigDecimal>,
 ) -> EntityChange {
-    let entity_id = financials_store_retriever.get_day_timestamp().to_string();
+    let entity_id = financials_store_retriever
+        .day_timestamp
+        .unwrap()
+        .to_string();
 
     let mut hour_snapshot_entity_change = EntityChange::new(
         "daily_financials_snapshot",
         entity_id.as_ref(),
         0,
-        Operation::Create,
+        Operation::Update,
     );
 
     hour_snapshot_entity_change
@@ -227,43 +230,45 @@ fn create_daily_financial_snapshot_entity_change(
         .change("protocol", constants::PROTOCOL_ID.to_string())
         .change(
             "total_value_locked_usd",
-            financials_store_retriever.get_cumulative_protocol_value(StoreKey::PoolTVL),
+            financials_store_retriever.get_protocol_specific_cumulative_field(StoreKey::PoolTVL),
         )
         .change(
             "daily_volume_usd",
-            financials_store_retriever.get_daily_protocol_field_value(StoreKey::PoolVolume),
+            financials_store_retriever.get_protocol_specific_daily_field(StoreKey::PoolVolume),
         )
         .change(
             "cumulative_volume_usd",
-            financials_store_retriever.get_cumulative_protocol_value(StoreKey::PoolVolume),
+            financials_store_retriever.get_protocol_specific_cumulative_field(StoreKey::PoolVolume),
         )
         .change(
             "daily_supply_side_revenue_usd",
             financials_store_retriever
-                .get_daily_protocol_field_value(StoreKey::PoolSupplySideRevenue),
+                .get_protocol_specific_daily_field(StoreKey::PoolSupplySideRevenue),
         )
         .change(
             "cumulative_supply_side_revenue_usd",
             financials_store_retriever
-                .get_cumulative_protocol_value(StoreKey::PoolSupplySideRevenue),
+                .get_protocol_specific_cumulative_field(StoreKey::PoolSupplySideRevenue),
         )
         .change(
             "daily_protocol_side_revenue_usd",
             financials_store_retriever
-                .get_daily_protocol_field_value(StoreKey::PoolProtocolSideRevenue),
+                .get_protocol_specific_daily_field(StoreKey::PoolProtocolSideRevenue),
         )
         .change(
             "cumulative_protocol_side_revenue_usd",
             financials_store_retriever
-                .get_cumulative_protocol_value(StoreKey::PoolProtocolSideRevenue),
+                .get_protocol_specific_cumulative_field(StoreKey::PoolProtocolSideRevenue),
         )
         .change(
             "daily_total_revenue_usd",
-            financials_store_retriever.get_daily_protocol_field_value(StoreKey::PoolTotalRevenue),
+            financials_store_retriever
+                .get_protocol_specific_daily_field(StoreKey::PoolTotalRevenue),
         )
         .change(
             "cumulative_total_revenue_usd",
-            financials_store_retriever.get_cumulative_protocol_value(StoreKey::PoolTotalRevenue),
+            financials_store_retriever
+                .get_protocol_specific_cumulative_field(StoreKey::PoolTotalRevenue),
         )
         .change("block_number", latest_block_number.unwrap())
         .change("timestamp", latest_timestamp.unwrap());

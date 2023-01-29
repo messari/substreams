@@ -34,36 +34,28 @@ impl StoreKey {
         format!("2{}:{}", self.get_unique_id(), token_address)
     }
 
-    pub(crate) fn get_cumulative_field_key(&self, unique_key: &String) -> String {
-        format!("c:{}:{}", self.get_unique_id(), unique_key)
+    pub(crate) fn get_pool_specific_hourly_key(&self, timestamp: &i64, pool: &String) -> String {
+        format!("h:{}:{}:{}", self.get_unique_id(), timestamp, pool)
     }
 
-    pub(crate) fn get_daily_field_key(&self, day_timestamp: &String, pool: &String) -> String {
-        format!("d:{}:{}:{}", self.get_unique_id(), pool, day_timestamp)
+    pub(crate) fn get_pool_specific_daily_key(&self, timestamp: &i64, pool: &String) -> String {
+        format!("d:{}:{}:{}", self.get_unique_id(), timestamp, pool)
     }
 
-    pub(crate) fn get_hourly_field_key(&self, hour_timestamp: &String, pool: &String) -> String {
-        format!("h:{}:{}:{}", self.get_unique_id(), pool, hour_timestamp)
+    pub(crate) fn get_pool_specific_cumulative_key(&self, pool: &String) -> String {
+        format!("c:{}:{}", self.get_unique_id(), pool)
     }
 
-    pub(crate) fn get_cumulative_stats_key(&self) -> String {
+    pub(crate) fn get_protocol_specific_hourly_key(&self, timestamp: &i64) -> String {
+        format!("h:{}:{}", self.get_unique_id(), timestamp)
+    }
+
+    pub(crate) fn get_protocol_specific_daily_key(&self, timestamp: &i64) -> String {
+        format!("d:{}:{}", self.get_unique_id(), timestamp)
+    }
+
+    pub(crate) fn get_protocol_specific_cumulative_key(&self) -> String {
         format!("c:{}", self.get_unique_id())
-    }
-
-    pub(crate) fn get_daily_stats_key(&self, day_timestamp: &String) -> String {
-        format!("d:{}:{}", self.get_unique_id(), day_timestamp)
-    }
-
-    pub(crate) fn get_hourly_stats_key(&self, hour_timestamp: &String) -> String {
-        format!("h:{}:{}", self.get_unique_id(), hour_timestamp)
-    }
-
-    pub(crate) fn get_daily_user_key(&self, user: &String, day_timestamp: &String) -> String {
-        format!("d:{}:{}:{}", self.get_unique_id(), user, day_timestamp)
-    }
-
-    pub(crate) fn get_hourly_user_key(&self, user: &String, hour_timestamp: &String) -> String {
-        format!("h:{}:{}:{}", self.get_unique_id(), user, hour_timestamp)
     }
 
     pub(crate) fn get_user_balance_key(&self, pool: &String, user: &String) -> String {

@@ -1,12 +1,11 @@
 use std::ops::Add;
 use substreams::scalar::{BigDecimal, BigInt};
-use substreams::store::{StoreGet, StoreGetBigDecimal, StoreGetBigInt};
+use substreams::store::{DeltaBigDecimal, StoreGet, StoreGetBigDecimal, StoreGetBigInt};
 
 use crate::pb::erc20::v1::Erc20Token;
 use crate::pb::uniswap::v2::{self as uniswap, Pool};
 use crate::store_key::StoreKey;
 
-/// Returns the timestamp for the start of the most recent day
 pub(crate) fn get_latest_day(timestamp: Option<i64>) -> Option<i64> {
     if timestamp.is_none() {
         return None;
@@ -16,7 +15,6 @@ pub(crate) fn get_latest_day(timestamp: Option<i64>) -> Option<i64> {
     Some(timestamp.unwrap() / SECONDS_IN_DAY)
 }
 
-/// Returns the timestamp for the start of the most recent hour
 pub(crate) fn get_latest_hour(timestamp: Option<i64>) -> Option<i64> {
     if timestamp.is_none() {
         return None;
@@ -24,6 +22,10 @@ pub(crate) fn get_latest_hour(timestamp: Option<i64>) -> Option<i64> {
 
     const SECONDS_IN_HOUR: i64 = 3600_i64;
     Some(timestamp.unwrap() / SECONDS_IN_HOUR)
+}
+
+pub(crate) fn get_delta(value: DeltaBigDecimal) -> BigDecimal {
+    value.new_value.clone() - value.old_value.clone()
 }
 
 impl Into<BigInt> for uniswap::BigInt {
@@ -48,10 +50,18 @@ impl uniswap::BigDecimal {
 
 impl Into<BigDecimal> for uniswap::BigDecimal {
     fn into(self) -> BigDecimal {
-        BigDecimal::from(
-            BigInt::from_unsigned_bytes_le(self.int_val.unwrap().value.as_slice())
-                / BigInt::from(10_i32.pow(self.scale as u32)),
-        )
+        let denominator = BigInt::from(10_i32.pow(self.scale as u32));
+
+        if denominator == BigInt::zero() {
+            BigDecimal::from(BigInt::from_unsigned_bytes_le(
+                self.int_val.unwrap().value.as_slice(),
+            ))
+        } else {
+            BigDecimal::from(
+                BigInt::from_unsigned_bytes_le(self.int_val.unwrap().value.as_slice())
+                    / denominator,
+            )
+        }
     }
 }
 
