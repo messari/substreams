@@ -2,8 +2,8 @@ use std::ops::Deref;
 use substreams::scalar::BigInt;
 use substreams::Hex;
 
-use crate::abi::pair;
 use crate::abi::erc20;
+use crate::abi::pair;
 use crate::pb::erc20::v1::{Erc20Token, Erc20Tokens};
 
 pub(crate) struct PoolRetriever {
