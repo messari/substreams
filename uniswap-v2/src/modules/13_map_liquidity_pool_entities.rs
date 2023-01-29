@@ -56,13 +56,13 @@ pub fn map_liquidity_pool_entities(
                     ));
 
                     if latest_timestamp.is_some() && latest_block_number.is_some() {
-                        tvl_store_retriever.set_day_and_hour_timestamp(latest_timestamp.clone());
+                        tvl_store_retriever.set_store_retriever_timestamp(latest_timestamp.clone());
                         native_tvl_store_retriever
-                            .set_day_and_hour_timestamp(latest_timestamp.clone());
+                            .set_store_retriever_timestamp(latest_timestamp.clone());
                         pool_balance_store_retriever
-                            .set_day_and_hour_timestamp(latest_timestamp.clone());
+                            .set_store_retriever_timestamp(latest_timestamp.clone());
                         volume_and_revenue_store_retriever
-                            .set_day_and_hour_timestamp(latest_timestamp.clone());
+                            .set_store_retriever_timestamp(latest_timestamp.clone());
 
                         entity_changes.push(create_daily_snapshot_entity_change(
                             pool.clone(),
@@ -130,27 +130,29 @@ fn get_liquidity_pool_entity_change(
     pool_entity_change
         .change(
             "total_value_locked_usd",
-            tvl_store_retriever.get_cumulative_pool_value(StoreKey::PoolTVL, pool_address),
+            tvl_store_retriever.get_pool_specific_cumulative_field(StoreKey::PoolTVL, pool_address),
         )
         .change(
             "cumulative_supply_side_revenue_usd",
             volume_and_revenue_store_retriever
-                .get_cumulative_pool_value(StoreKey::PoolSupplySideRevenue, pool_address),
+                .get_pool_specific_cumulative_field(StoreKey::PoolSupplySideRevenue, pool_address),
         )
         .change(
             "cumulative_protocol_side_revenue_usd",
-            volume_and_revenue_store_retriever
-                .get_cumulative_pool_value(StoreKey::PoolProtocolSideRevenue, pool_address),
+            volume_and_revenue_store_retriever.get_pool_specific_cumulative_field(
+                StoreKey::PoolProtocolSideRevenue,
+                pool_address,
+            ),
         )
         .change(
             "cumulative_total_revenue_usd",
             volume_and_revenue_store_retriever
-                .get_cumulative_pool_value(StoreKey::PoolTotalRevenue, pool_address),
+                .get_pool_specific_cumulative_field(StoreKey::PoolTotalRevenue, pool_address),
         )
         .change(
             "cumulative_volume_usd",
             volume_and_revenue_store_retriever
-                .get_cumulative_pool_value(StoreKey::PoolVolume, pool_address),
+                .get_pool_specific_cumulative_field(StoreKey::PoolVolume, pool_address),
         )
         .change(
             "input_token_balances",
@@ -159,7 +161,7 @@ fn get_liquidity_pool_entity_change(
         .change(
             "output_token_supply",
             pool_balance_store_retriever
-                .get_pool_non_static_field(StoreKey::PoolOutputTokenSupply, pool_address),
+                .get_pool_specific_unique_field(StoreKey::PoolOutputTokenSupply, pool_address),
         );
 
     pool_entity_change
@@ -177,7 +179,10 @@ fn create_daily_snapshot_entity_change(
     let entity_id = format!(
         "{}-{}",
         pool_address,
-        native_tvl_store_retriever.get_day_timestamp().to_string()
+        native_tvl_store_retriever
+            .day_timestamp
+            .unwrap()
+            .to_string()
     );
 
     let mut day_snapshot_entity_change = EntityChange::new(
@@ -193,47 +198,49 @@ fn create_daily_snapshot_entity_change(
         .change("pool", pool_address)
         .change(
             "total_value_locked_usd",
-            tvl_store_retriever.get_cumulative_pool_value(StoreKey::PoolTVL, pool_address),
+            tvl_store_retriever.get_pool_specific_cumulative_field(StoreKey::PoolTVL, pool_address),
         )
         .change(
             "cumulative_supply_side_revenue_usd",
             volume_and_revenue_store_retriever
-                .get_cumulative_pool_value(StoreKey::PoolSupplySideRevenue, pool_address),
+                .get_pool_specific_cumulative_field(StoreKey::PoolSupplySideRevenue, pool_address),
         )
         .change(
             "daily_supply_side_revenue_usd",
             volume_and_revenue_store_retriever
-                .get_daily_pool_field_value(StoreKey::PoolSupplySideRevenue, pool_address),
+                .get_pool_specific_daily_field(StoreKey::PoolSupplySideRevenue, pool_address),
         )
         .change(
             "cumulative_protocol_side_revenue_usd",
-            volume_and_revenue_store_retriever
-                .get_cumulative_pool_value(StoreKey::PoolProtocolSideRevenue, pool_address),
+            volume_and_revenue_store_retriever.get_pool_specific_cumulative_field(
+                StoreKey::PoolProtocolSideRevenue,
+                pool_address,
+            ),
         )
         .change(
             "daily_protocol_side_revenue_usd",
             volume_and_revenue_store_retriever
-                .get_daily_pool_field_value(StoreKey::PoolProtocolSideRevenue, pool_address),
+                .get_pool_specific_daily_field(StoreKey::PoolProtocolSideRevenue, pool_address),
         )
         .change(
             "cumulative_total_revenue_usd",
             volume_and_revenue_store_retriever
-                .get_cumulative_pool_value(StoreKey::PoolTotalRevenue, pool_address),
+                .get_pool_specific_cumulative_field(StoreKey::PoolTotalRevenue, pool_address),
         )
         .change(
             "daily_total_revenue_usd",
             volume_and_revenue_store_retriever
-                .get_daily_pool_field_value(StoreKey::PoolTotalRevenue, pool_address),
+                .get_pool_specific_daily_field(StoreKey::PoolTotalRevenue, pool_address),
         )
         .change(
             "cumulative_volume_usd",
             volume_and_revenue_store_retriever
-                .get_cumulative_pool_value(StoreKey::PoolVolume, pool_address),
+                .get_pool_specific_cumulative_field(StoreKey::PoolVolume, pool_address),
         )
         .change(
             "daily_volume_usd",
             volume_and_revenue_store_retriever
-                .get_daily_pool_field_value(StoreKey::PoolVolume, pool_address),
+                .get_pool_specific_daily_field(StoreKey::PoolVolume, pool_address),
         )
         .change(
             "input_token_balances",
@@ -242,7 +249,7 @@ fn create_daily_snapshot_entity_change(
         .change(
             "output_token_supply",
             pool_balance_store_retriever
-                .get_pool_non_static_field(StoreKey::PoolOutputTokenSupply, pool_address),
+                .get_pool_specific_unique_field(StoreKey::PoolOutputTokenSupply, pool_address),
         )
         .change(
             "block_number",
@@ -268,7 +275,10 @@ fn create_hourly_snapshot_entity_change(
     let entity_id = format!(
         "{}-{}",
         pool_address,
-        native_tvl_store_retriever.get_hour_timestamp().to_string()
+        native_tvl_store_retriever
+            .hour_timestamp
+            .unwrap()
+            .to_string()
     );
 
     let mut hour_snapshot_entity_change = EntityChange::new(
@@ -284,47 +294,49 @@ fn create_hourly_snapshot_entity_change(
         .change("pool", pool_address)
         .change(
             "total_value_locked_usd",
-            tvl_store_retriever.get_cumulative_pool_value(StoreKey::PoolTVL, pool_address),
+            tvl_store_retriever.get_pool_specific_cumulative_field(StoreKey::PoolTVL, pool_address),
         )
         .change(
             "cumulative_supply_side_revenue_usd",
             volume_and_revenue_store_retriever
-                .get_cumulative_pool_value(StoreKey::PoolSupplySideRevenue, pool_address),
+                .get_pool_specific_cumulative_field(StoreKey::PoolSupplySideRevenue, pool_address),
         )
         .change(
             "hourly_supply_side_revenue_usd",
             volume_and_revenue_store_retriever
-                .get_hourly_pool_field_value(StoreKey::PoolSupplySideRevenue, pool_address),
+                .get_pool_specific_daily_field(StoreKey::PoolSupplySideRevenue, pool_address),
         )
         .change(
             "cumulative_protocol_side_revenue_usd",
-            volume_and_revenue_store_retriever
-                .get_cumulative_pool_value(StoreKey::PoolProtocolSideRevenue, pool_address),
+            volume_and_revenue_store_retriever.get_pool_specific_cumulative_field(
+                StoreKey::PoolProtocolSideRevenue,
+                pool_address,
+            ),
         )
         .change(
             "hourly_protocol_side_revenue_usd",
             volume_and_revenue_store_retriever
-                .get_hourly_pool_field_value(StoreKey::PoolProtocolSideRevenue, pool_address),
+                .get_pool_specific_daily_field(StoreKey::PoolProtocolSideRevenue, pool_address),
         )
         .change(
             "cumulative_total_revenue_usd",
             volume_and_revenue_store_retriever
-                .get_cumulative_pool_value(StoreKey::PoolTotalRevenue, pool_address),
+                .get_pool_specific_cumulative_field(StoreKey::PoolTotalRevenue, pool_address),
         )
         .change(
             "hourly_total_revenue_usd",
             volume_and_revenue_store_retriever
-                .get_hourly_pool_field_value(StoreKey::PoolTotalRevenue, pool_address),
+                .get_pool_specific_daily_field(StoreKey::PoolTotalRevenue, pool_address),
         )
         .change(
             "cumulative_volume_usd",
             volume_and_revenue_store_retriever
-                .get_cumulative_pool_value(StoreKey::PoolVolume, pool_address),
+                .get_pool_specific_cumulative_field(StoreKey::PoolVolume, pool_address),
         )
         .change(
             "hourly_volume_usd",
             volume_and_revenue_store_retriever
-                .get_hourly_pool_field_value(StoreKey::PoolVolume, pool_address),
+                .get_pool_specific_daily_field(StoreKey::PoolVolume, pool_address),
         )
         .change(
             "input_token_balances",
@@ -333,7 +345,7 @@ fn create_hourly_snapshot_entity_change(
         .change(
             "output_token_supply",
             pool_balance_store_retriever
-                .get_pool_non_static_field(StoreKey::PoolOutputTokenSupply, pool_address),
+                .get_pool_specific_unique_field(StoreKey::PoolOutputTokenSupply, pool_address),
         )
         .change(
             "block_number",

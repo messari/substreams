@@ -1,30 +1,69 @@
-use ethabi::ethereum_types::Address;
-use substreams::store::{StoreGet, StoreGetProto};
-use substreams_helper::common::HasAddresser;
-use substreams_helper::hex::Hexable;
+use substreams::scalar::{BigDecimal, BigInt};
+use substreams::store::{StoreAdd, StoreGet, StoreSet};
+use substreams::{log, store};
 
-use crate::pb::uniswap::v2::Pool;
-use crate::store_key::StoreKey;
+pub trait StoreSetter {
+    type Input;
 
-pub struct PoolAddresser<'a> {
-    pub store: &'a StoreGetProto<Pool>,
-}
+    fn add_value<K: AsRef<str>>(&self, _key: K, _value: &Self::Input) {
+        log::info!("set_value not implemented")
+    }
 
-impl<'a> PoolAddresser<'a> {
-    fn has_address(&self, key: Address) -> bool {
-        let pool = self
-            .store
-            .get_last(StoreKey::Pool.get_unique_pool_key(&key.to_hex()));
-
-        if pool.is_none() {
-            return false;
-        }
-        return true;
+    fn set_value<K: AsRef<str>>(&self, _key: K, _value: &Self::Input) {
+        log::info!("set_value not implemented");
     }
 }
 
-impl<'a> HasAddresser for PoolAddresser<'a> {
-    fn has_address(&self, key: Address) -> bool {
-        return self.has_address(key);
+impl StoreSetter for store::StoreAddBigInt {
+    type Input = BigInt;
+
+    fn add_value<K: AsRef<str>>(&self, key: K, value: &Self::Input) {
+        self.add(0, key, value)
+    }
+}
+
+impl StoreSetter for store::StoreAddBigDecimal {
+    type Input = BigDecimal;
+
+    fn add_value<K: AsRef<str>>(&self, key: K, value: &Self::Input) {
+        self.add(0, key, value)
+    }
+}
+
+impl StoreSetter for store::StoreSetBigInt {
+    type Input = BigInt;
+
+    fn set_value<K: AsRef<str>>(&self, key: K, value: &Self::Input) {
+        self.set(0, key, value)
+    }
+}
+
+impl StoreSetter for store::StoreSetBigDecimal {
+    type Input = BigDecimal;
+
+    fn set_value<K: AsRef<str>>(&self, key: K, value: &Self::Input) {
+        self.set(0, key, value)
+    }
+}
+
+pub trait StoreGetter {
+    type Output;
+
+    fn get<K: AsRef<str>>(&self, key: K) -> Self::Output;
+}
+
+impl StoreGetter for store::StoreGetBigInt {
+    type Output = BigInt;
+
+    fn get<K: AsRef<str>>(&self, key: K) -> Self::Output {
+        self.get_last(key).unwrap_or(BigInt::zero())
+    }
+}
+
+impl StoreGetter for store::StoreGetBigDecimal {
+    type Output = BigDecimal;
+
+    fn get<K: AsRef<str>>(&self, key: K) -> Self::Output {
+        self.get_last(key).unwrap_or(BigDecimal::zero())
     }
 }

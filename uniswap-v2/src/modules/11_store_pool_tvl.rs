@@ -14,7 +14,7 @@ pub fn store_pool_tvl(
     usd_price_store: StoreGetBigDecimal,
     tvl_store: StoreSetBigDecimal,
 ) {
-    let mut aggregator = Aggregator::<StoreSetBigDecimal>::new(tvl_store, None);
+    let aggregator = Aggregator::<StoreSetBigDecimal>::new(&tvl_store, None);
 
     for native_tvl_delta in native_tvl_deltas.deltas {
         if let Some((pool_address, token_address)) =
@@ -39,7 +39,11 @@ pub fn store_pool_tvl(
             let pool_tvl =
                 (token0_native_tvl * token0_usd_price) + (token1_native_tvl * token1_usd_price);
 
-            aggregator.set_cumulative_field(StoreKey::PoolTVL, &pool.address, &pool_tvl);
+            aggregator.set_global_cumulative_unique_field(
+                StoreKey::PoolTVL,
+                &pool.address,
+                &pool_tvl,
+            );
         }
     }
 }
