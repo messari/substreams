@@ -72,53 +72,22 @@ impl Spkg {
 
         // println!("Events: [{{{}}}]", events.into_iter().map(|x| x.to_string()).collect::<Vec<_>>().join("}, {"));
 
-        let (proto_file, module_file, module_names) = get_proto_and_module_code_and_module_names(events, &spkg_name);
+        let contract_address = match abi_info {
+            AbiInfo::LocalFilePath(_) => {
+                get_input("Contract Address", None, false)
+            }
+            AbiInfo::ContractAddress(contract_address) => contract_address
+        };
+
+        let (proto_file, module_file, module_names) = get_proto_and_module_code_and_module_names(events, &spkg_name, contract_address);
 
         // Add modules to substreams.yaml
-
+         
         // and module file to mod.rs in modules folder
 
         // Write changes to file system
     }
 }
-
-fn get_proto(events: &Vec<Event>, spkg_pascal: &String, spkg_snake: &String) -> String {
-    let mut proto = format!("syntax = \"proto3\";\n\
-            package {};\
-            \n\
-            message {} {{\n", spkg_snake, spkg_pascal);
-
-    for event in events {
-        proto.push_str(event.)
-    }
-
-    String::new()
-}
-
-// fn rust_type(input: &ParamType) -> proc_macro2::TokenStream {
-//     match *input {
-//         ParamType::Address => quote! { Vec<u8> },
-//         ParamType::Bytes => quote! { Vec<u8> },
-//         ParamType::FixedBytes(size) => quote! { [u8; #size] },
-//         ParamType::Int(_) => quote! { substreams::scalar::BigInt },
-//         ParamType::Uint(_) => quote! { substreams::scalar::BigInt },
-//         ParamType::Bool => quote! { bool },
-//         ParamType::String => quote! { String },
-//         ParamType::Array(ref kind) => {
-//             let t = rust_type(&*kind);
-//             quote! { Vec<#t> }
-//         }
-//         ParamType::FixedArray(ref kind, size) => {
-//             let t = rust_type(&*kind);
-//             quote! { [#t; #size] }
-//         }
-//         ParamType::Tuple(_) => {
-//             unimplemented!(
-//                 "Tuples are not supported. https://github.com/openethereum/ethabi/issues/175"
-//             )
-//         }
-//     }
-// }
 
 fn assert_spkg_name_allowed(spkg_name: &String) {
     let chars_iter = spkg_name.chars();
@@ -248,6 +217,10 @@ impl DependencyManager {
         }
     }
 
+    fn contains_bigint(&self) -> bool {
+        self.dependencies.contains_key("BigInt")
+    }
+
     fn get_dependencies(self) -> Vec<String> {
         let mut dependencies = self.dependencies.into_iter().map(|x| x.1).collect::<Vec<_>>();
         dependencies.sort();
@@ -256,7 +229,7 @@ impl DependencyManager {
 }
 
 /// Returns a proto file for all event outputs, a code file for all the module code, and the names of the modules produces in form -> (proto_file, module_file, module_names)
-fn get_proto_and_module_code_and_module_names(events: Vec<Event>, package_name: &String) -> (String, String, Vec<String>) {
+fn get_proto_and_module_code_and_module_names(events: Vec<Event>, package_name: &String, contract_address: String) -> (String, String, Vec<String>) {
     fn get_proto_field_type_and_mapping_code(param_type: &ParamType, proto_dependencies: &mut DependencyManager, impl_dependencies: &mut DependencyManager, package_name: &String, variable_path: String) -> (String, String) {
         match param_type {
             ParamType::Address => {
@@ -355,6 +328,8 @@ fn get_proto_and_module_code_and_module_names(events: Vec<Event>, package_name: 
         }
     }
 
+    let contract_address_ident = format!("{}_CONTRACT_ADDRESS", package_name.to_uppercase());
+
     let mut proto_dependencies = DependencyManager::proto_manager();
     let mut impl_dependencies = DependencyManager::impls_manager();
     let mut events_protos = Vec::new();
@@ -363,8 +338,8 @@ fn get_proto_and_module_code_and_module_names(events: Vec<Event>, package_name: 
     let mut module_names = Vec::new();
     for event in events.into_iter() {
         events_protos.push_str(&format!("message {0}s {{\n  \
-                                                  repeated {0} items = 1;\n\
-                                              }}\n", event.event_name));
+                                             repeated {0} items = 1;\n\
+                                         }}\n", event.event_name));
 
         let mut event_proto = format!("message {0} {{\n  \
                                                 string tx_hash = 1;\n  \
@@ -391,8 +366,8 @@ fn get_proto_and_module_code_and_module_names(events: Vec<Event>, package_name: 
 
         proto_initialization.push_str("            }");
         let event_name_snake = to_snake_case(event.event_name);
-        let contract_address_ident = format!("{}_CONTRACT_ADDRESS", package_name.to_uppercase());
         let module_name = format!("map_{}s", event_name_snake);
+        module_names.push(module_name);
 
         modules.push(format!("#[substreams::handlers::map]\n\
                                    fn {0}(block: eth::Block) -> Result<{1}::{2}s, substreams::errors::Error> {{\n    \
@@ -413,14 +388,36 @@ fn get_proto_and_module_code_and_module_names(events: Vec<Event>, package_name: 
 
     }
 
-    // Check for BigInt and hex imports
-
     // Create proto file
+    events_protos.sort();
+    event_protos.sort();
+    let proto_file = format!("syntax = \"proto3\";\n\
+                                        package {};\
+                                        \n\
+                                        {}\
+                                        \n\
+                                        {}\
+                                        \n\
+                                        {}", package_name, events_protos.join("\n"), event_protos.join("\n"), proto_dependencies.get_dependencies().join("\n"));
 
     // Create module file
+    let mut module_file = format!("use substreams_ethereum::pb::eth::v2::{{self as eth}};\n");
+    if modules.iter().any(|module| module.contains("hex::encode")) {
+        module_file.push_str("use hex_literal::hex;\n")
+    }
+    if proto_dependencies.contains_bigint() {
+        module_file.push_str("use substreams::scalar::BigInt;\n")
+    }
+    module_file.push_str(&format!("\nuse crate::pb::{}\n", package_name));
+    module_file.push_str(&format!("\npub const {}: Address = hex!(\"{}\");\n\n", contract_address_ident, contract_address));
+
+    modules.sort();
+    module_file.push_str(&modules.join("\n"));
+    module_file.push('\n');
+    module_file.push_str(&impl_dependencies.get_dependencies().join("\n"));
 
     // Return
-    (String::new(), String::new(), Vec::new())
+    (proto_file, module_file, module_names)
 }
 
 fn get_proto_type(param_type: &ParamType, is_first_call: bool) -> String {
