@@ -30,12 +30,16 @@ fn store_pair_created_events(block: eth::Block, output: StoreSetProto<PairCreate
                     name: token0_asset.name,
                     symbol: token0_asset.symbol,
                     decimals: token0_asset.decimals,
+                    tx_created: "TODO".to_string(),
+                    block_created: 0, // TODO this should input store_tokens
                 }),
                 token1: Some(Erc20Token {
                     address: token1_asset.address,
                     name: token1_asset.name,
                     symbol: token1_asset.symbol,
                     decimals: token1_asset.decimals,
+                    tx_created: "TODO".to_string(),
+                    block_created: 0, // TODO this should input store_tokens
                 }),
                 pair: Hex(event.pair.clone()).to_string(),
                 factory: factory_address,

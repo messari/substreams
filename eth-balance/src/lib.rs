@@ -16,7 +16,7 @@ fn map_balances(block: pbeth::v2::Block) -> Result<token::Transfers, substreams:
                 balance_changes.push(token::TokenBalance {
                     log_ordinal: balance_change.ordinal,
                     token: token_helper::get_eth_token(),
-                    address: Hex(&balance_change.address).to_string(),
+                    address: Hex::encode(&balance_change.address),
                     old_balance: token_helper::bigint_to_string(balance_change.old_value.clone()),
                     new_balance: token_helper::bigint_to_string(balance_change.new_value.clone()),
                     reason: Some(balance_change.reason),

@@ -8,10 +8,9 @@ imports:
 
 protobuf:
   files:
-    - eth_balance.proto
-    -
+    - erc20.proto
   importPaths:
-    - ../eth-balance/proto
+    - ../common/proto
 
 binaries:
   default:

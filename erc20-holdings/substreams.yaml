@@ -20,13 +20,14 @@ binaries:
     file: ../target/wasm32-unknown-unknown/release/substreams_erc20_holdings.wasm
 
 modules:
+  # This should be a store module since it is needed by multiple modules
   - name: map_block_to_erc20_contracts
     kind: map
     initialBlock: 1
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:messari.common.v1.Addresses
+      type: proto:messari.erc20.v1.ERC20Tokens
 
   - name: map_block_to_transfers
     kind: map

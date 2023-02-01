@@ -36,6 +36,8 @@ fn map_price_for_tokens(
                 name: token.name,
                 symbol: token.symbol,
                 decimals: token.decimals,
+                tx_created: "TODO".to_string(),
+                block_created: 0, // TODO this should input store_tokens
             }),
             block_number,
             price_usd: token_price.to_string(),

@@ -11,6 +11,8 @@ message Token {
   string name = 2;
   string symbol = 3;
   uint64 decimals = 4;
+  string tx_created = 5;
+  uint64 block_created = 6;
 }
 
 message Transfers {
