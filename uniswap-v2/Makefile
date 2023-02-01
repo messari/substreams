@@ -4,4 +4,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_metrics_aggregator_entities -s 10008300
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_liquidity_pool_entities -s 10008300

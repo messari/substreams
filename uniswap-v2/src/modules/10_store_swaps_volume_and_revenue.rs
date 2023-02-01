@@ -20,9 +20,10 @@ pub fn store_swaps_volume_and_revenue(
             SwapEvent(swap) => {
                 let pool_address = &event.clone().pool;
 
-                let volume: BigDecimal =
-                    (swap.amount_in_usd.unwrap() + swap.amount_out_usd.unwrap()).convert()
-                        / BigDecimal::from(2);
+                let total_volume: BigDecimal =
+                    (swap.amount_in_usd.unwrap() + swap.amount_out_usd.unwrap()).into();
+
+                let volume: BigDecimal = total_volume / BigDecimal::from(2);
 
                 let supply_side_revenue =
                     volume.clone() * BigDecimal::from(25_i32) / BigDecimal::from(10000_i32);
