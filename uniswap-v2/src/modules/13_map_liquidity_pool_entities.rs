@@ -189,7 +189,7 @@ fn create_daily_snapshot_entity_change(
         "LiquidityPoolDailySnapshot",
         entity_id.as_ref(),
         0,
-        Operation::Create,
+        Operation::Update,
     );
 
     day_snapshot_entity_change
@@ -285,7 +285,7 @@ fn create_hourly_snapshot_entity_change(
         "LiquidityPoolHourlySnapshot",
         entity_id.as_ref(),
         0,
-        Operation::Create,
+        Operation::Update,
     );
 
     hour_snapshot_entity_change

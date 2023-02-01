@@ -64,6 +64,6 @@ impl StoreGetter for store::StoreGetBigDecimal {
     type Output = BigDecimal;
 
     fn get<K: AsRef<str>>(&self, key: K) -> Self::Output {
-        self.get_last(key).unwrap_or(BigDecimal::zero())
+        self.get_last(key).unwrap_or(BigDecimal::zero()).with_prec(15)
     }
 }

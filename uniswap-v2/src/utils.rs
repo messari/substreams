@@ -42,26 +42,10 @@ impl From<BigInt> for uniswap::BigInt {
         }
     }
 }
-impl uniswap::BigDecimal {
-    pub fn convert(&self) -> BigDecimal {
-        Into::<BigDecimal>::into(self.clone())
-    }
-}
 
 impl Into<BigDecimal> for uniswap::BigDecimal {
     fn into(self) -> BigDecimal {
-        let denominator = BigInt::from(10_i32.pow(self.scale as u32));
-
-        if denominator == BigInt::zero() {
-            BigDecimal::from(BigInt::from_unsigned_bytes_le(
-                self.int_val.unwrap().value.as_slice(),
-            ))
-        } else {
-            BigDecimal::from(
-                BigInt::from_unsigned_bytes_le(self.int_val.unwrap().value.as_slice())
-                    / denominator,
-            )
-        }
+        BigDecimal::new(self.int_val.unwrap().into(), -self.scale)
     }
 }
 
@@ -80,7 +64,7 @@ impl Add for uniswap::BigDecimal {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
-        (self.convert() + other.convert()).into()
+        (Into::<BigDecimal>::into(self) + Into::<BigDecimal>::into(other)).into()
     }
 }
 
