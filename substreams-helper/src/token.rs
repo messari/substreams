@@ -6,8 +6,10 @@ pub fn get_sol_token() -> Option<TokenAccount> {
         name: "Solana".to_string(),
         symbol: "SOL".to_string(),
         decimals: 9_u64,
-        freeze_authority: "NA".to_string(),
-        mint_authority: "NA".to_string(),
+        freeze_authority: "".to_string(),
+        mint_authority: "".to_string(),
+        tx_created: "".to_string(),
+        block_created: 0_u64,
     };
 
     Some(sol_token)
