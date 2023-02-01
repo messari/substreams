@@ -6,7 +6,6 @@ pub mod pb;
 mod keyer;
 mod rpc;
 
-use pb::common::v1 as common;
 use pb::erc20::v1 as erc20;
 use pb::erc20_price::v1::Erc20Price;
 use std::str::FromStr;
@@ -23,7 +22,6 @@ use substreams::store::StoreSetBigDecimal;
 use substreams::store::StoreSetRaw;
 use substreams::{hex, log, proto, store, Hex};
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
-use substreams_helper::erc20::Erc20Token;
 use substreams_helper::keyer::chainlink_asset_key;
 use substreams_helper::types::Address;
 
@@ -38,6 +36,7 @@ fn code_len(call: &pbeth::v2::Call) -> usize {
     len
 }
 
+// TODO: this should be a store module
 /// Extracts erc20 contract deployments from the blocks
 #[substreams::handlers::map]
 fn map_block_to_erc20_contracts(
@@ -67,40 +66,42 @@ fn map_block_to_erc20_contracts(
 
                 // Contract creation not from proxy contract
                 if call.call_type == pbeth::v2::CallType::Create as i32 {
-                    let mut code_change_len = 0;
-                    for code_change in &call.code_changes {
-                        code_change_len += code_change.new_code.len()
-                    }
+                    let code_change_len = code_len(&call);
 
                     if code_change_len <= 150 {
                         // skipping contracts with less than 150 bytes of code
                         log::info!(
-                            "Skipping contract {}. Contract code is less than 150 bytes.",
+                            "Skipping contract: {}. Contract code is less than 150 bytes.",
                             Hex::encode(&call.address)
                         );
                         continue;
                     }
                 }
 
-                let mut decimals = 18_u64;
+                log::info!(
+                    "Attempting to get metadata for erc20: {}",
+                    Hex::encode(&call.address)
+                );
+
+                let decimals: u64;
                 let decimal_result = rpc::get_erc20_decimals(&call.address);
                 match decimal_result {
                     Ok(_decimals) => decimals = _decimals,
-                    Err(e) => continue,
+                    Err(_e) => continue,
                 };
 
-                let mut symbol = "".to_string();
+                let symbol: String;
                 let symbaol_result = rpc::get_erc20_symbol(&call.address);
                 match symbaol_result {
                     Ok(_symbol) => symbol = _symbol,
-                    Err(e) => continue,
+                    Err(_e) => continue,
                 };
 
-                let mut name = "".to_string();
+                let name: String;
                 let name_result = rpc::get_erc20_name(&call.address);
                 match name_result {
                     Ok(_name) => name = _name,
-                    Err(e) => continue,
+                    Err(_e) => continue,
                 };
 
                 erc20_tokens.items.push(erc20::Erc20Token {
@@ -114,34 +115,6 @@ fn map_block_to_erc20_contracts(
             }
         }
     }
-
-    // for call_view in block.calls() {
-    //     let call = call_view.call;
-    //     if call.call_type == pbeth::v2::CallType::Create as i32 {
-    //         // skipping contracts that are too short to be an erc20 token
-    //         if code_len(call) < 150 {
-    //             continue;
-    //         }
-    //
-    //         let address = Hex::encode(call.address.clone());
-    //
-    //         // check if contract is an erc20 token
-    //         let erc20_struct = substreams_helper::erc20::get_erc20_token(address.clone());
-    //         if erc20_struct.is_none() {
-    //             continue;
-    //         }
-    //
-    //         log::info!("Create {}, len {}", address, code_len(call));
-    //         erc20_tokens.items.push(erc20::Erc20Token {
-    //             address: address,
-    //             name: erc20_struct.as_ref().unwrap().name.clone(),
-    //             symbol: erc20_struct.as_ref().unwrap().symbol.clone(),
-    //             decimals: erc20_struct.as_ref().unwrap().decimals,
-    //             tx_created: "TODO".to_string(),
-    //             block_created: block.number,
-    //         });
-    //     }
-    // }
 
     Ok(erc20_tokens)
 }

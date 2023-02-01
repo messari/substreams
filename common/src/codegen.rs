@@ -139,9 +139,6 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         }
     }
 
-    // Cleanup
-    fs::remove_dir_all(&tmp_dir).unwrap();
-
     if !pb_files.is_empty() {
         let pb_file_content = pb_files
             .into_iter()

@@ -6,4 +6,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_block_to_erc20_contracts -s 10606500 -t +100
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_block_to_erc20_contracts -s  6082465 -t +1
