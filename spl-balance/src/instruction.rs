@@ -1,4 +1,4 @@
-use {crate::option::COption, std::convert::TryInto, substreams::errors::Error};
+use {core::option::COption, std::convert::TryInto, substreams::errors::Error};
 
 /// Instructions supported by the token program.
 #[repr(C)]

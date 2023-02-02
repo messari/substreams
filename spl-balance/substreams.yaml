@@ -31,6 +31,6 @@ modules:
   - name: store_tokens
     kind: store
     updatePolicy: set
-    valueType: proto:messari.sol_token.v1.Token
+    valueType: proto:messari.sol_token.v1.TokenAccount
     inputs:
       - source: sf.solana.type.v1.Block
