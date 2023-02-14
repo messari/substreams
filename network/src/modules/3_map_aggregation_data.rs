@@ -38,7 +38,7 @@ pub fn map_aggregation_data(block: eth::Block, buggy_deltas: store::Deltas<Delta
 
     let mut new_unique_authors = 0;
     for unique_delta in unique_deltas.deltas.into_iter() {
-        if unique_delta.key == "latest_day_timestamp".to_string() && unique_delta.operation != Operation::Create {
+        if unique_delta.key == "latest_day_timestamp".to_string() && unique_delta.operation != Operation::Create && unique_delta.new_value==unique_delta.old_value+1 {
             if store_retriever.day_timestamp_is_not_set() {
                 store_retriever.set_day_timestamp(unique_delta.old_value);
             }
@@ -50,7 +50,7 @@ pub fn map_aggregation_data(block: eth::Block, buggy_deltas: store::Deltas<Delta
                 supply: Some(store_retriever.get_day_sum(StoreKey::Supply).into()),
                 transactions: Some(store_retriever.get_day_sum(StoreKey::Transactions).into()),
             });
-        } else if unique_delta.key == "latest_hour_timestamp".to_string() && unique_delta.operation != Operation::Create {
+        } else if unique_delta.key == "latest_hour_timestamp".to_string() && unique_delta.operation != Operation::Create && unique_delta.new_value==unique_delta.old_value+1 {
             if store_retriever.hour_timestamp_is_not_set() {
                 store_retriever.set_hour_timestamp(unique_delta.old_value);
             }
