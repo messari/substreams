@@ -11,7 +11,7 @@ dataSources:
     source:
       package:
         moduleName: map_entity_changes
-        file: substreams.spkg
+        file: messari-networks-substreams-v0.1.0.spkg
     mapping:
       kind: substreams/graph-entities
       apiVersion: 0.0.5
