@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package messari.eth_supply.v1;
+
+message EthSupply {
+  string genesis = 1;      // string: BigInt, in wei
+  string blockRewards = 2; // string: BigInt, in wei
+  string uncleRewards = 3; // string: BigInt, in wei
+  string burned = 4;       // string: BigInt, in wei
+  string total = 5;        // string: BigInt, in wei
+}

@@ -1,0 +1,22 @@
+[package]
+name = "eth-supply"
+version = "0.1.0"
+description = "A substream that calculates the current eth supply"
+edition = "2021"
+repository = "https://github.com/messari/substreams/eth-supply"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+num-bigint = "0.4"
+prost = "0.11.6"
+hex-literal = "0.3.4"
+ethabi = "17.2.0"
+substreams = { workspace = true }
+substreams-ethereum = { workspace = true }
+substreams-helper = { path = "../substreams-helper" }
+
+[build-dependencies]
+anyhow = "1.0.69"
+substreams-common = { path = "../common" }
