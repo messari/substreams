@@ -19,3 +19,7 @@ message Domain {
 message Domains {
     repeated Domain items = 1; 
 }
+
+message Lines {
+    repeated string lines = 1;
+}
