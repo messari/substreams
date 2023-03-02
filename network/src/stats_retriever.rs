@@ -35,7 +35,7 @@ impl<'a> StatsRetriever<'a> {
     }
 
     pub(crate) fn get_total_stats(&self, variable_key: StoreKey, count_key: StoreKey) -> Stats {
-        let count = self.aggregation_retriever.get_total_sum(count_key).to_u64() as i64;
+        let count = self.aggregation_retriever.get_total_sum(count_key).to_u64() as i32;
         let count_big_decimal = BigDecimal::from(count);
 
         let (sum, sum_squares) = self.aggregation_retriever.get_total_stats_values(variable_key.clone());
@@ -55,7 +55,7 @@ impl<'a> StatsRetriever<'a> {
     }
 
     pub(crate) fn get_day_stats(&self, variable_key: StoreKey, count_key: StoreKey) -> Stats {
-        let count = self.aggregation_retriever.get_day_sum(count_key).to_u64() as i64;
+        let count = self.aggregation_retriever.get_day_sum(count_key).to_u64() as i32;
         let count_big_decimal = BigDecimal::from(count);
 
         let (sum, sum_squares) = self.aggregation_retriever.get_day_stats_values(variable_key.clone());
@@ -75,7 +75,7 @@ impl<'a> StatsRetriever<'a> {
     }
 
     pub(crate) fn get_hour_stats(&self, variable_key: StoreKey, count_key: StoreKey) -> Stats {
-        let count = self.aggregation_retriever.get_hour_sum(count_key).to_u64() as i64;
+        let count = self.aggregation_retriever.get_hour_sum(count_key).to_u64() as i32;
         let count_big_decimal = BigDecimal::from(count);
 
         let (sum, sum_squares) = self.aggregation_retriever.get_hour_stats_values(variable_key.clone());
