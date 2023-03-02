@@ -1,18 +1,42 @@
 # Subgraph Schema: Network
-# Warning this is a current adaptation of the intended schema in
-# order to gel with the current setup of this substream
+# Version: 1.1.2
+# See https://github.com/messari/subgraphs/blob/master/docs/SCHEMA.md for details
+
+enum SubgraphNetwork {
+  ArbitrumOne
+  ArweaveMainnet
+  AURORA
+  AVALANCHE
+  BOBA
+  BSC # aka BNB Chain
+  CELO
+  CLOVER
+  COSMOS
+  CRONOS
+  MAINNET # Ethereum Mainnet
+  FANTOM
+  FUSE
+  HARMONY
+  JUNO
+  MOONBEAM
+  MOONRIVER
+  NearMainnet
+  OPTIMISM
+  OSMOSIS
+  MATIC # aka Polygon
+  GNOSIS
+}
 
 # Stores statistical analytics for given metrics
 type Stats @entity {
   " { id of the snapshot this belongs to } - { DataType } "
-
   id: String!
 
   " Number of times entity has been used in a time data entity "
-  count: BigInt!
+  count: Int!
 
   " The average of all the values "
-  mean: BigInt!
+  mean: BigDecimal!
 
   " The maximum value in this entity "
   max: BigInt!
@@ -23,10 +47,10 @@ type Stats @entity {
   " The sum of all the values "
   sum: BigInt!
 
-  ##### Calculated Statistical Fields #####
+  ##### Calculated Statisitcal Fields #####
 
   " The standard deviation of all values within this entity "
-  variance: BigInt
+  variance: BigDecimal
 }
 
 ##########################
@@ -37,53 +61,57 @@ type Network @entity {
   " Name of the network being indexed "
   id: String!
 
-  " The version of the schema "
-  schema_version: String!
+  " The verison of the schema "
+  schemaVersion: String!
 
   " The version of the subgraph "
-  subgraph_version: String!
+  subgraphVersion: String!
 
   " The version of the methodology "
-  methodology_version: String!
+  methodologyVersion: String!
 
   #### Quantitative Data ####
 
   " Number of cumulative unique authors (see type Author for explanation) "
-  cumulative_unique_authors: BigInt!
+  cumulativeUniqueAuthors: Int!
 
   " The total number of blocks in the blockchain "
-  block_height: Int!
+  blockHeight: Int!
 
   " Total difficulty to reach the current block "
-  cumulative_difficulty: BigInt
+  cumulativeDifficulty: BigInt
 
   " Total gas used "
-  cumulative_gas_used: BigInt
+  cumulativeGasUsed: BigInt
 
   " Current gas limit "
-  gas_limit: Int
+  gasLimit: BigInt
 
   " Total burnt fees on the network in native asset "
-  cumulative_burnt_fees: BigInt
+  cumulativeBurntFees: BigInt
 
   " Total rewards emitted on the network in native asset "
-  cumulative_rewards: BigInt
+  cumulativeRewards: BigInt
 
-  " Total number of transactions that have occurred on this network "
-  cumulative_transactions: BigInt
+  " Total number of transactions that have occured on this network "
+  cumulativeTransactions: BigInt
 
   " Total size of the network in native units (e.g. Bytes in Arweave and Ethereum) "
-  cumulative_size: BigInt
+  cumulativeSize: BigInt
 
   " Current supply of the native asset "
-  total_supply: Int
+  totalSupply: BigInt
 
   " Statistical analysis of blocks/day from daily snapshots "
-  daily_blocks: Stats!
+  dailyBlocks: Stats!
 
   #### Snapshots ####
 
+  " Daily metrics for this blockchain "
+  dailySnapshots: [DailySnapshot!]! @derivedFrom(field: "network")
 
+  " Hourly metrics for this blockchain "
+  hourlySnapshots: [HourlySnapshot!]! @derivedFrom(field: "network")
 }
 
 ###############################
@@ -95,81 +123,81 @@ type DailySnapshot @entity {
   id: String!
 
   " ID of the network this snapshot belongs to "
-  network: String!
+  network: Network!
 
   #### Quantitative Data ####
 
   " Block height at this day (aka, blockNumber) "
-  block_height: Int!
+  blockHeight: Int!
 
   " Blocks created during this day (note, this is different from blocksPerDay) "
-  daily_blocks: Int!
+  dailyBlocks: Int!
 
   " Timestamp of this snapshot "
-  timestamp: Int!
+  timestamp: BigInt!
 
   " Number of cumulative unique authors (see type Author for explanation) "
-  cumulative_unique_authors: BigInt!
+  cumulativeUniqueAuthors: Int!
 
   " Statistical analysis of unique daily active authors "
-  daily_unique_authors: Stats
+  dailyUniqueAuthors: Stats
 
   " Total difficulty up until this day "
-  cumulative_difficulty: BigInt
+  cumulativeDifficulty: BigInt
 
   " Statistical analysis of difficulty during this day "
-  daily_difficulty: Stats
+  dailyDifficulty: Stats
 
   " Total gas used up until this day "
-  cumulative_gas_used: BigInt
+  cumulativeGasUsed: BigInt
 
   " Statistical analysis of gas used during this day"
-  daily_gas_used: Stats
+  dailyGasUsed: Stats
 
   " Statistical analysis of gas limit across blocks this day"
-  daily_gas_limit: Stats
+  dailyGasLimit: Stats
 
   " Total amount of fees burned "
-  cumulative_burnt_fees: BigInt
+  cumulativeBurntFees: BigInt
 
-  " Statistical amount of burnt fees for this day "
-  daily_burnt_fees: Stats
+  " Statisical amount of burnt fees for this day "
+  dailyBurntFees: Stats
 
   " Total amount of rewards emitted "
-  cumulative_rewards: BigInt
+  cumulativeRewards: BigInt
 
   " Statistical analysis of rewards emitted on this day "
-  daily_rewards: Stats
+  dailyRewards: Stats
 
   " Total size of the entire network in this day (in native units) "
-  cumulative_size: BigInt
+  cumulativeSize: BigInt
 
   " Statistical analysis of size in bytes of a block during this day "
-  daily_size: Stats
+  dailySize: Stats
 
   " Statistical analysis of chunks per block during this day "
-  daily_chunks: Stats
+  dailyChunks: Stats
 
   " Total amount of the native asset in circulation during this day "
-  total_supply: Int
+  totalSupply: BigInt
 
-  " Statistical analysis of the daily supply "
-  daily_supply: Stats
+  " Statisitcal analysis of the daily supply "
+  dailySupply: Stats
 
   " Total number of transactions that have occured on this blockchain "
-  cumulative_transactions: BigInt
+  cumulativeTransactions: BigInt
 
   " Statistical analysis of transactions per day "
-  daily_transactions: Stats
+  dailyTransactions: Stats
 
-  " Statistical analysis of the block interval during this day "
-  daily_block_interval: Stats
+  " Statisical analysis of the block interval during this day "
+  dailyBlockInterval: Stats
 
   " gas price at the end of this hour in network native gas units "
-  gas_price: Int
+  gasPrice: BigInt
 
   " Statistical analysis of the gas price during this day "
-  daily_gas_price: Stats
+  dailyGasPrice: Stats
 }
 
 type HourlySnapshot @entity {
@@ -177,79 +205,79 @@ type HourlySnapshot @entity {
   id: String!
 
   " ID of the network this snapshot belongs to "
-  network: String!
+  network: Network!
 
   #### Quantitative Data ####
 
   " Block height at this day (aka, blockNumber) "
-  block_height: Int!
+  blockHeight: Int!
 
   " Blocks created during this day (note, this is different from blocksPerDay) "
-  hourly_blocks: Int!
+  hourlyBlocks: Int!
 
   " Timestamp of this snapshot "
-  timestamp: Int!
+  timestamp: BigInt!
 
   " Number of cumulative unique authors (see type Author for explanation) "
-  cumulative_unique_authors: BigInt!
+  cumulativeUniqueAuthors: Int!
 
   " Statistical analysis of unique hourly active authors "
-  hourly_unique_authors: Stats
+  hourlyUniqueAuthors: Stats
 
   " Total difficulty up until this hour "
-  cumulative_difficulty: BigInt
+  cumulativeDifficulty: BigInt
 
   " Statistical analysis of difficulty during this hour "
-  hourly_difficulty: Stats
+  hourlyDifficulty: Stats
 
   " Total gas used up until this hour "
-  cumulative_gas_used: BigInt
+  cumulativeGasUsed: BigInt
 
   " Statistical analysis of gas used during this hour"
-  hourly_gas_used: Stats
+  hourlyGasUsed: Stats
 
   " Statistical analysis of gas limit across blocks this hour"
-  hourly_gas_limit: Stats
+  hourlyGasLimit: Stats
 
   " Total amount of fees burned "
-  cumulative_burnt_fees: BigInt
+  cumulativeBurntFees: BigInt
 
-  " Statistical amount of burnt fees for this hour "
-  hourly_burnt_fees: Stats
+  " Statisical amount of burnt fees for this hour "
+  hourlyBurntFees: Stats
 
   " Total amount of rewards emitted "
-  cumulative_rewards: BigInt
+  cumulativeRewards: BigInt
 
   " Statistical analysis of rewards emitted on this hour "
-  hourly_rewards: Stats
+  hourlyRewards: Stats
 
   " Total size of the entire network in this hour (in native units) "
-  cumulative_size: BigInt
+  cumulativeSize: BigInt
 
   " Statistical analysis of size in bytes of a block during this hour "
-  hourly_size: Stats
+  hourlySize: Stats
 
   " Statistical analysis of chunks per block during this hour "
-  hourly_chunks: Stats
+  hourlyChunks: Stats
 
   " Total amount of the native asset in circulation during this hour "
-  total_supply: Int
+  totalSupply: BigInt
 
-  " Statistical analysis of the hourly supply "
-  hourly_supply: Stats
+  " Statisitcal analysis of the hourly supply "
+  hourlySupply: Stats
 
-  " Total number of transactions that have occurred on this blockchain "
-  cumulative_transactions: Int
+  " Total number of transactions that have occured on this blockchain "
+  cumulativeTransactions: BigInt
 
   " Statistical analysis of transactions per hour "
-  hourly_transactions: Stats
+  hourlyTransactions: Stats
 
-  " Statistical analysis of the block interval during this hour "
-  hourly_block_interval: Stats
+  " Statisical analysis of the block interval during this hour "
+  hourlyBlockInterval: Stats
 
   " gas price at the end of this hour in network native gas units "
-  gas_price: Int
+  gasPrice: BigInt
 
   " Statistical analysis of the gas price during this hour "
-  hourly_gas_price: Stats
+  hourlyGasPrice: Stats
 }
