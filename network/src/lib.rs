@@ -9,5 +9,6 @@ mod stats_retriever;
 mod store_key;
 mod store_retriever;
 mod utils;
+mod network;
 
 pub use modules::*;

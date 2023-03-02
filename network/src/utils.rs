@@ -1,5 +1,5 @@
 use crate::pb::{aggregate_data, network};
-use substreams::scalar::BigInt;
+use substreams::scalar::{BigDecimal, BigInt};
 use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams_ethereum::scalar::BigIntSign;
 
@@ -30,6 +30,12 @@ impl From<BigInt> for aggregate_data::BigInt {
 impl From<BigInt> for network::v1::BigInt {
     fn from(big_int: BigInt) -> Self {
         network::v1::BigInt { bytes: big_int.to_bytes_le().1 }
+    }
+}
+
+impl From<BigDecimal> for network::v1::BigDecimal {
+    fn from(big_decimal: BigDecimal) -> Self {
+        network::v1::BigDecimal { bytes: Vec::new() } // TODO: Work out which format we need for converting BigDecimal into bytes to be compatible with the graph..
     }
 }
 

@@ -84,7 +84,6 @@ modules:
       - store: store_min_values
       - store: store_non_aggregation_data
         mode: deltas
-      - store: store_non_aggregation_data
     output:
       type: proto:substreams.entity.v1.EntityChanges
 

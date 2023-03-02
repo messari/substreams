@@ -5,256 +5,31 @@ message BigInt {
   bytes bytes = 1;
 }
 
-message Network {
-    // Name of the network being indexed
-    string id = 1;
-  
-    // The version of the schema
-    string schema_version = 2;
-  
-    // The version of the subgraph
-    string subgraph_version = 3;
-  
-    // The version of the methodology
-    string methodology_version = 4;
-  
-    // #### Quantitative Data ####
-  
-    // Number of cumulative unique authors (see type Author for explanation)
-    BigInt cumulative_unique_authors = 5;
-  
-    // The total number of blocks in the blockchain
-    uint64 block_height = 6;
-  
-    // Total difficulty to reach the current block
-    BigInt cumulative_difficulty = 7;
-    
-    // Total gas used
-    BigInt cumulative_gas_used = 8;
-  
-    // Current gas limit
-    uint64 gas_limit = 9;
-  
-    // Total burnt fees on the network in native asset
-    BigInt cumulative_burnt_fees = 10;
-  
-    // Total rewards emitted on the network in native asset
-    BigInt cumulative_rewards = 11;
-  
-    // Total number of transactions that have occurred on this network
-    BigInt cumulative_transactions = 12;
-  
-    // Total size of the network in native units (e.g. Bytes in Arweave and Ethereum)
-    BigInt cumulative_size  = 13;
-  
-    // Current supply of the native asset
-    uint64 total_supply = 14;
+message BigDecimal {
+  bytes bytes = 1;
+}
 
-    // Statistical analysis of  blocks/day from daily snapshots
-    Stats daily_blocks = 15;
-  
-    // #### Snapshots ####
-  
-    // Daily metrics for this blockchain
-    DailySnapshots daily_snapshots = 16;
-  
-    // Hourly metrics for this blockchain
-    HourlySnapshots hourly_snapshots = 17;
-  }
+message Stats {
+  // { id of the snapshot this belongs to } - { DataType }
+  string id = 1;
 
-  message Stats {
-    // { id of the snapshot this belongs to } - { DataType }
-    string id = 1;
+  // Number of times entity has been used in a time data entity
+  int64 count = 2;
 
-    // Number of times entity has been used in a time data entity
-    BigInt count = 2;
+  // The average of all the values
+  BigDecimal mean = 3;
 
-    // The average of all the values
-    BigInt mean = 3;
+  // The maximum value in this entity
+  BigInt max = 4;
 
-    // The maximum value in this entity
-    BigInt max = 4;
+  // The minimum value in this data set
+  BigInt min = 5;
 
-    // The minimum value in this data set
-    BigInt min = 5;
+  // The sum of all the values
+  BigInt sum = 7;
 
-    // The sum of all the values
-    BigInt sum = 7;
+  // ##### Calculated Statistical Fields #####
 
-    // ##### Calculated Statistical Fields #####
-
-    // The standard deviation of all values within this entity
-    BigInt variance = 8;
-  }
-
-  message DailySnapshot {
-    // { number of days since UNIX epoch time }
-    string id = 1;
-
-    // ID of the network this snapshot belongs to
-    string network = 2;
-
-    // #### Quantitative Data ####
-
-    // Block height at start of day (aka, blockNumber)
-    uint64 block_height = 3;
-
-    // Blocks created during this day (note, this is different from blocksPerDay)
-    uint64 daily_blocks = 4;
-
-    // Timestamp of this snapshot
-    int64 timestamp = 5;
-
-    // Number of cumulative unique authors (see type Author for explanation)
-    BigInt cumulative_unique_authors = 6;
-
-    // Statistical analysis of unique daily active authors
-    Stats daily_unique_authors = 7;
-
-    // Total difficulty up until this day
-    BigInt cumulative_difficulty = 8;
-
-    // Statistical analysis of difficulty during this day
-    Stats daily_difficulty = 9;
-
-    // Total gas used up until this day
-    BigInt cumulative_gas_used = 10;
-
-    // Statistical analysis of gas used during this day
-    Stats daily_gas_used = 11;
-
-    // Statistical analysis of gas limit across blocks this day
-    Stats daily_gas_limit = 12;
-
-    // Total amount of fees burned
-    BigInt cumulative_burnt_fees = 13;
-
-    // Statistical amount of burnt fees for this day
-    Stats daily_burnt_fees = 14;
-
-    // Total amount of rewards emitted
-    BigInt cumulative_rewards = 15;
-
-    // Statistical analysis of rewards emitted on this day
-    Stats daily_rewards = 16;
-
-    // Total size of the entire network in this day (in native units)
-    BigInt cumulative_size = 17;
-
-    // Statistical analysis of size in bytes of a block during this day
-    Stats daily_size = 18;
-
-    // Statistical analysis of chunks per block during this day
-    Stats daily_chunks = 19;
-
-    // Total amount of the native asset in circulation during this day
-    uint64 total_supply = 20;
-
-    // Statistical analysis of the daily supply
-    Stats daily_supply = 21;
-
-    // Total number of transactions that have occurred on this blockchain
-    BigInt cumulative_transactions = 22;
-
-    // Statistical analysis of transactions per day
-    Stats daily_transactions = 23;
-
-    // Statistical analysis of the block interval during this day
-    Stats daily_block_interval = 24;
-
-    // gas price at the end of this day in network native gas units
-    uint64 gas_price = 25;
-
-    // Statistical analysis of the gas price during this day
-    Stats daily_gas_price = 26;
-  }
-
-  message HourlySnapshot {
-    // { number of hours since UNIX epoch time }
-    string id = 1;
-
-    // ID of the network this snapshot belongs to
-    string network = 2;
-
-    // #### Quantitative Data ####
-
-    // Block height at this day (aka, blockNumber)
-    uint64 block_height = 3;
-
-    // Blocks created during this day (note, this is different from blocksPerDay)
-    uint64 hourly_blocks = 4;
-
-    // Timestamp of this snapshot
-    int64 timestamp = 5;
-
-    // Number of cumulative unique authors (see type Author for explanation)
-    BigInt cumulative_unique_authors = 6;
-
-    // Statistical analysis of unique hourly active authors
-    Stats hourly_unique_authors = 7;
-
-    // Total difficulty up until this hour
-    BigInt cumulative_difficulty = 8;
-
-    // Statistical analysis of difficulty during this hour
-    Stats hourly_difficulty = 9;
-
-    // Total gas used up until this hour
-    BigInt cumulative_gas_used = 10;
-
-    // Statistical analysis of gas used during this hou
-    Stats hourly_gas_used = 11;
-
-    // Statistical analysis of gas limit across blocks this hou
-    Stats hourly_gas_limit = 12;
-
-    // Total amount of fees burned
-    BigInt cumulative_burnt_fees = 13;
-
-    // Statistical amount of burnt fees for this hour
-    Stats hourly_burnt_fees = 14;
-
-    // Total amount of rewards emitted
-    BigInt cumulative_rewards = 15;
-
-    // Statistical analysis of rewards emitted on this hour
-    Stats hourly_rewards = 16;
-
-    // Total size of the entire network in this hour (in native units)
-    BigInt cumulative_size = 17;
-
-    // Statistical analysis of size in bytes of a block during this hour
-    Stats hourly_size = 18;
-
-    // Statistical analysis of chunks per block during this hour
-    Stats hourly_chunks = 19;
-
-    // Total amount of the native asset in circulation during this hour
-    uint64 total_supply = 20;
-
-    // Statistical analysis of the hourly supply
-    Stats hourly_supply = 21;
-
-    // Total number of transactions that have occurred on this blockchain
-    uint64 cumulative_transactions = 22;
-
-    // Statistical analysis of transactions per hour
-    Stats hourly_transactions = 23;
-
-    // Statistical analysis of the block interval during this hour
-    Stats hourly_block_interval = 24;
-
-    // gas price at the end of this hour in network native gas units
-    uint64 gas_price = 25;
-
-    // Statistical analysis of the gas price during this hour
-    Stats hourly_gas_price = 26;
-  }
-
-  message DailySnapshots {
-    repeated DailySnapshot snapshots = 1;
-  }
-
-  message HourlySnapshots {
-    repeated HourlySnapshot snapshots = 1;
-  }
+  // The standard deviation of all values within this entity
+  BigDecimal variance = 8;
+}
