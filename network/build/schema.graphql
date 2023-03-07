@@ -2,35 +2,10 @@
 # Version: 1.1.2
 # See https://github.com/messari/subgraphs/blob/master/docs/SCHEMA.md for details
 
-enum SubgraphNetwork {
-  ArbitrumOne
-  ArweaveMainnet
-  AURORA
-  AVALANCHE
-  BOBA
-  BSC # aka BNB Chain
-  CELO
-  CLOVER
-  COSMOS
-  CRONOS
-  MAINNET # Ethereum Mainnet
-  FANTOM
-  FUSE
-  HARMONY
-  JUNO
-  MOONBEAM
-  MOONRIVER
-  NearMainnet
-  OPTIMISM
-  OSMOSIS
-  MATIC # aka Polygon
-  GNOSIS
-}
-
 # Stores statistical analytics for given metrics
 type Stats @entity {
   " { id of the snapshot this belongs to } - { DataType } "
-  id: String!
+  id: ID!
 
   " Number of times entity has been used in a time data entity "
   count: Int!
@@ -59,7 +34,7 @@ type Stats @entity {
 
 type Network @entity {
   " Name of the network being indexed "
-  id: String!
+  id: ID!
 
   " The verison of the schema "
   schemaVersion: String!
@@ -120,7 +95,7 @@ type Network @entity {
 
 type DailySnapshot @entity {
   " { number of days since UNIX epoch time } "
-  id: String!
+  id: ID!
 
   " ID of the network this snapshot belongs to "
   network: Network!
@@ -202,7 +177,7 @@ type DailySnapshot @entity {
 
 type HourlySnapshot @entity {
   " { number of hours since UNIX epoch time } "
-  id: String!
+  id: ID!
 
   " ID of the network this snapshot belongs to "
   network: Network!

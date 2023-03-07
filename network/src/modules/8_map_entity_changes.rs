@@ -10,7 +10,7 @@ use substreams_entity_change::pb::entity::entity_change::Operation;
 use substreams_entity_change::pb::entity::{EntityChange, EntityChanges, Field};
 use substreams_entity_change::pb::entity::value::Typed;
 
-use crate::network::SubgraphNetwork;
+use crate::network::Network;
 use crate::pb::aggregate_data::AggregateData;
 use crate::stats_retriever::StatsRetriever;
 use crate::store_key::StoreKey;
@@ -30,32 +30,34 @@ pub fn map_entity_changes(
 
     let mut stats_retriever = StatsRetriever::new(&aggregation_store, &max_store, &min_store, aggregate_data.timestamp);
 
-    let (network_entity, is_new_day, is_new_hour) = get_network_entity_change(&mut stats_retriever, &non_aggregation_deltas, &aggregation_deltas);
+    let mut entity_changes = vec![];
 
-    let mut entity_changes = vec![network_entity];
+    let (is_new_day, is_new_hour) = get_network_entity_change(&mut stats_retriever, &non_aggregation_deltas, &aggregation_deltas, &mut entity_changes);
 
     if is_new_day {
-        entity_changes.push(create_daily_snapshot_entity_change(
+        add_daily_snapshot_entity_changes(
             &aggregate_data,
             &mut stats_retriever,
             &non_aggregation_deltas,
-        ))
+            &mut entity_changes
+        )
     }
 
     if is_new_hour {
-        entity_changes.push(create_hourly_snapshot_entity_change(
+        add_hourly_snapshot_entity_changes(
             &aggregate_data,
             &mut stats_retriever,
             &non_aggregation_deltas,
-        ))
+            &mut entity_changes
+        )
     }
 
     Ok(EntityChanges { entity_changes })
 }
 
 /// Returns network entity change and also if it is the time to create a day or hour snapshot. Return is in form => (network_entity_change, create_day_snapshot, create_hour_snapshot)
-fn get_network_entity_change(stats_retriever: &mut StatsRetriever, non_aggregation_deltas: &store::Deltas<DeltaBigInt>, aggregation_deltas: &store::Deltas<DeltaBigInt>) -> (EntityChange, bool, bool) {
-    let entity_id: String = SubgraphNetwork::MAINNET.to_string();
+fn get_network_entity_change(stats_retriever: &mut StatsRetriever, non_aggregation_deltas: &store::Deltas<DeltaBigInt>, aggregation_deltas: &store::Deltas<DeltaBigInt>, entity_changes: &mut Vec<EntityChange>) -> (bool, bool) {
+    let entity_id: String = Network::MAINNET.to_string();
     stats_retriever.set_entity_id(entity_id.clone());
     let mut network_entity_change = EntityChange::new("Network", entity_id.to_string().as_str(), 0, Operation::Update);
 
@@ -113,13 +115,15 @@ fn get_network_entity_change(stats_retriever: &mut StatsRetriever, non_aggregati
     }
 
     if is_new_day {
-        network_entity_change.change("dailyBlocks", stats_retriever.get_total_stats(StoreKey::DailyBlocks, StoreKey::NumDays).encode_to_vec());
+        entity_changes.push(stats_retriever.get_total_stats("dailyBlocks", StoreKey::DailyBlocks, StoreKey::NumDays, false));
+        network_entity_change.change("dailyBlocks", stats_retriever.get_id("dailyBlocks"));
     }
 
     if is_first_block {
         network_entity_change.operation = Operation::Create as i32;
 
-        network_entity_change.change("dailyBlocks", stats_retriever.get_zero_stats().encode_to_vec());
+        entity_changes.push(stats_retriever.get_zero_stats_entity_change("dailyBlocks"));
+        network_entity_change.change("dailyBlocks", stats_retriever.get_id("dailyBlocks"));
 
         // And finally we can add the constant fields that won't get changed over time
         network_entity_change
@@ -129,14 +133,17 @@ fn get_network_entity_change(stats_retriever: &mut StatsRetriever, non_aggregati
             .change("methodologyVersion", "methodology_version".to_string());
     }
 
-    (network_entity_change, is_new_day, is_new_hour)
+    entity_changes.push(network_entity_change);
+
+    (is_new_day, is_new_hour)
 }
 
-fn create_daily_snapshot_entity_change(
+fn add_daily_snapshot_entity_changes(
     aggregate_data: &AggregateData,
     stats_retriever: &mut StatsRetriever,
-    non_aggregation_deltas: &store::Deltas<DeltaBigInt>
-) -> EntityChange {
+    non_aggregation_deltas: &store::Deltas<DeltaBigInt>,
+    entity_changes: &mut Vec<EntityChange>
+) {
     let entity_id = (get_latest_day(aggregate_data.timestamp) - 1).to_string();
     stats_retriever.set_entity_id(entity_id.clone());
     let mut day_snapshot_entity_change = EntityChange::new("DailySnapshot", entity_id.as_str(), 0, Operation::Create);
@@ -162,43 +169,56 @@ fn create_daily_snapshot_entity_change(
     let cumulative_rewards_up_to_end_of_day = store_retriever.get_total_sum(StoreKey::CumulativeRewards) - aggregate_data.rewards.as_ref().unwrap().clone().into();
     let cumulative_transactions_up_to_end_of_day = store_retriever.get_total_sum(StoreKey::CumulativeTransactions) - aggregate_data.transactions.as_ref().unwrap().clone().into();
 
+    entity_changes.push(stats_retriever.get_total_stats("dailyUniqueAuthors", StoreKey::DailyUniqueAuthors, StoreKey::NumDays, true));
+    entity_changes.push(stats_retriever.get_day_stats("dailyDifficulty", StoreKey::Difficulty, StoreKey::BlocksAcrossDay));
+    entity_changes.push(stats_retriever.get_day_stats("dailyGasUsed", StoreKey::GasUsed, StoreKey::BlocksAcrossDay));
+    entity_changes.push(stats_retriever.get_day_stats("dailyGasLimit", StoreKey::GasLimit, StoreKey::BlocksAcrossDay));
+    entity_changes.push(stats_retriever.get_day_stats("dailyBurntFees", StoreKey::BurntFees, StoreKey::BlocksAcrossDay));
+    entity_changes.push(stats_retriever.get_day_stats("dailyRewards", StoreKey::Rewards, StoreKey::BlocksAcrossDay));
+    entity_changes.push(stats_retriever.get_day_stats("dailySize", StoreKey::BlockSize, StoreKey::BlocksAcrossDay));
+    entity_changes.push(stats_retriever.get_total_stats("dailySupply", StoreKey::DailySupply, StoreKey::NumDays, true));
+    entity_changes.push(stats_retriever.get_total_stats("dailyTransactions", StoreKey::DailyTransactions, StoreKey::NumDays, true));
+    entity_changes.push(stats_retriever.get_day_stats("dailyBlockInterval", StoreKey::BlockInterval, StoreKey::BlocksAcrossDay));
+    entity_changes.push(stats_retriever.get_day_stats("dailyGasPrice", StoreKey::BlockInterval, StoreKey::BlocksAcrossDay));
+
     day_snapshot_entity_change
         .change("id", entity_id)
-        .change("network", SubgraphNetwork::MAINNET)
+        .change("network", Network::MAINNET.to_string())
         .change("blockHeight", block_height_at_start_of_day.to_u64() as i32)
         .change("dailyBlocks", store_retriever.get_day_sum(StoreKey::BlocksAcrossDay).to_u64() as i32)
         .change("timestamp", BigInt::from(aggregate_data.timestamp))
         .change("cumulativeUniqueAuthors", cumulative_unique_authors_up_to_end_of_day.to_u64() as i32)
-        .change("dailyUniqueAuthors", stats_retriever.get_total_stats(StoreKey::DailyUniqueAuthors, StoreKey::NumDays).encode_to_vec())
+        .change("dailyUniqueAuthors", stats_retriever.get_id("dailyUniqueAuthors"))
         .change("cumulativeDifficulty", cumulative_difficulty_up_to_start_of_day)
-        .change("dailyDifficulty", stats_retriever.get_day_stats(StoreKey::Difficulty, StoreKey::BlocksAcrossDay).encode_to_vec())
+        .change("dailyDifficulty", stats_retriever.get_id("dailyDifficulty"))
         .change("cumulativeGasUsed", cumulative_gas_used_up_to_start_of_day)
-        .change("dailyGasUsed", stats_retriever.get_day_stats(StoreKey::GasUsed, StoreKey::BlocksAcrossDay).encode_to_vec())
-        .change("dailyGasLimit", stats_retriever.get_day_stats(StoreKey::GasLimit, StoreKey::BlocksAcrossDay).encode_to_vec())
+        .change("dailyGasUsed", stats_retriever.get_id("dailyGasUsed"))
+        .change("dailyGasLimit", stats_retriever.get_id("dailyGasLimit"))
         .change("cumulativeBurntFees", cumulative_burnt_fees_up_to_end_of_day)
-        .change("dailyBurntFees", stats_retriever.get_day_stats(StoreKey::BurntFees, StoreKey::BlocksAcrossDay).encode_to_vec())
+        .change("dailyBurntFees", stats_retriever.get_id("dailyBurntFees"))
         .change("cumulativeRewards", cumulative_rewards_up_to_end_of_day)
-        .change("dailyRewards", stats_retriever.get_day_stats(StoreKey::Rewards, StoreKey::BlocksAcrossDay).encode_to_vec())
+        .change("dailyRewards", stats_retriever.get_id("dailyRewards"))
         .change("cumulativeSize", store_retriever.get_day_sum(StoreKey::BlockSize))
-        .change("dailySize", stats_retriever.get_day_stats(StoreKey::BlockSize, StoreKey::BlocksAcrossDay).encode_to_vec())
+        .change("dailySize", stats_retriever.get_id("dailySize"))
         .change("totalSupply", store_retriever.get_day_sum(StoreKey::TotalSupply))
-        .change("dailySupply", stats_retriever.get_total_stats(StoreKey::DailySupply, StoreKey::NumDays).encode_to_vec())
+        .change("dailySupply", stats_retriever.get_id("dailySupply"))
         .change("cumulativeTransactions", cumulative_transactions_up_to_end_of_day)
-        .change("dailyTransactions", stats_retriever.get_total_stats(StoreKey::DailyTransactions, StoreKey::NumDays).encode_to_vec())
+        .change("dailyTransactions", stats_retriever.get_id("dailyTransactions"))
         .change(
             "dailyBlockInterval",
-            stats_retriever.get_day_stats(StoreKey::BlockInterval, StoreKey::BlocksAcrossDay).encode_to_vec(),
+            stats_retriever.get_id("dailyBlockInterval"),
         )
-        .change("dailyGasPrice", stats_retriever.get_day_stats(StoreKey::BlockInterval, StoreKey::BlocksAcrossDay).encode_to_vec());
+        .change("dailyGasPrice", stats_retriever.get_id("dailyGasPrice"));
 
-    day_snapshot_entity_change
+    entity_changes.push(day_snapshot_entity_change);
 }
 
-fn create_hourly_snapshot_entity_change(
+fn add_hourly_snapshot_entity_changes(
     aggregate_data: &AggregateData,
     stats_retriever: &mut StatsRetriever,
-    non_aggregation_deltas: &store::Deltas<DeltaBigInt>
-) -> EntityChange {
+    non_aggregation_deltas: &store::Deltas<DeltaBigInt>,
+    entity_changes: &mut Vec<EntityChange>
+) {
     let entity_id = (get_latest_hour(aggregate_data.timestamp) - 1).to_string();
     stats_retriever.set_entity_id(entity_id.clone());
     let mut hour_snapshot_entity_change = EntityChange::new("HourlySnapshot", entity_id.as_str(), 0, Operation::Create);
@@ -224,39 +244,51 @@ fn create_hourly_snapshot_entity_change(
     let cumulative_rewards_up_to_end_of_hour = store_retriever.get_total_sum(StoreKey::CumulativeRewards) - aggregate_data.rewards.as_ref().unwrap().clone().into();
     let cumulative_transactions_up_to_end_of_hour = store_retriever.get_total_sum(StoreKey::CumulativeTransactions) - aggregate_data.transactions.as_ref().unwrap().clone().into();
 
+    entity_changes.push(stats_retriever.get_total_stats("hourlyUniqueAuthors", StoreKey::HourlyUniqueAuthors, StoreKey::NumHours, true));
+    entity_changes.push(stats_retriever.get_hour_stats_entity_change("hourlyDifficulty", StoreKey::Difficulty, StoreKey::BlocksAcrossHour));
+    entity_changes.push(stats_retriever.get_hour_stats_entity_change("hourlyGasUsed", StoreKey::GasUsed, StoreKey::BlocksAcrossHour));
+    entity_changes.push(stats_retriever.get_hour_stats_entity_change("hourlyGasLimit", StoreKey::GasLimit, StoreKey::BlocksAcrossHour));
+    entity_changes.push(stats_retriever.get_hour_stats_entity_change("hourlyBurntFees", StoreKey::BurntFees, StoreKey::BlocksAcrossHour));
+    entity_changes.push(stats_retriever.get_hour_stats_entity_change("hourlyRewards", StoreKey::Rewards, StoreKey::BlocksAcrossHour));
+    entity_changes.push(stats_retriever.get_hour_stats_entity_change("hourlySize", StoreKey::BlockSize, StoreKey::BlocksAcrossHour));
+    entity_changes.push(stats_retriever.get_total_stats("hourlySupply", StoreKey::HourlySupply, StoreKey::NumHours, true));
+    entity_changes.push(stats_retriever.get_total_stats("hourlyTransactions", StoreKey::HourlyTransactions, StoreKey::NumHours, true));
+    entity_changes.push(stats_retriever.get_hour_stats_entity_change("hourlyBlockInterval", StoreKey::BlockInterval, StoreKey::BlocksAcrossHour));
+    entity_changes.push(stats_retriever.get_hour_stats_entity_change("hourlyGasPrice", StoreKey::BlockInterval, StoreKey::BlocksAcrossHour));
+
     hour_snapshot_entity_change
         .change("id", entity_id)
-        .change("network", SubgraphNetwork::MAINNET)
+        .change("network", Network::MAINNET.to_string())
         .change("blockHeight", block_height_at_start_of_hour.to_u64() as i32)
         .change("hourlyBlocks", store_retriever.get_hour_sum(StoreKey::BlocksAcrossHour).to_u64() as i32)
         .change("timestamp", BigInt::from(aggregate_data.timestamp))
         .change("cumulativeUniqueAuthors", cumulative_unique_authors_up_to_end_of_hour.to_u64() as i32)
         .change(
             "hourlyUniqueAuthors",
-            stats_retriever.get_total_stats(StoreKey::HourlyUniqueAuthors, StoreKey::NumHours).encode_to_vec(),
+            stats_retriever.get_id("hourlyUniqueAuthors"),
         )
         .change("cumulativeDifficulty", cumulative_difficulty_up_to_start_of_hour)
-        .change("hourlyDifficulty", stats_retriever.get_hour_stats(StoreKey::Difficulty, StoreKey::BlocksAcrossHour).encode_to_vec())
+        .change("hourlyDifficulty", stats_retriever.get_id("hourlyDifficulty"))
         .change("cumulativeGasUsed", cumulative_gas_used_up_to_start_of_hour)
-        .change("hourlyGasUsed", stats_retriever.get_hour_stats(StoreKey::GasUsed, StoreKey::BlocksAcrossHour).encode_to_vec())
-        .change("hourlyGasLimit", stats_retriever.get_hour_stats(StoreKey::GasLimit, StoreKey::BlocksAcrossHour).encode_to_vec())
+        .change("hourlyGasUsed", stats_retriever.get_id("hourlyGasUsed"))
+        .change("hourlyGasLimit", stats_retriever.get_id("hourlyGasLimit"))
         .change("cumulativeBurntFees", cumulative_burnt_fees_up_to_end_of_hour)
-        .change("hourlyBurntFees", stats_retriever.get_hour_stats(StoreKey::BurntFees, StoreKey::BlocksAcrossHour).encode_to_vec())
+        .change("hourlyBurntFees", stats_retriever.get_id("hourlyBurntFees"))
         .change("cumulativeRewards", cumulative_rewards_up_to_end_of_hour)
-        .change("hourlyRewards", stats_retriever.get_hour_stats(StoreKey::Rewards, StoreKey::BlocksAcrossHour).encode_to_vec())
+        .change("hourlyRewards", stats_retriever.get_id("hourlyRewards"))
         .change("cumulativeSize", store_retriever.get_hour_sum(StoreKey::BlockSize))
-        .change("hourlySize", stats_retriever.get_hour_stats(StoreKey::BlockSize, StoreKey::BlocksAcrossHour).encode_to_vec())
+        .change("hourlySize", stats_retriever.get_id("hourlySize"))
         .change("totalSupply", store_retriever.get_hour_sum(StoreKey::TotalSupply))
-        .change("hourlySupply", stats_retriever.get_total_stats(StoreKey::HourlySupply, StoreKey::NumHours).encode_to_vec())
+        .change("hourlySupply", stats_retriever.get_id("hourlySupply"))
         .change("cumulativeTransactions", cumulative_transactions_up_to_end_of_hour)
-        .change("hourlyTransactions", stats_retriever.get_total_stats(StoreKey::HourlyTransactions, StoreKey::NumHours).encode_to_vec())
+        .change("hourlyTransactions", stats_retriever.get_id("hourlyTransactions"))
         .change(
             "hourlyBlockInterval",
-            stats_retriever.get_hour_stats(StoreKey::BlockInterval, StoreKey::BlocksAcrossHour).encode_to_vec(),
+            stats_retriever.get_id("hourlyBlockInterval"),
         )
-        .change("hourlyGasPrice", stats_retriever.get_hour_stats(StoreKey::BlockInterval, StoreKey::BlocksAcrossHour).encode_to_vec());
+        .change("hourlyGasPrice", stats_retriever.get_id("hourlyGasPrice"));
 
-    hour_snapshot_entity_change
+    entity_changes.push(hour_snapshot_entity_change);
 }
 
 fn get_proper_deltas(incorrect_deltas: store::Deltas<DeltaBigInt>) -> store::Deltas<DeltaBigInt> {
