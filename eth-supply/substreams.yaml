@@ -14,7 +14,6 @@ binaries:
 modules:
   - name: map_supply_delta
     kind: map
-    initialBlock: 0
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
@@ -29,7 +28,6 @@ modules:
 
   - name: map_output
     kind: map
-    initialBlock: 0
     inputs:
       - store: store_supply
     output:
