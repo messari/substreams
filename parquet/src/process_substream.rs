@@ -10,18 +10,19 @@ use prost_types::{DescriptorProto, FileDescriptorProto};
 use tonic::metadata::MetadataValue;
 use tonic::Status;
 use tonic::transport::{Channel, ClientTlsConfig};
-use crate::{read_package, streamingfast_dtos};
+use crate::streamingfast_dtos;
+use crate::file::{File, LocationType};
 use crate::parquet_sink::ParquetSink;
 use crate::sink::Sink;
 use crate::streamingfast_dtos::ForkStep::StepIrreversible;
 use crate::streamingfast_dtos::{module_output, ModuleOutput, Package, Request, Response};
 use crate::streamingfast_dtos::module_output::Data;
 
-async fn process_substream(spkg: Vec<u8>, module_name: String, encoding_type: EncodingType, storage_location: StorageLocation, start_block: i64, stop_block: u64) {
+pub(crate) async fn process_substream(spkg: Vec<u8>, module_name: String, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, start_block: i64, stop_block: u64) {
     let mut package = Package::decode(spkg.as_ref()).unwrap();
 
     let output_type = get_output_type(&package, &module_name);
-    let mut sink = encoding_type.get_sink(&package.proto_files, &output_type);
+    let mut sink = encoding_type.get_sink(&package.proto_files, &output_type, location_type, data_location_path);
 
     let request = Request {
         start_block_num: start_block,
@@ -49,15 +50,30 @@ async fn process_substream(spkg: Vec<u8>, module_name: String, encoding_type: En
     let response_stream = client.blocks(request).await.unwrap();
     let mut block_stream = response_stream.into_inner();
 
-    // TODO: We need to turn the following section into a streamer that return a stream of files
+    // TODO: Change the logic below into buffered streams in a select to prevent
+    // TODO: downloading data and writing files blocking one another
     while let Some(block) = block_stream.next().await {
-        if let Ok((output_data, block_number)) = get_output_data(block);
-        sink.process(output_data, block_number);
+        if let Some((output_data, block_number)) = get_output_data(block).unwrap() {
+            match sink.process(output_data, block_number) {
+                Ok(Some(file)) => {
+                    file.save().await;
+                }
+                Err(error) => {
+                    // TODO: Flesh the error out and return it rather than panicking
+                    panic!("{}", error);
+                }
+                _ => {}
+            }
+        }
     }
+
+    // For testing purposes we will create a file from the remaining data, however post-testing
+    // this line should either be deleted or there should be a flag to enable it
+    sink.make_file().save().await;
 }
 
 /// Returns both the output data and also it's corresponding block_number
-fn get_output_data(block: Result<Response, Status>) -> Result<(Vec<u8>, i64), String> {
+fn get_output_data(block: Result<Response, Status>) -> Result<Option<(Vec<u8>, i64)>, String> {
     match block {
         Ok(response) => {
             if let Some(message) = response.message {
@@ -68,7 +84,7 @@ fn get_output_data(block: Result<Response, Status>) -> Result<(Vec<u8>, i64), St
                             match module_output.data {
                                 None => {}
                                 Some(Data::MapOutput(data)) => {
-                                    return Ok((data.value, block_number));
+                                    return Ok(Some((data.value, block_number)));
                                 }
                                 _ => {}
                             }
@@ -78,7 +94,7 @@ fn get_output_data(block: Result<Response, Status>) -> Result<(Vec<u8>, i64), St
                 }
             }
 
-            Err(todo!())
+            Ok(None)
         }
         Err(error) => {
             Err(format!("Error!: {} - TODO: Give proper error message here..", error.message()))
@@ -88,7 +104,7 @@ fn get_output_data(block: Result<Response, Status>) -> Result<(Vec<u8>, i64), St
 
 fn get_output_type(package: &Package, module_name: &String) -> String {
     for module in package.modules.as_ref().unwrap().modules.iter() {
-        if module.name == module_name {
+        if &module.name == module_name {
             let output_type = module.output.as_ref().unwrap().r#type.to_string();
 
             if !output_type.starts_with("proto:") {
@@ -108,9 +124,9 @@ pub(crate) enum EncodingType {
 }
 
 impl EncodingType {
-    pub(crate) fn get_sink(&self, proto_descriptors: &Vec<FileDescriptorProto>, proto_type: &str) -> Box<dyn Sink> {
+    pub(crate) fn get_sink(&self, proto_descriptors: &Vec<FileDescriptorProto>, proto_type: &str, location_type: LocationType, data_location_path: Option<PathBuf>) -> Box<dyn Sink> {
         match self {
-            EncodingType::Parquet => Box::new(ParquetSink::new(proto_descriptors, proto_type))
+            EncodingType::Parquet => Box::new(ParquetSink::new(proto_descriptors, proto_type, location_type, data_location_path))
         }
     }
 }

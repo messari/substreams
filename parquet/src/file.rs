@@ -1,4 +1,9 @@
+use std::borrow::Borrow;
 use std::path::PathBuf;
+use tokio::fs::File as TokioFile;
+use tokio::io::AsyncWriteExt;
+
+use crate::process_substream::EncodingType;
 
 pub(crate) struct File {
     file_data: Vec<u8>,
@@ -11,6 +16,23 @@ impl File {
             file_data,
             output_location,
         }
+    }
+
+    pub(crate) async fn save(&self) {
+        match self.output_location.borrow() {
+            Location::DataWarehouse(_) => {
+                todo!()
+            }
+            Location::Local(file_path) => {
+                println!("Filepath: {}", file_path.to_string_lossy());
+                let mut file = TokioFile::create(file_path).await.unwrap();
+                file.write_all(&self.file_data).await.unwrap();
+            }
+        }
+    }
+
+    pub(crate) fn get_data(self) -> Vec<u8> {
+        self.file_data
     }
 }
 
@@ -38,8 +60,10 @@ impl Location {
         }
     }
 
-    pub(crate) fn get_file_location(&self, first_block_number: i64, last_block_number: &i64) -> Location {
-        let filename = format!("{}_{}.parquet", first_block_number, last_block_number);
+    pub(crate) fn get_file_location(&self, first_block_number: i64, last_block_number: i64, encoding_type: EncodingType) -> Location {
+        let filename = match encoding_type {
+            EncodingType::Parquet => format!("{}_{}.parquet", first_block_number, last_block_number)
+        };
 
         match self {
             Location::DataWarehouse(base_path) => Location::DataWarehouse(base_path.join(filename)),
