@@ -12,4 +12,7 @@ message EthSupply {
   BigInt uncleRewards = 3;
   BigInt burned = 4;
   BigInt total = 5;
+
+  bytes blockHash = 6;
+  uint64 blockNumber = 7;
 }

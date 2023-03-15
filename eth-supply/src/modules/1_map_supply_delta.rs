@@ -17,5 +17,8 @@ fn map_supply_delta(block: pbeth::v2::Block) -> Result<EthSupply, substreams::er
         uncle_rewards: issuance.uncle_rewards.serialize().into(),
         burned: bh.burnt_fees().serialize().into(),
         total: BigInt::from(0).serialize().into(),
+
+        block_hash: bh.hash(),
+        block_number: bh.block_number(),
     })
 }

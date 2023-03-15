@@ -29,9 +29,18 @@ modules:
   - name: map_output
     kind: map
     inputs:
+      - map: map_supply_delta
       - store: store_supply
     output:
       type: "proto:messari.eth_supply.v1.EthSupply"
+
+  - name: map_entity_changes
+    kind: map
+    inputs:
+      - map: map_supply_delta
+      - map: map_output
+    output:
+      type: "proto:substreams.entity.v1.EntityChanges"
 
 protobuf:
   files:
