@@ -16,7 +16,7 @@ impl BigIntDeserializeExt for Option<sfBigInt> {
 
 impl BigIntDeserializeExt for sfBigInt {
     fn deserialize(&self) -> BigInt {
-        BigInt::from_signed_bytes_le(self.bytes.as_slice())
+        BigInt::from_unsigned_bytes_be(self.bytes.as_slice())
     }
 }
 
@@ -27,7 +27,7 @@ pub(crate) trait BigIntSerializeExt {
 impl BigIntSerializeExt for BigInt {
     fn serialize(&self) -> sfBigInt {
         sfBigInt {
-            bytes: self.to_signed_bytes_le(),
+            bytes: self.to_bytes_be().1,
         }
     }
 }
