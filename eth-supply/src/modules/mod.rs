@@ -6,3 +6,6 @@ mod store_supply;
 
 #[path = "3_map_output.rs"]
 mod map_output;
+
+#[path = "4_map_entity_changes.rs"]
+mod map_entity_changes;

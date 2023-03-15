@@ -27,6 +27,14 @@ impl<'a> BlockHandler<'a> {
         Self(block)
     }
 
+    pub fn hash(&self) -> Vec<u8> {
+        self.0.hash.clone()
+    }
+
+    pub fn block_number(&self) -> u64 {
+        self.0.number
+    }
+
     /// Returns the timestamp for the start of the most recent day
     pub fn timestamp(&self) -> i64 {
         if let Some(header) = self.0.header.as_ref() {
