@@ -9,11 +9,11 @@ pub mod sol_token {
 }
 
 #[rustfmt::skip]
-#[path = "../target/pb/messari.uniswap.v1.rs"]
-pub(in crate::pb) mod uniswap_v1;
+#[path = "../target/pb/messari.solana.type.rs"]
+pub(in crate::pb) mod solana_type;
 
-pub mod uniswap {
-    pub mod v1 {
-        pub use super::super::uniswap_v1::*;
+pub mod solana {
+    pub mod type {
+        pub use super::super::solana_type::*;
     }
 }

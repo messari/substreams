@@ -1,0 +1,23 @@
+[package]
+name = "sol-balance"
+version = "0.1.0"
+description = "Messari's substream for solana SOL balances"
+edition = "2021"
+repository = "https://github.com/messari/substreams"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+bs58 = "0.4.0"
+prost = "0.11.2"
+ethabi = "17.2.0"
+num-bigint = "0.4"
+hex-literal = "0.3.4"
+substreams = { workspace = true }
+substreams-solana = { workspace = true }
+substreams-helper = { path = "../substreams-helper" }
+
+[build-dependencies]
+anyhow = "1"
+substreams-common = { path = "../common" }

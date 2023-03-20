@@ -77,6 +77,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "bs58"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
+
+[[package]]
 name = "bumpalo"
 version = "3.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -915,6 +921,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "sol-balance"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bs58",
+ "ethabi",
+ "hex-literal",
+ "num-bigint",
+ "prost 0.11.3",
+ "substreams 0.3.2",
+ "substreams-common",
+ "substreams-helper",
+ "substreams-solana 0.2.0",
+]
+
+[[package]]
 name = "solana-sample"
 version = "0.1.0"
 dependencies = [
@@ -925,7 +947,7 @@ dependencies = [
  "prost-build 0.10.4",
  "prost-types 0.10.1",
  "substreams 0.0.11",
- "substreams-solana",
+ "substreams-solana 0.1.0",
 ]
 
 [[package]]
@@ -1153,6 +1175,17 @@ dependencies = [
  "prost-build 0.10.4",
  "prost-types 0.10.1",
  "substreams 0.0.12",
+]
+
+[[package]]
+name = "substreams-solana"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5e5ad4a64b8af93729ca06debc69b2c72eaec3ee44872dd593e16dfcc56dae7"
+dependencies = [
+ "prost 0.11.3",
+ "prost-build 0.11.1",
+ "prost-types 0.11.1",
 ]
 
 [[package]]

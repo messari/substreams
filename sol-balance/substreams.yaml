@@ -1,0 +1,27 @@
+specVersion: v0.1.0
+package:
+  name: sol_balance
+  version: v0.1.0
+
+imports:
+  sol: https://github.com/streamingfast/firehose-solana/releases/download/v0.1.0/solana-v0.1.0.spkg
+
+protobuf:
+  files:
+    - sol_token.proto
+  importPaths:
+    - ../common/proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/sol_balance.wasm"
+
+modules:
+  # get the SOL balance change of each account in each transaction in a block
+  - name: map_balances
+    kind: map
+    inputs:
+      - source: sf.solana.type.v1.Block
+    output:
+      type: proto:messari.sol.token.BalanceChanges
