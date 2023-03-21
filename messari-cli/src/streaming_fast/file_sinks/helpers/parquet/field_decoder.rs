@@ -1,15 +1,15 @@
 use std::borrow::BorrowMut;
 use std::fmt::Debug;
-use bytes::Bytes;
 use parquet::column::writer::ColumnWriter;
 use parquet::data_type::ByteArray;
-use parquet::file::writer::{SerializedColumnWriter, SerializedRowGroupWriter};
+use parquet::file::writer::SerializedRowGroupWriter;
 
-use crate::decoder::{Decoder, FieldSpecification};
-use crate::file_buffer::FileBuffer;
-use crate::value_store::ValueStore;
+use crate::streaming_fast::file_sinks::helpers::parquet::file_buffer::FileBuffer;
+use crate::streaming_fast::file_sinks::helpers::parquet::parquet_schema_builder::ParquetSchemaBuilder;
+use crate::streaming_fast::proto_structure_info::{FieldInfo, FieldSpecification, FieldType};
+use crate::streaming_fast::proto_utils::FromUnsignedVarint;
 
-pub struct FieldDecoder {
+pub(in crate::streaming_fast::file_sinks) struct FieldDecoder {
     value_store: ValueStore,
     definition_lvls: Option<Vec<i16>>,
     repetition_lvls: Option<Vec<i16>>,
@@ -18,24 +18,46 @@ pub struct FieldDecoder {
 }
 
 impl FieldDecoder {
-    pub(crate) fn new(value_store: ValueStore, mut track_definition_lvls: bool, mut track_repetition_lvls: bool, field_specification: FieldSpecification, flattened_field_name: String) -> Self {
-        match field_specification {
+    pub(in crate::streaming_fast::file_sinks) fn new(field_info: FieldInfo, parquet_schema_builder: &mut ParquetSchemaBuilder, mut track_definition_lvls: bool, mut track_repetition_lvls: bool) -> Self {
+        match field_info.field_specification {
             FieldSpecification::Required => {}
             FieldSpecification::Optional => track_definition_lvls = true,
             FieldSpecification::Repeated => track_repetition_lvls = true,
             FieldSpecification::Packed => track_repetition_lvls = true,
         };
 
+        let value_store = match field_info.field_type {
+            FieldType::Double => ValueStore::Double(Vec::new()),
+            FieldType::Float => ValueStore::Float(Vec::new()),
+            FieldType::Int64 => ValueStore::Int64(Vec::new()),
+            FieldType::Uint64 => ValueStore::Uint64(Vec::new()),
+            FieldType::Int32 => ValueStore::Int32(Vec::new()),
+            FieldType::Fixed64 => ValueStore::Fixed64(Vec::new()),
+            FieldType::Fixed32 => ValueStore::Fixed32(Vec::new()),
+            FieldType::Bool => ValueStore::Bool(Vec::new()),
+            FieldType::String => ValueStore::String(Vec::new()),
+            FieldType::Bytes => ValueStore::Bytes(Vec::new()),
+            FieldType::Uint32 => ValueStore::Uint32(Vec::new()),
+            FieldType::Enum => ValueStore::Enum(Vec::new()),
+            FieldType::Sfixed32 => ValueStore::Sfixed32(Vec::new()),
+            FieldType::Sfixed64 => ValueStore::Sfixed64(Vec::new()),
+            FieldType::Sint32 => ValueStore::Sint32(Vec::new()),
+            FieldType::Sint64 => ValueStore::Sint64(Vec::new()),
+            _ => unreachable!()
+        };
+
+        let flattened_field_name = parquet_schema_builder.add_column_info(&field_info.field_name, field_info.field_type, &field_info.field_specification);
+
         FieldDecoder {
             value_store,
             definition_lvls: if track_definition_lvls { Some(Vec::new()) } else { None },
             repetition_lvls: if track_repetition_lvls { Some(Vec::new()) } else { None },
-            field_specification,
+            field_specification: field_info.field_specification,
             flattened_field_name
         }
     }
 
-    pub(crate) fn write_data_to_parquet(&mut self, row_group_writer: &mut SerializedRowGroupWriter<FileBuffer>) {
+    pub(in crate::streaming_fast::file_sinks) fn write_data_to_parquet(&mut self, row_group_writer: &mut SerializedRowGroupWriter<FileBuffer>) {
         let mut serialized_column_writer = row_group_writer.next_column().unwrap().unwrap();
 
         macro_rules! write_batch {
@@ -47,12 +69,6 @@ impl FieldDecoder {
                 ).unwrap()
             }
         }
-
-        // macro_rules! write_batch {
-        //     ($column_writer_ident:ident, $values_ident:ident) => {
-        //         println!("Num values: {}", $values_ident.len());
-        //     }
-        // }
 
         match (self.value_store.borrow_mut(), serialized_column_writer.untyped()) {
             (ValueStore::Double(values), ColumnWriter::DoubleColumnWriter(ref mut column_writer)) => {
@@ -67,16 +83,16 @@ impl FieldDecoder {
             (ValueStore::Int64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
                 write_batch!(column_writer, values)
             }
-            (ValueStore::UInt32(values), ColumnWriter::Int32ColumnWriter(ref mut column_writer)) => {
+            (ValueStore::Uint32(values), ColumnWriter::Int32ColumnWriter(ref mut column_writer)) => {
                 write_batch!(column_writer, values)
             }
-            (ValueStore::UInt64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
+            (ValueStore::Uint64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
                 write_batch!(column_writer, values)
             }
-            (ValueStore::SInt32(values), ColumnWriter::Int32ColumnWriter(ref mut column_writer)) => {
+            (ValueStore::Sint32(values), ColumnWriter::Int32ColumnWriter(ref mut column_writer)) => {
                 write_batch!(column_writer, values)
             }
-            (ValueStore::SInt64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
+            (ValueStore::Sint64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
                 write_batch!(column_writer, values)
             }
             (ValueStore::Fixed32(values), ColumnWriter::Int32ColumnWriter(ref mut column_writer)) => {
@@ -85,10 +101,10 @@ impl FieldDecoder {
             (ValueStore::Fixed64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
                 write_batch!(column_writer, values)
             }
-            (ValueStore::SFixed32(values), ColumnWriter::Int32ColumnWriter(ref mut column_writer)) => {
+            (ValueStore::Sfixed32(values), ColumnWriter::Int32ColumnWriter(ref mut column_writer)) => {
                 write_batch!(column_writer, values)
             }
-            (ValueStore::SFixed64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
+            (ValueStore::Sfixed64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
                 write_batch!(column_writer, values)
             }
             (ValueStore::Bool(values), ColumnWriter::BoolColumnWriter(ref mut column_writer)) => {
@@ -110,7 +126,7 @@ impl FieldDecoder {
     }
 
     /// This is triggered when the proto data does not contain a value for a given field.
-    pub(crate) fn push_null_or_default_value(&mut self, uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<(), String> {
+    pub(in crate::streaming_fast::file_sinks) fn push_null_or_default_value(&mut self, uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<(), String> {
         match self.field_specification {
             FieldSpecification::Required => {
                 self.value_store.push_default_value();
@@ -122,11 +138,11 @@ impl FieldDecoder {
         }
     }
 
-    pub(crate) fn push_null(&mut self, uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<(), String> {
+    pub(in crate::streaming_fast::file_sinks) fn push_null(&mut self, uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<(), String> {
         todo!()
     }
 
-    pub(crate) fn decode(&mut self, data: &mut &[u8], wire_type: u8, uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<(), String> {
+    pub(in crate::streaming_fast::file_sinks) fn decode(&mut self, data: &mut &[u8], wire_type: u8, uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<(), String> {
         match self.field_specification {
             FieldSpecification::Required => {
                 self.decode_single_value(data, wire_type, uncompressed_file_size)?;
@@ -167,7 +183,7 @@ impl FieldDecoder {
         Ok(())
     }
 
-    pub(crate) fn decode_single_value(&mut self, data: &mut &[u8], wire_type: u8, uncompressed_file_size: &mut usize) -> Result<(), String> {
+    fn decode_single_value(&mut self, data: &mut &[u8], wire_type: u8, uncompressed_file_size: &mut usize) -> Result<(), String> {
         // Todo: Add wire_type checks for single value decoding if necessary
 
         macro_rules! decode_value {
@@ -199,20 +215,20 @@ impl FieldDecoder {
             ValueStore::Int64(values) => {
                 decode_value! { "Int64" @ values => 64 => b = i64::from_signed_varint(data) => b }
             }
-            ValueStore::UInt32(values) => {
+            ValueStore::Uint32(values) => {
                 decode_value! { "UInt32" @ values => 32 => b = u32::from_signed_varint(data) => b as i32 }
             }
-            ValueStore::UInt64(values) => {
+            ValueStore::Uint64(values) => {
                 decode_value! { "UInt64" @ values => 64 => b = u64::from_signed_varint(data) => b as i64 }
             }
-            ValueStore::SInt32(values) => {
+            ValueStore::Sint32(values) => {
                 decode_value! { "SInt32" @ values => 32 => b = u32::from_unsigned_varint(data) => {
                     let (sign, sign_bit) = if b % 2 == 0 { (1i32, 0) } else { (-1i32, 1) };
                     let magnitude = (b / 2) as i32 + sign_bit;
                     sign * magnitude
                 } }
             }
-            ValueStore::SInt64(values) => {
+            ValueStore::Sint64(values) => {
                 decode_value! { "SInt64" @ values => 64 => b = u64::from_unsigned_varint(data) => {
                     let (sign, sign_bit) = if b % 2 == 0 { (1i64, 0) } else { (-1i64, 1) };
                     let magnitude = (b / 2) as i64 + sign_bit;
@@ -225,10 +241,10 @@ impl FieldDecoder {
             ValueStore::Fixed64(values) => {
                 decode_value! { "Fixed64" @ values => 64 => b = try_read_8_bytes(data) => u64::from_le_bytes(b) as i64 }
             }
-            ValueStore::SFixed32(values) => {
+            ValueStore::Sfixed32(values) => {
                 decode_value! { "SFixed32" @ values => 32 => b = try_read_4_bytes(data) => i32::from_le_bytes(b) }
             }
-            ValueStore::SFixed64(values) => {
+            ValueStore::Sfixed64(values) => {
                 decode_value! { "SFixed64" @ values => 64 => b = try_read_8_bytes(data) => i64::from_le_bytes(b) }
             }
             ValueStore::Bool(values) => {
@@ -297,20 +313,20 @@ impl FieldDecoder {
             ValueStore::Int64(values) => {
                 decode_packed_values! { "Int64" @ values => 64 => b = i64::from_signed_varint(&mut packed_values_data) => b }
             }
-            ValueStore::UInt32(values) => {
+            ValueStore::Uint32(values) => {
                 decode_packed_values! { "UInt32" @ values => 32 => b = u32::from_signed_varint(&mut packed_values_data) => b as i32 }
             }
-            ValueStore::UInt64(values) => {
+            ValueStore::Uint64(values) => {
                 decode_packed_values! { "UInt64" @ values => 64 => b = u64::from_signed_varint(&mut packed_values_data) => b as i64 }
             }
-            ValueStore::SInt32(values) => {
+            ValueStore::Sint32(values) => {
                 decode_packed_values! { "SInt32" @ values => 32 => b = u32::from_signed_varint(&mut packed_values_data) => {
                     let (sign, sign_bit) = if b % 2 == 0 { (1i32, 0) } else { (-1i32, 1) };
                     let magnitude = (b / 2) as i32 + sign_bit;
                     sign * magnitude
                 } }
             }
-            ValueStore::SInt64(values) => {
+            ValueStore::Sint64(values) => {
                 decode_packed_values! { "SInt64" @ values => 64 => b = u64::from_signed_varint(&mut packed_values_data) => {
                     let (sign, sign_bit) = if b % 2 == 0 { (1i64, 0) } else { (-1i64, 1) };
                     let magnitude = (b / 2) as i64 + sign_bit;
@@ -323,10 +339,10 @@ impl FieldDecoder {
             ValueStore::Fixed64(values) => {
                 decode_packed_values! { "Fixed64" @ values => 64 => b = try_read_8_bytes(&mut packed_values_data) => u64::from_le_bytes(b) as i64 }
             }
-            ValueStore::SFixed32(values) => {
+            ValueStore::Sfixed32(values) => {
                 decode_packed_values! { "SFixed32" @ values => 32 => b = try_read_4_bytes(&mut packed_values_data) => i32::from_le_bytes(b) }
             }
-            ValueStore::SFixed64(values) => {
+            ValueStore::Sfixed64(values) => {
                 decode_packed_values! { "SFixed64" @ values => 64 => b = try_read_8_bytes(&mut packed_values_data) => i64::from_le_bytes(b) }
             }
             ValueStore::Bool(values) => {
@@ -352,41 +368,6 @@ impl FieldDecoder {
         }
 
         Ok(())
-    }
-}
-
-
-trait FromUnsignedVarint: Sized
-{
-    fn from_unsigned_varint(data: &mut &[u8]) -> Option<Self>;
-}
-
-impl<T: Default + TryFrom<u64>> FromUnsignedVarint for T
-    where
-        T::Error: Debug,
-{
-    fn from_unsigned_varint(data: &mut &[u8]) -> Option<Self>
-    {
-        let mut result = 0u64;
-        let mut idx = 0;
-        loop {
-            if idx >= data.len() {
-                return None;
-            }
-
-            let b = data[idx];
-            let value = (b & 0x7f) as u64;
-            result += value << (idx * 7);
-
-            idx += 1;
-            if b & 0x80 == 0 {
-                break;
-            }
-        }
-
-        let result = T::try_from(result).expect("Out of range");
-        *data = &data[idx..];
-        Some(result)
     }
 }
 
@@ -463,4 +444,48 @@ fn read_string(data: &mut &[u8]) -> Option<ByteArray>
     let (str_data, remainder) = data.split_at(len);
     *data = remainder;
     Some(ByteArray::from(String::from_utf8_lossy(str_data).to_string().as_str()))
+}
+
+#[derive(PartialEq, Clone)]
+enum ValueStore
+{
+    Double(Vec<f64>),
+    Float(Vec<f32>),
+    Int32(Vec<i32>),
+    Int64(Vec<i64>),
+    Uint32(Vec<i32>),
+    Uint64(Vec<i64>),
+    Sint32(Vec<i32>),
+    Sint64(Vec<i64>),
+    Fixed32(Vec<i32>),
+    Fixed64(Vec<i64>),
+    Sfixed32(Vec<i32>),
+    Sfixed64(Vec<i64>),
+    Bool(Vec<bool>),
+    String(Vec<ByteArray>),
+    Bytes(Vec<ByteArray>),
+    Enum(Vec<i64>),
+}
+
+impl ValueStore {
+    fn push_default_value(&mut self) {
+        match self.borrow_mut() {
+            ValueStore::Double(values) => values.push(0_f64),
+            ValueStore::Float(values) => values.push(0_f32),
+            ValueStore::Int32(values) => values.push(0),
+            ValueStore::Int64(values) => values.push(0),
+            ValueStore::Uint32(values) => values.push(0),
+            ValueStore::Uint64(values) => values.push(0),
+            ValueStore::Sint32(values) => values.push(0),
+            ValueStore::Sint64(values) => values.push(0),
+            ValueStore::Fixed32(values) => values.push(0),
+            ValueStore::Fixed64(values) => values.push(0),
+            ValueStore::Sfixed32(values) => values.push(0),
+            ValueStore::Sfixed64(values) => values.push(0),
+            ValueStore::Bool(values) => values.push(false),
+            ValueStore::String(values) => values.push(ByteArray::from("")),
+            ValueStore::Bytes(values) => values.push(ByteArray::from("")),
+            ValueStore::Enum(values) => values.push(0),
+        }
+    }
 }

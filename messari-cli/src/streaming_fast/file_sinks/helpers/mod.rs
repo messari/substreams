@@ -1,0 +1,1 @@
+pub(in crate::streaming_fast::file_sinks) mod parquet;

@@ -7,12 +7,14 @@ mod protocols;
 mod template_files;
 mod terminal_interface;
 mod utils;
+mod streaming_fast;
 
 use clap::Parser;
 
 use crate::command_line_client::CommandLineClient;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let mut client: CommandLineClient = CommandLineClient::parse();
-    client.execute();
+    client.execute().await;
 }

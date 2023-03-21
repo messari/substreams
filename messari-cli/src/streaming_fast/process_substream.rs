@@ -1,28 +1,41 @@
 use std::env;
 use std::path::PathBuf;
-use std::time::Duration;
-use anyhow::Context;
 use futures::StreamExt;
-use http::Uri;
-use http::uri::Scheme;
 use prost::Message;
-use prost_types::{DescriptorProto, FileDescriptorProto};
 use tonic::metadata::MetadataValue;
 use tonic::Status;
-use tonic::transport::{Channel, ClientTlsConfig};
-use crate::streamingfast_dtos;
-use crate::file::{File, LocationType};
-use crate::parquet_sink::ParquetSink;
-use crate::sink::Sink;
-use crate::streamingfast_dtos::ForkStep::StepIrreversible;
-use crate::streamingfast_dtos::{module_output, ModuleOutput, Package, Request, Response};
-use crate::streamingfast_dtos::module_output::Data;
+use tonic::transport::Channel;
 
-pub(crate) async fn process_substream(spkg: Vec<u8>, module_name: String, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, start_block: i64, stop_block: u64) {
-    let mut package = Package::decode(spkg.as_ref()).unwrap();
+use crate::streaming_fast::streamingfast_dtos;
+use crate::streaming_fast::file::LocationType;
+use crate::streaming_fast::sink::Sink;
+use crate::streaming_fast::streamingfast_dtos::ForkStep::StepIrreversible;
+use crate::streaming_fast::streamingfast_dtos::{Package, Request, Response};
+use crate::streaming_fast::streamingfast_dtos::module_output::Data;
+use crate::streaming_fast::proto_structure_info::get_output_type_info;
 
-    let output_type = get_output_type(&package, &module_name);
-    let mut sink = encoding_type.get_sink(&package.proto_files, &output_type, location_type, data_location_path);
+pub(crate) async fn process_substream(spkg: Vec<u8>, module_name: String, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, start_block_arg: Option<i64>, stop_block_arg: Option<u64>) {
+    let package = Package::decode(spkg.as_ref()).unwrap();
+
+    let start_block = start_block_arg.unwrap_or_default();
+    // TODO: If the stop block number is not found then we should default to the latest block
+    let stop_block = stop_block_arg.unwrap();
+
+    let mut sink_output_path = if let Some(data_location_path) = data_location_path {
+        data_location_path
+    } else {
+        match location_type {
+            LocationType::Local => std::env::current_dir().unwrap().join("data"),
+            LocationType::DataWarehouse => PathBuf::from("substreams")
+        }
+    };
+
+    // TODO: data_location_path should be checked here to make sure something weird isn't happening here...
+
+    let (output_type_info, proto_type_name) = get_output_type_info(&package, &module_name);
+    sink_output_path = add_package_partitions_to_output_folder_path(sink_output_path, &proto_type_name, &output_type_info.type_name);
+
+    let mut sink = Sink::new(output_type_info, encoding_type, location_type, sink_output_path, start_block);
 
     let request = Request {
         start_block_num: start_block,
@@ -52,24 +65,39 @@ pub(crate) async fn process_substream(spkg: Vec<u8>, module_name: String, encodi
 
     // TODO: Change the logic below into buffered streams in a select to prevent
     // TODO: downloading data and writing files blocking one another
+    let mut last_seen_block_number = start_block;
     while let Some(block) = block_stream.next().await {
         if let Some((output_data, block_number)) = get_output_data(block).unwrap() {
             match sink.process(output_data, block_number) {
-                Ok(Some(file)) => {
-                    file.save().await;
+                Ok(files) => {
+                    futures::future::join_all(files.into_iter().map(|file| file.save())).await;
                 }
                 Err(error) => {
                     // TODO: Flesh the error out and return it rather than panicking
                     panic!("{}", error);
                 }
-                _ => {}
             }
+            last_seen_block_number = block_number;
         }
     }
 
-    // For testing purposes we will create a file from the remaining data, however post-testing
-    // this line should either be deleted or there should be a flag to enable it
-    sink.make_file().save().await;
+    if let Some(file) = sink.flush_leftovers_to_file(last_seen_block_number) {
+        file.save().await;
+    } else {
+        println!("No data was extracted during processing!");
+    }
+}
+
+fn add_package_partitions_to_output_folder_path(mut sink_output_path: PathBuf, proto_type_name: &str, entity_name: &str) -> PathBuf {
+    let proto_type = proto_type_name.replace("proto:", "");
+
+    for proto_type_part in proto_type.split('.') {
+        if proto_type_part!="messari" && proto_type_part!="" && proto_type_part!=entity_name { // We will add the entity name to the path later on :)
+            sink_output_path = sink_output_path.join(proto_type_part);
+        }
+    }
+
+    sink_output_path.join("parquet")
 }
 
 /// Returns both the output data and also it's corresponding block_number
@@ -102,36 +130,7 @@ fn get_output_data(block: Result<Response, Status>) -> Result<Option<(Vec<u8>, i
     }
 }
 
-fn get_output_type(package: &Package, module_name: &String) -> String {
-    for module in package.modules.as_ref().unwrap().modules.iter() {
-        if &module.name == module_name {
-            let output_type = module.output.as_ref().unwrap().r#type.to_string();
-
-            if !output_type.starts_with("proto:") {
-                panic!("TODO!");
-            }
-
-            return output_type;
-        }
-    }
-
-    panic!("Couldn't find output type!!")
-}
-
 pub(crate) enum EncodingType {
     // JsonL,
     Parquet
-}
-
-impl EncodingType {
-    pub(crate) fn get_sink(&self, proto_descriptors: &Vec<FileDescriptorProto>, proto_type: &str, location_type: LocationType, data_location_path: Option<PathBuf>) -> Box<dyn Sink> {
-        match self {
-            EncodingType::Parquet => Box::new(ParquetSink::new(proto_descriptors, proto_type, location_type, data_location_path))
-        }
-    }
-}
-
-pub(crate) enum StorageLocation {
-    Local(PathBuf),
-    // DWH(PathBuf)
 }

@@ -1,23 +1,21 @@
-use std::borrow::BorrowMut;
-use std::cell::RefCell;
 use std::io::Write;
 use std::mem;
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
-pub(crate) struct FileBuffer {
+pub(in crate::streaming_fast::file_sinks) struct FileBuffer {
     file_data: Arc<Mutex<Vec<u8>>>
 }
 
 impl FileBuffer {
-    pub(crate) fn new() -> FileBuffer {
+    pub(in crate::streaming_fast::file_sinks) fn new() -> FileBuffer {
         FileBuffer {
             file_data: Arc::new(Mutex::new(vec![])),
         }
     }
 
-    pub(crate) fn get_data(mut self) -> Vec<u8> {
+    pub(in crate::streaming_fast::file_sinks) fn get_data(self) -> Vec<u8> {
         mem::take(self.file_data.lock().unwrap().deref_mut())
     }
 }
