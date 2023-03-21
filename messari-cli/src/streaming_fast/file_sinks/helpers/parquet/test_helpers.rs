@@ -1,55 +1,33 @@
-use std::any::Any;
-use std::default;
 use std::fmt::Debug;
-use parquet::file::reader::{FileReader, SerializedFileReader};
 use parquet::record::{Field, Row};
 use prost::Message;
-use prost_types::{DescriptorProto, FieldDescriptorProto, FileDescriptorProto};
-use prost_types::field_descriptor_proto::{Label, Type};
-use crate::file::LocationType;
 
-use crate::parquet_sink::ParquetSink;
-use crate::sink::Sink;
+use crate::streaming_fast::file_sinks::file_sink::FileSink;
+use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
+use crate::streaming_fast::proto_structure_info::{FieldInfo, FieldSpecification, FieldType, MessageInfo};
 
-pub(crate) fn assert_data_sinks_correctly_from_proto_to_parquet<T: TestSinkType>(test_data: Vec<T>, sink: &mut ParquetSink) {
-    const DUMMY_BLOCK_NUMBER: i64 = 1;
+pub(in crate::streaming_fast::file_sinks) fn get_parquet_sink<T: TestSinkType>() -> ParquetFileSink {
+    let message_info = T::get_proto_structure_info();
+    let field_info = FieldInfo {
+        field_name: "Only1Message".to_string(),
+        field_type: FieldType::Message(message_info),
+        field_specification: FieldSpecification::Required,
+        field_number: 0, // Doesn't matter what is put here (never used..)
+    };
 
-    for test_datum in test_data.iter() {
-        let bytes: Vec<u8> = test_datum.encode_to_proto();
-
-        sink.process(bytes, DUMMY_BLOCK_NUMBER).unwrap();
-    }
-
-    let parquet_file_data = sink.make_file().get_data();
-    let reader = SerializedFileReader::new(bytes::Bytes::from(parquet_file_data)).unwrap();
-
-    for (parquet_row, test_datum) in reader.get_row_iter(None).unwrap().zip(test_data) {
-        let parsed_data = T::get_from_parquet_row(parquet_row).0;
-        assert_eq!(parsed_data, test_datum);
-    }
+    ParquetFileSink::new(field_info)
 }
 
-pub(crate) fn get_parquet_sink<T: TestSinkType>() -> ParquetSink {
-    let mut descriptor_proto = T::get_descriptor_proto();
-    descriptor_proto.name = Some(::prost::alloc::string::String::from("Only1Message"));
-
-    let mut file_descriptor_proto = FileDescriptorProto::default();
-    file_descriptor_proto.package = Some(::prost::alloc::string::String::from("Only1File"));
-    file_descriptor_proto.message_type = vec![descriptor_proto];
-
-    ParquetSink::new(&vec![file_descriptor_proto], "Only1File.Only1Message", LocationType::Local, None)
-}
-
-pub(crate) trait TestSinkType: PartialEq + Debug {
+pub(in crate::streaming_fast::file_sinks) trait TestSinkType: PartialEq + Debug {
     fn encode_to_proto(&self) -> Vec<u8>;
     fn get_from_parquet_row(row: Row) -> (Self, u64) where Self: Sized;
     // TODO: Give an rng object here to seed the random values instead of the current method of stubbing them
     fn generate_data_samples(num_samples: usize) -> Vec<Self> where Self: Sized;
-    fn get_descriptor_proto() -> DescriptorProto;
+    fn get_proto_structure_info() -> MessageInfo;
 }
 
 #[derive(Default, PartialEq, Debug)]
-pub(crate) struct FlatSimple {
+pub(in crate::streaming_fast::file_sinks) struct FlatSimple {
     field1: u32,
     field2: u64,
     field3: i32,
@@ -141,6 +119,13 @@ impl TestSinkType for FlatSimple {
                 field5: "1234wdc11111w".to_string(),
             },
             FlatSimple {
+                field1: 1,
+                field2: 0,
+                field3: 0,
+                field4: -34,
+                field5: "".to_string(),
+            },
+            FlatSimple {
                 field1: 0,
                 field2: 0,
                 field3: 0,
@@ -157,45 +142,44 @@ impl TestSinkType for FlatSimple {
         ]
     }
 
-    fn get_descriptor_proto() -> DescriptorProto {
-        get_descriptor_proto(vec![
-            ("field1".to_string(), Type::Uint32),
-            ("field2".to_string(), Type::Uint64),
-            ("field3".to_string(), Type::Int32),
-            ("field4".to_string(), Type::Int64),
-            ("field5".to_string(), Type::String)
+    fn get_proto_structure_info() -> MessageInfo {
+        get_message_info(vec![
+            ("field1".to_string(), FieldType::Uint32),
+            ("field2".to_string(), FieldType::Uint64),
+            ("field3".to_string(), FieldType::Int32),
+            ("field4".to_string(), FieldType::Int64),
+            ("field5".to_string(), FieldType::String)
         ])
     }
 }
 
-fn get_descriptor_proto(field_info: Vec<(String, Type)>) -> DescriptorProto {
-    let field_descriptors = field_info.into_iter().enumerate().map(|(field_number, (field_name, field_type))| FieldDescriptorProto {
-        name: Some(field_name),
-        label: Some(Label::Required as i32),
-        number: Some(field_number as i32),
-        r#type: Some(field_type as i32),
-        ..Default::default()
-    }).collect::<Vec<_>>();
-
-    DescriptorProto {
-        field: field_descriptors,
-        ..Default::default()
+fn get_message_info(field_info: Vec<(String, FieldType)>) -> MessageInfo {
+    MessageInfo {
+        fields: field_info.into_iter().enumerate().map(|(field_number, (field_name, field_type))| FieldInfo {
+            field_name,
+            field_type,
+            field_specification: FieldSpecification::Required,
+            field_number: (field_number+1) as u64,
+        }).collect::<Vec<_>>(),
     }
 }
 
-struct FlatDremel {
+#[allow(unused)]
+pub(in crate::streaming_fast::file_sinks) struct FlatDremel {
     // TODO: Put all types but with optional and vec wraps over each type
 }
 
 // TODO: impl TestSinkType for FlatDremel {}
 
-struct HierarchicalSimple {
+#[allow(unused)]
+pub(in crate::streaming_fast::file_sinks) struct HierarchicalSimple {
     // TODO
 }
 
 // TODO: impl TestSinkType for HierarchicalSimple {}
 
-struct HierarchicalDremel {
+#[allow(unused)]
+pub(in crate::streaming_fast::file_sinks) struct HierarchicalDremel {
     // TODO
 }
 
