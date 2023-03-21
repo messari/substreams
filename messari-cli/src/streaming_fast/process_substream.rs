@@ -97,7 +97,7 @@ fn add_package_partitions_to_output_folder_path(mut sink_output_path: PathBuf, p
         }
     }
 
-    sink_output_path.join("parquet")
+    sink_output_path
 }
 
 /// Returns both the output data and also it's corresponding block_number
