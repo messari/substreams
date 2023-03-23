@@ -1,9 +1,9 @@
 #[rustfmt::skip]
-#[path = "../target/pb/messari.eth_balance.v1.rs"]
-pub(in crate::pb) mod eth_balance_v1;
+#[path = "../target/pb/messari.network.v1.rs"]
+pub(in crate::pb) mod network_v1;
 
-pub mod eth_balance {
+pub mod network {
     pub mod v1 {
-        pub use super::super::eth_balance_v1::*;
+        pub use super::super::network_v1::*;
     }
 }

@@ -1,7 +1,8 @@
 use std::borrow::Borrow;
+use std::collections::{HashMap, HashSet};
 use parquet::basic::Repetition;
 use prost_types::field_descriptor_proto::{Label, Type};
-use prost_types::{DescriptorProto, FieldDescriptorProto, FileDescriptorProto};
+use prost_types::{DescriptorProto, EnumDescriptorProto, FieldDescriptorProto, FileDescriptorProto};
 
 use crate::streaming_fast::streamingfast_dtos::Package;
 
@@ -28,23 +29,46 @@ pub(crate) fn get_output_type_info(package: &Package, module_name: &String) -> (
 pub(crate) struct MessageInfo {
     pub(crate) type_name: String,
     pub(crate) field_specification: FieldSpecification,
-    pub(crate) fields: Vec<FieldInfo>
+    pub(crate) fields: Vec<FieldInfo>,
+    pub(crate) oneof_groups: Vec<Vec<u64>>
 }
 
 impl MessageInfo {
     pub(crate) fn new(proto_descriptors: &Vec<FileDescriptorProto>, proto_type_name: &str, field_specification: FieldSpecification) -> Self {
         let message = get_proto_type(proto_descriptors, proto_type_name);
 
+        let mut oneof_group_mappings = HashMap::new();
+        let mut fields = Vec::new();
+        for field in message.field {
+            let field_specification = field.get_field_specification();
+            let field_number = field.get_field_number();
+            if let Some(index) = field.get_oneof_index() {
+                if oneof_group_mappings.contains_key(&index) {
+                    oneof_group_mappings.get_mut(&index).unwrap().insert(field_number);
+                } else {
+                    let mut field_numbers = HashSet::new();
+                    field_numbers.insert(field_number);
+                    oneof_group_mappings.insert(index, field_numbers);
+                }
+            }
+            fields.push(FieldInfo {
+                field_name: field.name().to_string(),
+                field_type: field.get_field_type(proto_descriptors, &field_specification),
+                field_specification,
+                field_number,
+            });
+        }
+
         MessageInfo {
             type_name: message.name().to_string(), // TODO: Should probably make sure this isn't a "full path type" and instead just the actual type name as specified in the proto
             field_specification,
-            fields: message.field.iter().map(|field| {
-                let field_specification = field.get_field_specification();
-                FieldInfo {
-                    field_name: field.name().to_string(),
-                    field_type: field.get_field_type(proto_descriptors, &field_specification),
-                    field_specification,
-                    field_number: field.get_field_number(),
+            fields,
+            oneof_groups: oneof_group_mappings.into_values().filter_map(|group| {
+                if group.len() > 1 {
+                    Some(group.into_iter().collect())
+                } else {
+                    // "Oneof groups of size one aren't actually oneof groups - they are just optional fields so we won't count these
+                    None
                 }
             }).collect(),
         }
@@ -69,6 +93,21 @@ impl MessageInfo {
     }
 }
 
+pub(crate) struct EnumInfo {
+    // Key is the field number, and value is the corresponding enum value
+    enum_mappings: HashMap<u64, String>
+}
+
+impl EnumInfo {
+    pub(crate) fn new(proto_descriptors: &Vec<FileDescriptorProto>, proto_type_name: &str) -> Self {
+        let enum_type = get_enum_type(proto_descriptors, proto_type_name);
+
+        EnumInfo {
+            enum_mappings: enum_type.value.into_iter().map(|enum_value| (enum_value.number.unwrap() as u64, enum_value.name().to_string())).collect(),
+        }
+    }
+}
+
 #[derive(PartialEq, Clone)]
 pub(crate) struct FieldInfo {
     pub(crate) field_name: String,
@@ -80,6 +119,14 @@ pub(crate) struct FieldInfo {
 impl FieldInfo {
     pub(crate) fn is_struct_field(&self) -> bool {
         if let FieldType::Message(_) = self.field_type.borrow() {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub(crate) fn is_enum_field(&self) -> bool {
+        if let FieldType::Enum(_) = self.field_type.borrow() {
             true
         } else {
             false
@@ -108,7 +155,7 @@ pub(crate) enum FieldType {
     Message(MessageInfo),
     Bytes,
     Uint32,
-    Enum,
+    Enum(EnumInfo),
     Sfixed32,
     Sfixed64,
     Sint32,
@@ -131,10 +178,27 @@ pub(crate) fn get_proto_type<'a>(proto_files: &'a Vec<FileDescriptorProto>, prot
     panic!("TODO: Something like: Unable to find proto type!!");
 }
 
+pub(crate) fn get_enum_type<'a>(proto_files: &'a Vec<FileDescriptorProto>, proto_type: &str) -> &'a EnumDescriptorProto {
+    // TODO: Might need to flesh this out to deal with inner declared types
+    for proto in proto_files.iter() {
+        if proto_type.contains(proto.package.as_ref().unwrap()) {
+            let message_type = proto_type.split('.').last().unwrap().to_string();
+            for proto_enum in proto.enum_type.iter() {
+                if proto_enum.name.as_ref().unwrap() == &message_type {
+                    return proto_enum;
+                }
+            }
+        }
+    }
+
+    panic!("TODO: Something like: Unable to find proto type!!");
+}
+
 trait ProtoFieldExt {
     fn get_field_specification(&self) -> FieldSpecification;
     fn get_field_type(&self, proto_descriptors: &Vec<FileDescriptorProto>, field_specification: &FieldSpecification) -> FieldType;
     fn get_field_number(&self) -> u64;
+    fn get_oneof_index(&self) -> Option<u64>;
 }
 
 impl ProtoFieldExt for FieldDescriptorProto {
@@ -185,7 +249,10 @@ impl ProtoFieldExt for FieldDescriptorProto {
             },
             x if x == (Type::Bytes as i32) => FieldType::Bytes,
             x if x == (Type::Uint32 as i32) => FieldType::Uint32,
-            x if x == (Type::Enum as i32) => FieldType::Enum,
+            x if x == (Type::Enum as i32) => {
+
+                FieldType::Enum(EnumInfo::new(proto_descriptors, self.type_name()))
+            },
             x if x == (Type::Sfixed32 as i32) => FieldType::Sfixed32,
             x if x == (Type::Sfixed64 as i32) => FieldType::Sfixed64,
             x if x == (Type::Sint32 as i32) => FieldType::Sint32,
@@ -196,6 +263,10 @@ impl ProtoFieldExt for FieldDescriptorProto {
 
     fn get_field_number(&self) -> u64 {
         self.number() as u64
+    }
+
+    fn get_oneof_index(&self) -> Option<u64> {
+        self.oneof_index.map(|index| index as u64)
     }
 }
 

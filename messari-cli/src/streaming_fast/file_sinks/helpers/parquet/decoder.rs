@@ -11,6 +11,7 @@ use crate::streaming_fast::proto_utils::FromUnsignedVarint;
 pub(in crate::streaming_fast::file_sinks) enum Decoder {
     FieldDecoder(FieldDecoder),
     StructDecoder(StructDecoder),
+    EnumDecoder(EnumDecoder)
 }
 
 impl Decoder {
@@ -27,6 +28,8 @@ impl Decoder {
             parquet_schema_builder.finish_building_sub_group();
 
             decoder
+        } else if field_info.is_enum_field() {
+
         } else {
             Decoder::FieldDecoder(FieldDecoder::new(field_info, parquet_schema_builder, track_definition_lvls, track_repetition_lvls))
         }

@@ -13,6 +13,7 @@ members = [
     "solana-sample",
     "ens-names",
     "eth-supply",
+    "test1"
 ]
 exclude = ["messari-cli"]
 
