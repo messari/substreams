@@ -1,6 +1,6 @@
-mod streamingfast_dtos;
+pub(crate) mod streamingfast_dtos;
 mod sink;
-mod proto_structure_info;
+pub(crate) mod proto_structure_info;
 mod file_sinks;
 mod proto_utils;
 

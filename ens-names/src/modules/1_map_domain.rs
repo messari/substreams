@@ -22,7 +22,6 @@ pub fn map_domain(block: eth::Block) -> Result<ENS::Domains, substreams::errors:
                 controller_address: Hex(&event.owner.to_vec()).to_string(),
                 registrant_address: Hex(&event.owner.to_vec()).to_string(),
                 transaction_hash: Hex(&log.receipt.transaction.hash).to_string(),
-                block_number: block.number,
             })
         }
     }
