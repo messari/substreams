@@ -81,11 +81,7 @@ pub(crate) async fn process_substream(spkg: Vec<u8>, module_name: String, encodi
         }
     }
 
-    if let Some(file) = sink.flush_leftovers_to_file(last_seen_block_number) {
-        file.save().await;
-    } else {
-        println!("No data was extracted during processing!");
-    }
+    futures::future::join_all(sink.flush_leftovers(last_seen_block_number).into_iter().map(|file| file.save())).await;
 }
 
 fn add_package_partitions_to_output_folder_path(mut sink_output_path: PathBuf, proto_type_name: &str, entity_name: &str) -> PathBuf {
@@ -130,6 +126,7 @@ fn get_output_data(block: Result<Response, Status>) -> Result<Option<(Vec<u8>, i
     }
 }
 
+#[derive(Clone)]
 pub(crate) enum EncodingType {
     // JsonL,
     Parquet

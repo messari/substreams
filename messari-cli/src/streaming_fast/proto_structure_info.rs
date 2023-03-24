@@ -86,6 +86,19 @@ impl MessageInfo {
         false
     }
 
+    pub(crate) fn is_oneof_type(&self) -> bool {
+        if self.oneof_groups.len()==1 && self.oneof_groups[0].len()==self.fields.len() {
+            for field in self.fields.iter() {
+                if !field.is_struct_field() {
+                    return false;
+                }
+            }
+            true
+        } else {
+            false
+        }
+    }
+
     pub(crate) fn get_item_type_info(mut self) -> (MessageInfo, u64) {
         let field = self.fields.pop().unwrap();
         let field_number = field.field_number;

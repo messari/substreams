@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use parquet::file::writer::SerializedRowGroupWriter;
 
 use crate::streaming_fast::file_sinks::helpers::parquet::decoder::{Decoder};
@@ -10,8 +10,9 @@ use crate::streaming_fast::proto_utils::FromUnsignedVarint;
 pub(in crate::streaming_fast::file_sinks) struct StructDecoder {
     field_decoders: BTreeMap<u64, Decoder>,
     field_specification: FieldSpecification,
-    non_repeated_fields: Vec<u64>,
-    flattened_field_name: String
+    non_repeated_nor_oneof_fields: Vec<u64>,
+    flattened_field_name: String,
+    oneof_group_tracker: OneofGroupTracker
 }
 
 impl StructDecoder {
@@ -24,10 +25,15 @@ impl StructDecoder {
         };
 
         let mut field_decoders = BTreeMap::new();
-        let mut non_repeated_fields = Vec::new();
+        let mut non_repeated_nor_oneof_fields = Vec::new();
+        let oneof_field_numbers = message_info.oneof_groups.clone().into_iter().flat_map(|x| x).collect::<Vec<_>>();
         for field_info in message_info.fields {
             match field_info.field_specification {
-                FieldSpecification::Required | FieldSpecification::Optional => non_repeated_fields.push(field_info.field_number),
+                FieldSpecification::Required | FieldSpecification::Optional => {
+                    if !oneof_field_numbers.contains(&field_info.field_number) {
+                        non_repeated_nor_oneof_fields.push(field_info.field_number);
+                    }
+                },
                 _ => {}
             }
             field_decoders.insert(field_info.field_number, Decoder::new(field_info, parquet_schema_builder, track_definition_lvls, track_repetition_lvls));
@@ -36,8 +42,9 @@ impl StructDecoder {
         StructDecoder {
             field_decoders,
             field_specification: message_info.field_specification,
-            non_repeated_fields,
-            flattened_field_name: parquet_schema_builder.get_flattened_field_name(&message_info.type_name)
+            non_repeated_nor_oneof_fields,
+            flattened_field_name: parquet_schema_builder.get_flattened_field_name(&message_info.type_name),
+            oneof_group_tracker: OneofGroupTracker::new(message_info.oneof_groups)
         }
     }
 
@@ -72,6 +79,7 @@ impl StructDecoder {
             match self.field_decoders.get_mut(&field_number) {
                 Some(field) => {
                     field.decode(data, wire_type, uncompressed_file_size, current_definition_lvl, last_repetition_lvl)?;
+                    self.oneof_group_tracker.notify_field_seen(field_number)?;
                     decoded_fields.push(field_number);
                 }
                 _ => {
@@ -80,11 +88,14 @@ impl StructDecoder {
             };
         }
 
-        for field in self.non_repeated_fields.iter() {
+        for field in self.non_repeated_nor_oneof_fields.iter() {
             if !decoded_fields.contains(field) {
                 self.field_decoders.get_mut(field).unwrap().push_null_or_default_values(uncompressed_file_size, current_definition_lvl, last_repetition_lvl)?;
             }
         }
+
+        self.oneof_group_tracker.assert_oneof_groups_all_seen()?;
+        self.oneof_group_tracker.reset();
 
         Ok(())
     }
@@ -95,7 +106,7 @@ impl StructDecoder {
             FieldSpecification::Required => {
                 // TODO: Should check if we should always get some data returned for a struct - if this is the case then we should just
                 // TODO: return an error and stop processing rather than propagating null or default values
-                for field_number in self.non_repeated_fields.iter() {
+                for field_number in self.non_repeated_nor_oneof_fields.iter() {
                     self.field_decoders.get_mut(field_number).unwrap().push_null_or_default_values(uncompressed_file_size, current_definition_lvl, last_repetition_lvl)?;
                 }
                 Ok(true)
@@ -109,10 +120,63 @@ impl StructDecoder {
     }
 
     pub(in crate::streaming_fast::file_sinks) fn push_nulls(&mut self, uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<(), String> {
-        for field_number in self.non_repeated_fields.iter() {
+        for field_number in self.non_repeated_nor_oneof_fields.iter() {
             self.field_decoders.get_mut(field_number).unwrap().push_nulls(uncompressed_file_size, current_definition_lvl, last_repetition_lvl)?;
         }
 
+        Ok(())
+    }
+}
+
+struct OneofGroupTracker {
+    field_to_oneof_group_mappings: HashMap<u64, u8>,
+    oneof_group_tracker: HashMap<u8, Option<u64>>
+}
+
+impl OneofGroupTracker {
+    fn new(oneof_groups: Vec<Vec<u64>>) -> Self {
+        let mut field_to_oneof_group_mappings = HashMap::new();
+        let mut oneof_group_tracker = HashMap::new();
+        for (group_index, oneof_group_fields) in oneof_groups.into_iter().enumerate() {
+            let oneof_group_number = group_index as u8;
+            for field in oneof_group_fields {
+                field_to_oneof_group_mappings.insert(field, oneof_group_number);
+            }
+            oneof_group_tracker.insert(oneof_group_number, -1);
+        }
+
+        OneofGroupTracker {
+            field_to_oneof_group_mappings: Default::default(),
+            oneof_group_tracker: Default::default(),
+        }
+    }
+
+    /// Needs to get reset after each deserialization of a struct
+    fn reset(&mut self) {
+        self.oneof_group_tracker.values_mut().for_each(|val| *val=None)
+    }
+
+    fn notify_field_seen(&mut self, field_number: u64) -> Result<(), String> {
+        if let Some(group_index) = self.field_to_oneof_group_mappings.get(&field_number) {
+            let field = self.oneof_group_tracker.get_mut(group_index).unwrap();
+            if let Some(field_seen) = field.as_ref() {
+                if field_number != *field_seen {
+                    return Err("TODO".to_string());
+                }
+            } else {
+                *field = Some(field_number);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn assert_oneof_groups_all_seen(&self) -> Result<(), String> {
+        for (_oneof_group_number, field) in self.oneof_group_tracker.iter() {
+            if field.is_none() {
+                return Err("TODO".to_string());
+            }
+        }
         Ok(())
     }
 }

@@ -90,7 +90,7 @@ impl ParquetSchemaBuilder {
             FieldType::Sfixed64 => add_field!(INT64),
             FieldType::Sint32 => add_field!(INT32),
             FieldType::Sint64 => add_field!(INT64),
-            _ => unreachable!()
+            FieldType::Message(_) => unreachable!()
         }
 
         self.current_id += 1;
