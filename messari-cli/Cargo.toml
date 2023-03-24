@@ -31,7 +31,7 @@ tonic = { version = "0.8.3", features = ["tls-roots", "gzip"] }
 
 [dev-dependencies]
 rand = "0.8.5"
-rand_derive2 = { version="0.1.18", path="test_data_derive" }
+rand_derive2 = { version="0.1.18", path= "test_data_derive" }
 
 [[bin]]
 name = "messari"
