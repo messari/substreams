@@ -68,6 +68,7 @@ impl Location {
     }
 }
 
+#[derive(Clone)]
 pub(crate) enum LocationType {
     DataWarehouse,
     Local
