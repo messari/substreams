@@ -1564,6 +1564,8 @@ dependencies = [
  "pathdiff",
  "prost",
  "prost-types",
+ "rand",
+ "rand_derive2",
  "regex",
  "reqwest",
  "rust-s3",
@@ -1929,6 +1931,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "proc_macro2_helper"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de7d18393e9ef5104442cde71ea51a7fcca8e2dbba4285887176ce78da3ac799"
+dependencies = [
+ "proc-macro2",
+ "syn",
+]
+
+[[package]]
 name = "prost"
 version = "0.11.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1997,6 +2009,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
+]
+
+[[package]]
+name = "rand_derive2"
+version = "0.1.18"
+dependencies = [
+ "proc-macro2",
+ "proc_macro2_helper",
+ "quote",
+ "syn",
 ]
 
 [[package]]

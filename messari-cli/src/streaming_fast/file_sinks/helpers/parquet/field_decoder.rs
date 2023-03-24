@@ -1,13 +1,11 @@
 use std::borrow::BorrowMut;
-use std::fmt::Debug;
-use parquet::column::writer::ColumnWriter;
-use parquet::data_type::ByteArray;
+use parquet::data_type::{BoolType, ByteArray, ByteArrayType, DoubleType, FloatType, Int32Type, Int64Type};
 use parquet::file::writer::SerializedRowGroupWriter;
 
 use crate::streaming_fast::file_sinks::helpers::parquet::file_buffer::FileBuffer;
 use crate::streaming_fast::file_sinks::helpers::parquet::parquet_schema_builder::ParquetSchemaBuilder;
 use crate::streaming_fast::proto_structure_info::{FieldInfo, FieldSpecification, FieldType};
-use crate::streaming_fast::proto_utils::FromUnsignedVarint;
+use crate::streaming_fast::proto_utils::{FromSignedVarint, FromUnsignedVarint};
 
 pub(in crate::streaming_fast::file_sinks) struct FieldDecoder {
     value_store: ValueStore,
@@ -38,7 +36,6 @@ impl FieldDecoder {
             FieldType::String => ValueStore::String(Vec::new()),
             FieldType::Bytes => ValueStore::Bytes(Vec::new()),
             FieldType::Uint32 => ValueStore::Uint32(Vec::new()),
-            FieldType::Enum => ValueStore::Enum(Vec::new()),
             FieldType::Sfixed32 => ValueStore::Sfixed32(Vec::new()),
             FieldType::Sfixed64 => ValueStore::Sfixed64(Vec::new()),
             FieldType::Sint32 => ValueStore::Sint32(Vec::new()),
@@ -61,8 +58,8 @@ impl FieldDecoder {
         let mut serialized_column_writer = row_group_writer.next_column().unwrap().unwrap();
 
         macro_rules! write_batch {
-            ($column_writer_ident:ident, $values_ident:ident) => {
-                $column_writer_ident.write_batch(
+            ($values_ident:ident, $value_type:ident) => {
+                serialized_column_writer.typed::<$value_type>().write_batch(
                     $values_ident,
                     self.definition_lvls.as_ref().map(|lvls| lvls.as_slice()),
                     self.repetition_lvls.as_ref().map(|lvls| lvls.as_slice())
@@ -70,56 +67,22 @@ impl FieldDecoder {
             }
         }
 
-        match (self.value_store.borrow_mut(), serialized_column_writer.untyped()) {
-            (ValueStore::Double(values), ColumnWriter::DoubleColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Float(values), ColumnWriter::FloatColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Int32(values), ColumnWriter::Int32ColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Int64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Uint32(values), ColumnWriter::Int32ColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Uint64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Sint32(values), ColumnWriter::Int32ColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Sint64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Fixed32(values), ColumnWriter::Int32ColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Fixed64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Sfixed32(values), ColumnWriter::Int32ColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Sfixed64(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Bool(values), ColumnWriter::BoolColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::String(values), ColumnWriter::ByteArrayColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Bytes(values), ColumnWriter::ByteArrayColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            }
-            (ValueStore::Enum(values), ColumnWriter::Int64ColumnWriter(ref mut column_writer)) => {
-                write_batch!(column_writer, values)
-            },
-            _ => unreachable!()
+        match self.value_store.borrow_mut() {
+            ValueStore::Double(values) => write_batch!(values, DoubleType),
+            ValueStore::Float(values) => write_batch!(values, FloatType),
+            ValueStore::Int32(values) => write_batch!(values, Int32Type),
+            ValueStore::Int64(values) => write_batch!(values, Int64Type),
+            ValueStore::Uint32(values) => write_batch!(values, Int32Type),
+            ValueStore::Uint64(values) => write_batch!(values, Int64Type),
+            ValueStore::Sint32(values) => write_batch!(values, Int32Type),
+            ValueStore::Sint64(values) => write_batch!(values, Int64Type),
+            ValueStore::Fixed32(values) => write_batch!(values, Int32Type),
+            ValueStore::Fixed64(values) => write_batch!(values, Int64Type),
+            ValueStore::Sfixed32(values) => write_batch!(values, Int32Type),
+            ValueStore::Sfixed64(values) => write_batch!(values, Int64Type),
+            ValueStore::Bool(values) => write_batch!(values, BoolType),
+            ValueStore::String(values) => write_batch!(values, ByteArrayType),
+            ValueStore::Bytes(values) => write_batch!(values, ByteArrayType),
         };
 
         serialized_column_writer.close().unwrap();
@@ -255,9 +218,6 @@ impl FieldDecoder {
             }
             ValueStore::Bytes(values) => {
                 decode_value! { "Bytes" @ values => b.len() => b = read_bytes(data) => b }
-            }
-            ValueStore::Enum(values) => {
-                decode_value! { "Enum" @ values => 64 => b = i64::from_signed_varint(data) => b }
             }
         };
 
@@ -401,24 +361,6 @@ fn try_read_4_bytes(data: &mut &[u8]) -> Option<[u8; 4]>
     }
 }
 
-trait FromSignedVarint: Sized
-{
-    fn from_signed_varint(data: &mut &[u8]) -> Option<Self>;
-}
-
-impl<T: Default + TryFrom<i64>> FromSignedVarint for T
-    where
-        T::Error: Debug,
-{
-    fn from_signed_varint(data: &mut &[u8]) -> Option<Self>
-    {
-        u64::from_unsigned_varint(data).map(|u| {
-            let signed: i64 = unsafe { std::mem::transmute(u) };
-            signed.try_into().unwrap()
-        })
-    }
-}
-
 fn read_bytes(data: &mut &[u8]) -> Option<ByteArray>
 {
     let original = *data;
@@ -464,7 +406,6 @@ enum ValueStore
     Bool(Vec<bool>),
     String(Vec<ByteArray>),
     Bytes(Vec<ByteArray>),
-    Enum(Vec<i64>),
 }
 
 impl ValueStore {
@@ -485,7 +426,6 @@ impl ValueStore {
             ValueStore::Bool(values) => values.push(false),
             ValueStore::String(values) => values.push(ByteArray::from("")),
             ValueStore::Bytes(values) => values.push(ByteArray::from("")),
-            ValueStore::Enum(values) => values.push(0),
         }
     }
 }

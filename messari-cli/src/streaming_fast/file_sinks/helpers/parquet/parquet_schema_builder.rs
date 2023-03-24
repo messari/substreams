@@ -85,7 +85,7 @@ impl ParquetSchemaBuilder {
             FieldType::String => add_field!(BYTE_ARRAY @ LogicalType::String),
             FieldType::Bytes => add_field!(BYTE_ARRAY),
             FieldType::Uint32 => add_field!(INT32 @ LogicalType::Integer{ bit_width: 32, is_signed: false }),
-            FieldType::Enum => add_field!(INT32 @ LogicalType::Enum), // TODO: Should be changed to BYTE_ARRAY type here..
+            FieldType::Enum(_) => add_field!(BYTE_ARRAY @ LogicalType::Enum),
             FieldType::Sfixed32 => add_field!(INT32),
             FieldType::Sfixed64 => add_field!(INT64),
             FieldType::Sint32 => add_field!(INT32),

@@ -1,5 +1,23 @@
 use std::fmt::Debug;
 
+pub(crate) trait FromSignedVarint: Sized
+{
+    fn from_signed_varint(data: &mut &[u8]) -> Option<Self>;
+}
+
+impl<T: Default + TryFrom<i64>> FromSignedVarint for T
+    where
+        T::Error: Debug,
+{
+    fn from_signed_varint(data: &mut &[u8]) -> Option<Self>
+    {
+        u64::from_unsigned_varint(data).map(|u| {
+            let signed: i64 = unsafe { std::mem::transmute(u) };
+            signed.try_into().unwrap()
+        })
+    }
+}
+
 pub(crate) trait FromUnsignedVarint: Sized
 {
     fn from_unsigned_varint(data: &mut &[u8]) -> Option<Self>;
