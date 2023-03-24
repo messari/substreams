@@ -37,9 +37,9 @@ impl MessageInfo {
     pub(crate) fn new(proto_descriptors: &Vec<FileDescriptorProto>, proto_type_name: &str, field_specification: FieldSpecification) -> Self {
         let message = get_proto_type(proto_descriptors, proto_type_name);
 
-        let mut oneof_group_mappings = HashMap::new();
+        let mut oneof_group_mappings: HashMap<u64, HashSet<u64>> = HashMap::new();
         let mut fields = Vec::new();
-        for field in message.field {
+        for field in &message.field {
             let field_specification = field.get_field_specification();
             let field_number = field.get_field_number();
             if let Some(index) = field.get_oneof_index() {
@@ -93,6 +93,7 @@ impl MessageInfo {
     }
 }
 
+#[derive(PartialEq, Clone)]
 pub(crate) struct EnumInfo {
     // Key is the field number, and value is the corresponding enum value
     enum_mappings: HashMap<u64, String>
@@ -103,7 +104,7 @@ impl EnumInfo {
         let enum_type = get_enum_type(proto_descriptors, proto_type_name);
 
         EnumInfo {
-            enum_mappings: enum_type.value.into_iter().map(|enum_value| (enum_value.number.unwrap() as u64, enum_value.name().to_string())).collect(),
+            enum_mappings: enum_type.value.iter().map(|enum_value| (enum_value.number.unwrap() as u64, enum_value.name().to_string())).collect(),
         }
     }
 }
@@ -137,6 +138,14 @@ impl FieldInfo {
         match self.field_type {
             FieldType::Message(message_info) => message_info,
             _ => panic!("No message info found! TODO: Flesh out this error some more")
+        }
+    }
+
+    pub(crate) fn get_enum_mappings(&self) -> &HashMap<u64, String> {
+        if let FieldType::Enum(enum_info) = &self.field_type {
+            &enum_info.enum_mappings
+        } else {
+            unreachable!()
         }
     }
 }
@@ -250,7 +259,6 @@ impl ProtoFieldExt for FieldDescriptorProto {
             x if x == (Type::Bytes as i32) => FieldType::Bytes,
             x if x == (Type::Uint32 as i32) => FieldType::Uint32,
             x if x == (Type::Enum as i32) => {
-
                 FieldType::Enum(EnumInfo::new(proto_descriptors, self.type_name()))
             },
             x if x == (Type::Sfixed32 as i32) => FieldType::Sfixed32,

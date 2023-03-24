@@ -80,17 +80,19 @@ impl FileSink for ParquetFileSink {
 #[cfg(test)]
 mod tests {
     use parquet::file::reader::{FileReader, SerializedFileReader};
-    use prost_types::FileDescriptorProto;
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
     use crate::streaming_fast::file_sinks::file_sink::FileSink;
-    use crate::streaming_fast::file_sinks::helpers::parquet::test_helpers::{FlatSimple, get_parquet_sink, TestSinkType};
+    use crate::streaming_fast::file_sinks::helpers::parquet::test_helpers::{FlatSimple, GenRandSamples, get_parquet_sink, TestSinkType};
     use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
-    use crate::streaming_fast::sink::Sink;
 
     const DUMMY_BLOCK_NUMBER: i64 = 1;
 
     #[test]
     fn test_flat_simple() {
-        let flat_simple_samples = FlatSimple::generate_data_samples(3);
+        let mut rng = StdRng::seed_from_u64(42);
+        let flat_simple_samples = FlatSimple::get_samples(50, &mut rng);
+
         let mut sink = get_parquet_sink::<FlatSimple>();
 
         assert_data_sinks_correctly_from_proto_to_parquet(flat_simple_samples, &mut sink);

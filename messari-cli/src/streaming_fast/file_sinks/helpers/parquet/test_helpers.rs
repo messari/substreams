@@ -1,32 +1,50 @@
 use std::fmt::Debug;
 use parquet::record::{Field, Row};
 use prost::Message;
+use rand::distributions::{Distribution, Standard};
+use rand::Rng;
+use rand_derive2::RandGen;
 
 use crate::streaming_fast::file_sinks::file_sink::FileSink;
 use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
 use crate::streaming_fast::proto_structure_info::{FieldInfo, FieldSpecification, FieldType, MessageInfo};
 
 pub(in crate::streaming_fast::file_sinks) fn get_parquet_sink<T: TestSinkType>() -> ParquetFileSink {
-    let message_info = T::get_proto_structure_info();
-    let field_info = FieldInfo {
-        field_name: "Only1Message".to_string(),
-        field_type: FieldType::Message(message_info),
-        field_specification: FieldSpecification::Required,
-        field_number: 0, // Doesn't matter what is put here (never used..)
-    };
-
-    ParquetFileSink::new(field_info)
+    ParquetFileSink::new(T::get_proto_structure_info())
 }
 
-pub(in crate::streaming_fast::file_sinks) trait TestSinkType: PartialEq + Debug {
+pub(in crate::streaming_fast::file_sinks) trait TestSinkType: PartialEq + Debug + GenRandSamples {
     fn encode_to_proto(&self) -> Vec<u8>;
     fn get_from_parquet_row(row: Row) -> (Self, u64) where Self: Sized;
-    // TODO: Give an rng object here to seed the random values instead of the current method of stubbing them
-    fn generate_data_samples(num_samples: usize) -> Vec<Self> where Self: Sized;
     fn get_proto_structure_info() -> MessageInfo;
 }
 
-#[derive(Default, PartialEq, Debug)]
+pub(in crate::streaming_fast::file_sinks) trait GenRandSamples {
+    /// Will panic if you ask if to generate you anything less than 10 samples. Also when generating samples
+    /// 3 of the samples are guaranteed to be default value samples
+    fn get_samples<T: Rng>(num_samples: usize, rng: &mut T) -> Vec<Self> where Self: Sized;
+}
+
+impl<T: Default + Clone> GenRandSamples for T where Standard: Distribution<T> {
+    fn get_samples<R: Rng>(num_samples: usize, rng: &mut R) -> Vec<Self> {
+        assert!(num_samples >= 10);
+
+        let mut samples = Vec::with_capacity(num_samples);
+        for _ in 0..num_samples {
+            samples.push(rng.gen());
+        }
+
+        let default_value = T::default();
+        for _ in 0..3 {
+            let insertion_index = rng.gen_range(0..samples.len());
+            samples.insert(insertion_index, default_value.clone());
+        }
+
+        samples
+    }
+}
+
+#[derive(Default, PartialEq, Debug, RandGen, Clone)]
 pub(in crate::streaming_fast::file_sinks) struct FlatSimple {
     field1: u32,
     field2: u64,
@@ -108,40 +126,6 @@ impl TestSinkType for FlatSimple {
         (flat_simple, block_number)
     }
 
-    fn generate_data_samples(num_samples: usize) -> Vec<Self> {
-        // TODO: Generate these samples automatically using rng
-        vec![
-            FlatSimple {
-                field1: 42,
-                field2: 123,
-                field3: -21,
-                field4: -643345324,
-                field5: "1234wdc11111w".to_string(),
-            },
-            FlatSimple {
-                field1: 1,
-                field2: 0,
-                field3: 0,
-                field4: -34,
-                field5: "".to_string(),
-            },
-            FlatSimple {
-                field1: 0,
-                field2: 0,
-                field3: 0,
-                field4: 0,
-                field5: "".to_string(),
-            },
-            FlatSimple {
-                field1: 21,
-                field2: 1243321,
-                field3: 32,
-                field4: 89,
-                field5: "TESTING_123".to_string(),
-            }
-        ]
-    }
-
     fn get_proto_structure_info() -> MessageInfo {
         get_message_info(vec![
             ("field1".to_string(), FieldType::Uint32),
@@ -155,12 +139,15 @@ impl TestSinkType for FlatSimple {
 
 fn get_message_info(field_info: Vec<(String, FieldType)>) -> MessageInfo {
     MessageInfo {
+        type_name: Default::default(),
+        field_specification: FieldSpecification::Required,
         fields: field_info.into_iter().enumerate().map(|(field_number, (field_name, field_type))| FieldInfo {
             field_name,
             field_type,
             field_specification: FieldSpecification::Required,
             field_number: (field_number+1) as u64,
         }).collect::<Vec<_>>(),
+        oneof_groups: vec![],
     }
 }
 
