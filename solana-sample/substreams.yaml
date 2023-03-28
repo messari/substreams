@@ -6,15 +6,22 @@ package:
 imports:
   sol: https://github.com/streamingfast/firehose-solana/releases/download/v0.1.0/solana-v0.1.0.spkg
 
+protobuf:
+  files:
+    - test.proto
+  importPaths:
+    - ./proto
+
 binaries:
   default:
     type: wasm/rust-v1
     file: "../target/wasm32-unknown-unknown/release/solana_sample.wasm"
 
 modules:
-    - name: store_test
-      kind: store
-      updatePolicy: set
-      valueType: bytes
-      inputs:
-        - source: sf.solana.type.v1.Block
+  # Will store the entire solana block as a string
+  - name: store_test
+    kind: store
+    updatePolicy: set
+    valueType: proto:sf.solana.type.v2.Block
+    inputs:
+      - source: sf.solana.type.v2.Block

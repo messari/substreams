@@ -1,0 +1,36 @@
+specVersion: v0.1.0
+package:
+  name: spl_balance
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+
+protobuf:
+  files:
+    - sol_token.proto
+  importPaths:
+    - ../common/proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/spl_balance.wasm"
+
+modules:
+  # maps the balance changes of owners of SPL tokens
+  - name: map_balances
+    kind: map
+    inputs:
+      - source: sf.solana.type.v1.Block
+      - store: store_tokens
+    output:
+      type: proto:solana.spl.v1.BalanceChanges
+
+  # stores all SPL tokens to retrieve
+  - name: store_tokens
+    kind: store
+    updatePolicy: set
+    valueType: proto:messari.sol_token.v1.TokenAccount
+    inputs:
+      - source: sf.solana.type.v1.Block

@@ -4,4 +4,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e mainnet.sol.streamingfast.io:443 substreams.yaml store_test -s 0 -t +10
+	substreams run substreams.yaml map_transfers -s 1000 -t +5 --debug-modules-initial-snapshot=store_pools
