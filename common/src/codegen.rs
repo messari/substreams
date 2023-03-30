@@ -98,6 +98,10 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         let mut pb_files_hash = HashMap::new();
         let pb_filenames = dir_filenames(&tmp_dir);
         for file in pb_filenames.iter() {
+            if file == "mod" {
+                continue;
+            }
+
             // parse version from file name
             let filename = file.split('.').collect::<Vec<&str>>();
             // let package_name = filename[0];
