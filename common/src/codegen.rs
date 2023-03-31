@@ -149,9 +149,9 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
                         (
                             format!(
                                 "#[rustfmt::skip]\n\
-                                #[path = \"../{}/pb/messari.{}.{}.rs\"]\n\
-                                pub(in crate::pb) mod {1}_{2};\n",
-                                out_dir, filename, version
+                                #[path = \"../{}/pb/{}.{}.{}.rs\"]\n\
+                                pub(in crate::pb) mod {2}_{3};\n",
+                                out_dir, (if filename.contains("entity") {"substreams"} else {"messari"}), filename, version
                             ),
                             format!(
                                 "    pub mod {} {{\n        \
@@ -162,7 +162,6 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
                         )
                     })
                     .unzip();
-
                 format!(
                     "{}\n\
                     pub mod {} {{\n\

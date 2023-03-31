@@ -1,0 +1,15 @@
+specVersion: 0.0.4
+description: ETH Balance Change subgraph powered by substreams
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: substreams
+    name: graph_network_substreams
+    network: mainnet
+    source:
+      package:
+        moduleName: map_entity_changes
+        file: ../eth-balance-v0.1.0.spkg
+    mapping:
+      kind: substreams/graph-entities
+      apiVersion: 0.0.5

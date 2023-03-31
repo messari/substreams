@@ -3,7 +3,7 @@ use num_bigint;
 use substreams::scalar::BigInt;
 use substreams_ethereum::pb::eth as pbeth;
 
-pub const ETH_ADDRESS: &str = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+pub const ETH_ADDRESS: &str = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 
 pub fn get_eth_token() -> Option<Erc20Token> {
     let eth_token = Erc20Token {

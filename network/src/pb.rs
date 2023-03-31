@@ -1,9 +1,19 @@
 #[rustfmt::skip]
-#[path = "../target/pb/messari.network.v1.rs"]
-pub(in crate::pb) mod network_v1;
+#[path = "../target/pb/messari.entity.v1.rs"]
+pub(in crate::pb) mod entity_v1;
 
-pub mod network {
+pub mod entity {
     pub mod v1 {
-        pub use super::super::network_v1::*;
+        pub use super::super::entity_v1::*;
+    }
+}
+
+#[rustfmt::skip]
+#[path = "../target/pb/messari.erc20.v1.rs"]
+pub(in crate::pb) mod erc20_v1;
+
+pub mod erc20 {
+    pub mod v1 {
+        pub use super::super::erc20_v1::*;
     }
 }
