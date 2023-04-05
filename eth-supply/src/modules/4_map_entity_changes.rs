@@ -1,6 +1,7 @@
 use hex::FromHex;
 
 use substreams::pb::substreams::Clock;
+use substreams::scalar::BigInt;
 use substreams_entity_change::change::ToField;
 use substreams_entity_change::pb::entity::entity_change::Operation;
 use substreams_entity_change::pb::entity::{EntityChange, EntityChanges};
@@ -17,7 +18,7 @@ fn map_entity_changes(
 ) -> Result<EntityChanges, substreams::errors::Error> {
     let block_hash: String = clock.id;
     let hash_bytes: Vec<u8> = FromHex::from_hex::<&String>(&block_hash).unwrap();
-    let timestamp = clock.timestamp.unwrap();
+    let timestamp = BigInt::from(clock.timestamp.unwrap().seconds);
     let block_num = clock.number;
 
     let entity_changes = vec![EntityChange {
