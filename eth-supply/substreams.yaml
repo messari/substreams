@@ -5,6 +5,7 @@ package:
 
 imports:
   eth: "https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg"
+  entity: "https://github.com/streamingfast/substreams-entity-change/releases/download/v0.2.1/substreams-entity-change-v0.2.1.spkg"
 
 binaries:
   default:
@@ -29,7 +30,6 @@ modules:
   - name: map_output
     kind: map
     inputs:
-      - map: map_supply_delta
       - store: store_supply
     output:
       type: "proto:messari.eth_supply.v1.EthSupply"
@@ -37,6 +37,7 @@ modules:
   - name: map_entity_changes
     kind: map
     inputs:
+      - source: sf.substreams.v1.Clock
       - map: map_supply_delta
       - map: map_output
     output:

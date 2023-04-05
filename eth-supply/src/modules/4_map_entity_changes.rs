@@ -1,6 +1,6 @@
-use hex::ToHex;
+use hex::FromHex;
 
-use substreams::scalar::BigInt;
+use substreams::pb::substreams::Clock;
 use substreams_entity_change::change::ToField;
 use substreams_entity_change::pb::entity::entity_change::Operation;
 use substreams_entity_change::pb::entity::{EntityChange, EntityChanges};
@@ -11,12 +11,15 @@ use crate::pb::eth_supply::v1::EthSupply;
 
 #[substreams::handlers::map]
 fn map_entity_changes(
+    clock: Clock,
     block_delta: EthSupply,
     cumulative: EthSupply,
 ) -> Result<EntityChanges, substreams::errors::Error> {
-    let hash_bytes: &Vec<u8> = cumulative.block_hash.as_ref();
-    let block_hash: String = hash_bytes.encode_hex::<String>();
-    let timestamp = BigInt::from(0);
+    let block_hash: String = clock.id;
+    let hash_bytes: Vec<u8> = FromHex::from_hex::<&String>(&block_hash).unwrap();
+    let timestamp = clock.timestamp.unwrap();
+    let block_num = clock.number;
+
     let entity_changes = vec![EntityChange {
         entity: "Supply".to_string(),
         id: block_hash.to_string(),
@@ -24,7 +27,7 @@ fn map_entity_changes(
         operation: Operation::Create.into(),
         fields: vec![
             hash_bytes.to_field("blockHash".to_string()),
-            cumulative.block_number.to_field("blockNumber".to_string()),
+            block_num.to_field("blockNumber".to_string()),
             timestamp.to_field("timestamp".to_string()),
             cumulative
                 .total
