@@ -101,6 +101,9 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
             // parse version from file name
             let filename = file.split('.').collect::<Vec<&str>>();
             // let package_name = filename[0];
+            if filename.len() < 2 {
+                continue;
+            }
             let name = filename[1].to_string();
             let version = filename[2];
             pb_files_hash
@@ -139,6 +142,9 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         }
     }
 
+    // Cleanup
+    fs::remove_dir_all(&tmp_dir).unwrap();
+
     if !pb_files.is_empty() {
         let pb_file_content = pb_files
             .into_iter()
@@ -149,9 +155,9 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
                         (
                             format!(
                                 "#[rustfmt::skip]\n\
-                                #[path = \"../{}/pb/{}.{}.{}.rs\"]\n\
-                                pub(in crate::pb) mod {2}_{3};\n",
-                                out_dir, (if filename.contains("entity") {"substreams"} else {"messari"}), filename, version
+                                #[path = \"../{}/pb/messari.{}.{}.rs\"]\n\
+                                pub(in crate::pb) mod {1}_{2};\n",
+                                out_dir, filename, version
                             ),
                             format!(
                                 "    pub mod {} {{\n        \
@@ -162,6 +168,7 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
                         )
                     })
                     .unzip();
+
                 format!(
                     "{}\n\
                     pub mod {} {{\n\

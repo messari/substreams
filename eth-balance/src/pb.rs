@@ -1,5 +1,5 @@
 #[rustfmt::skip]
-#[path = "../target/pb/substreams.entity.v1.rs"]
+#[path = "../target/pb/messari.entity.v1.rs"]
 pub(in crate::pb) mod entity_v1;
 
 pub mod entity {
