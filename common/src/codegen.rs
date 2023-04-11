@@ -149,15 +149,20 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         let pb_file_content = pb_files
             .into_iter()
             .map(|(filename, versions)| {
+                let mut name = "messari".to_string();
+                if filename == "entity".to_string() {
+                    name = "substreams".to_string();
+                }
                 let (mod_content, registration_content): (Vec<String>, Vec<String>) = versions
                     .into_iter()
                     .map(|version| {
                         (
+
                             format!(
                                 "#[rustfmt::skip]\n\
-                                #[path = \"../{}/pb/messari.{}.{}.rs\"]\n\
-                                pub(in crate::pb) mod {1}_{2};\n",
-                                out_dir, filename, version
+                                #[path = \"../{}/pb/{}.{}.{}.rs\"]\n\
+                                pub(in crate::pb) mod {2}_{3};\n",
+                                out_dir, name, filename, version
                             ),
                             format!(
                                 "    pub mod {} {{\n        \
