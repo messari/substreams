@@ -3,6 +3,20 @@
 version = 3
 
 [[package]]
+name = "aave-v2"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ethabi",
+ "hex-literal",
+ "prost 0.11.9",
+ "substreams 0.5.6",
+ "substreams-common",
+ "substreams-ethereum",
+ "substreams-helper",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "0.7.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"

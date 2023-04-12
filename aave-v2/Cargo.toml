@@ -1,0 +1,20 @@
+[package]
+name = "aave-v2"
+version = "0.1.0"
+edition = "2021"
+repository = "https://github.com/messari/substreams/aave-v2"
+
+[dependencies]
+substreams-helper = { path = "../substreams-helper" }
+substreams-ethereum = { workspace = true }
+substreams = { workspace = true }
+ethabi = "17.2.0"
+hex-literal = "0.3.4"
+prost = "0.11.8"
+
+[build-dependencies]
+anyhow = "1.0.69"
+substreams-common = { path = "../common" }
+
+[lib]
+crate-type = ["cdylib"]

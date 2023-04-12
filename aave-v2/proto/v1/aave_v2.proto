@@ -1,0 +1,780 @@
+
+
+syntax = "proto3";
+
+package messari.aave_v2.v1;
+
+
+message BigInt {
+    string value = 1;
+}
+
+message ATokenSupply {
+    int64 timestamp = 1;
+    string blockHash = 2;
+
+    AToken a_token = 3;
+    BigInt scaled_supply = 4;
+}
+
+message Contract {
+    AToken token = 1;
+}
+
+enum ATOKEN_TYPE {
+    ATOKEN = 0;
+    VARIABLE_DEBT = 1;
+    STABLE_DEBT =  2;
+}
+
+message AToken {
+    ATOKEN_TYPE type = 1;
+    string address = 2;
+    string name = 3;
+    string asset = 4;
+}
+
+message ATokenSupplies {
+    repeated ATokenSupply supplies = 1;
+}
+
+message ATokenBalance {
+    AToken a_token = 1;
+    string address = 2;
+    BigInt scaled_balance = 3;
+}
+
+message ATokenBalances {
+    repeated ATokenBalance balances = 1;
+}
+
+// Struct combining all output from the different modules.
+message Output {
+    AaveV2Events events = 1;
+    ATokenSupplies supplies = 2;
+    ATokenBalances balances = 3;
+}
+
+// From here on, all should be codegenerated eventually.
+message AaveV2Events {
+    repeated AaveV2Event events = 1;
+}
+
+message AaveV2Event {
+    oneof event {
+        // LiquidityPool Events
+        Borrow borrow = 1;
+        Deposit deposit = 2;
+        FlashLoan flash_loan = 3;
+        LiquidationCall liquidation_call = 4;
+        Paused paused = 5;
+        RebalanceStableBorrowRate rebalance_stable_borrow_rate = 6;
+        Repay repay = 7;
+        ReserveDataUpdated reserve_data_updated = 8;
+        ReserveUsedAsCollateralDisabled reserve_used_as_collateral_disabled = 9;
+        ReserveUsedAsCollateralEnabled reserve_used_as_collateral_enabled = 10;
+        Swap swap = 11;
+        Unpaused unpaused = 12;
+        Withdraw withdraw = 13;
+        
+        // IncentivesController Events
+        AssetConfigUpdated asset_config_updated = 14;
+        AssetIndexUpdated asset_index_updated = 15;
+        ClaimerSet claimer_set = 16;
+        DistributionEndUpdated distribution_end_updated = 17;
+        PendingAdminChanged pending_admin_changed = 18;
+        RewardsAccrued rewards_accrued = 19;
+        RewardsClaimed rewards_claimed = 20;
+        RewardsVaultUpdated rewards_vault_updated = 21;
+        RoleClaimed role_claimed = 22;
+        UserIndexUpdated user_index_updated = 23;
+
+        // LendingPoolConfigurator Events
+        ATokenUpgraded a_token_upgraded = 24;
+        BorrowingDisabledOnReserve borrowing_disabled_on_reserve = 25;
+        BorrowingEnabledOnReserve borrowing_enabled_on_reserve = 26;
+        CollateralConfigurationChanged collateral_configuration_changed = 27;
+        ReserveActivated reserve_activated = 28;
+        ReserveDeactivated reserve_deactivated = 29;
+        ReserveDecimalsChanged reserve_decimals_changed = 30;
+        ReserveFactorChanged reserve_factor_changed = 31;
+        ReserveFrozen reserve_frozen = 32;
+        ReserveInitialized reserve_initialized = 33;
+        ReserveInterestRateStrategyChanged reserve_interest_rate_strategy_changed = 34;
+        ReserveUnfrozen reserve_unfrozen = 35;
+        StableDebtTokenUpgraded stable_debt_token_upgraded = 36;
+        StableRateDisabledOnReserve stable_rate_disabled_on_reserve = 37;
+        StableRateEnabledOnReserve stable_rate_enabled_on_reserve = 38;
+        VariableDebtTokenUpgraded variable_debt_token_upgraded = 39;
+
+        // AToken Events
+        Approval approval = 40;
+        BalanceTransfer balance_transfer = 41;
+        Burn burn = 42;
+        Initialized initialized = 43;
+        Mint mint = 44;
+        Transfer transfer = 45;
+        BorrowAllowanceDelegated borrow_allowance_delegated = 46;
+        StableDebtTokenBurn stable_debt_token_burn = 47;
+        StableDebtTokenInitialized stable_debt_token_initialized = 48;
+        StableDebtTokenMint stable_debt_token_mint = 49;
+        VariableDebtTokenBorrowAllowanceDelegated variable_debt_token_borrow_allowance_delegated = 50;
+        VariableDebtTokenBurn variable_debt_token_burn = 51;
+        VariableDebtTokenInitialized variable_debt_token_initialized = 52;
+        VariableDebtTokenMint variable_debt_token_mint = 53;
+    }
+}
+
+// LiquidityPool Events
+message Borrow {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    // rewrite the following with the correct tag numbers
+
+    string reserve = 6;
+    string user = 7;
+    string on_behalf_of = 8;
+    BigInt amount = 9;
+    BigInt borrow_rate_mode = 10;
+    BigInt borrow_rate = 11;
+    BigInt referral = 12;
+
+}
+
+message Deposit {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string reserve = 6;
+    string user = 7;
+    string on_behalf_of = 8;
+    BigInt amount = 9;
+    BigInt referral = 10;
+}
+
+message FlashLoan {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string target = 6;
+    string initiator = 7;
+    string asset = 8;
+    BigInt amount = 9;
+    BigInt premium = 10;
+    BigInt referral_code = 11;
+}
+
+message LiquidationCall {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string collateral_asset = 6;
+    string debt_asset = 7;
+    string user = 8;
+    BigInt debt_to_cover = 9;
+    BigInt liquidated_collateral_amount = 10;
+    string liquidator = 11;
+    bool receive_a_token = 12;
+}
+
+message Paused {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+}
+
+message RebalanceStableBorrowRate {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string reserve = 6;
+    string user = 7;
+}
+
+message Repay {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string reserve = 6;
+    string user = 7;
+    string repayer = 8;
+    BigInt amount = 9;
+}
+
+message ReserveDataUpdated {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string reserve = 6;
+    BigInt liquidity_rate = 7;
+    BigInt stable_borrow_rate = 8;
+    BigInt variable_borrow_rate = 9;
+    BigInt liquidity_index = 10;
+    BigInt variable_borrow_index = 11;
+}
+
+message ReserveUsedAsCollateralDisabled {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string reserve = 6;
+    string user = 7;
+}
+
+message ReserveUsedAsCollateralEnabled {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string reserve = 6;
+    string user = 7;
+}
+
+message Swap {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string reserve = 6;
+    string user = 7;
+    BigInt rate_mode = 8;
+}
+
+message Unpaused {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+}
+
+message Withdraw {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string reserve = 6;
+    string user = 7;
+    string to = 8;
+    BigInt amount = 9;
+}
+
+// IncentivesController Events
+message AssetConfigUpdated {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+    BigInt emission = 7;
+}
+
+message AssetIndexUpdated {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+    BigInt index = 7;
+}
+
+message ClaimerSet {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string user = 6;
+    string claimer = 7;
+}
+
+message DistributionEndUpdated {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    BigInt ditribution_end = 6;
+}
+
+message PendingAdminChanged {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string new_pending_admin = 6;
+}
+
+message RewardsAccrued {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string user = 6;
+    BigInt amount = 7;
+}
+
+message RewardsClaimed {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string user = 6;
+    string to = 7;
+    string claimer = 8;
+    BigInt amount = 9;
+}
+
+message RewardsVaultUpdated {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string vault = 6;
+}
+
+message RoleClaimed {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string new_adming = 6;
+    BigInt role = 7;
+}
+
+message UserIndexUpdated {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string user = 6;
+    string asset = 7;
+    BigInt index = 8;
+}
+
+
+// LendingPoolConfigurator Events
+message ATokenUpgraded {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+    string proxy = 7;
+    string implementation = 8;
+}
+
+message BorrowingDisabledOnReserve {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+}
+
+message BorrowingEnabledOnReserve {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+    bool stable_rate_enabled = 7;
+}
+
+message CollateralConfigurationChanged {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+    BigInt ltv = 7;
+    BigInt liquidation_threshold = 8;
+    BigInt liquidation_bonus = 9;
+}
+
+message ReserveActivated {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+}
+
+message ReserveDeactivated {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+}
+
+message ReserveDecimalsChanged {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+    BigInt decimals = 7;
+}
+
+message ReserveFactorChanged {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+    BigInt factor = 7;
+}
+
+message ReserveFrozen {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+}
+
+message ReserveInitialized {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+    string a_token = 7;
+    string stable_debt_token = 8;
+    string variable_debt_token = 9;
+    string interest_rate_strategy_address = 10;
+}
+
+message ReserveInterestRateStrategyChanged {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+    string strategy = 7;
+}
+
+message ReserveUnfrozen {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+}
+
+message StableDebtTokenUpgraded {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+    string proxy = 7;
+    string implementation = 8;
+}
+
+message StableRateDisabledOnReserve {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+}
+
+message StableRateEnabledOnReserve {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+}
+
+message VariableDebtTokenUpgraded {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string asset = 6;
+    string proxy = 7;
+    string implementation = 8;
+}
+
+// AToken events
+message Approval {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string owner = 6;
+    string spender = 7;
+    BigInt value = 8;
+}
+
+message BalanceTransfer {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string from = 6;
+    string to = 7;
+    BigInt value = 8;
+    BigInt index = 9;
+}
+
+message Burn {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string from = 6;
+    string target = 7;
+    BigInt value = 8;
+    BigInt index = 9;
+}
+
+message Initialized {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string underlying_asset = 6;
+    string pool = 7;
+    string treasury = 8;
+    string incentives_controller = 9;
+    BigInt a_token_decimals = 10;
+    string a_token_name = 11;
+    string a_token_symbol = 12;
+    string params = 13;
+}
+
+message Mint {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string from = 6;
+    BigInt value = 7;
+    BigInt index = 8;
+}
+
+message Transfer {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string from = 6;
+    string to = 7;
+    BigInt value = 8;
+}
+
+// Stable debt token events
+message BorrowAllowanceDelegated {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string from_user = 6;
+    string to_user = 7;
+    string asset = 8;
+    BigInt amount = 9;
+}
+
+message StableDebtTokenBurn {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string user = 6;
+    BigInt amount = 7;
+    BigInt current_balance = 8;
+    BigInt balance_increase = 9;
+    BigInt avg_stable_rate = 10;
+    BigInt new_total_supply = 11;
+}
+
+message StableDebtTokenInitialized {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string underlying_asset = 6;
+    string pool = 8;
+    string incentives_controller = 9;
+    BigInt debt_token_decimals = 10;
+    string debt_token_name = 11;
+    string debt_token_symbol = 12;
+    string params = 13;
+}
+
+message StableDebtTokenMint {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string user = 6;
+    string on_behalf_of = 7;
+    BigInt amount = 8;
+    BigInt current_balance = 9;
+    BigInt balance_increase = 10;
+    BigInt new_rate = 11;
+    BigInt avg_stable_rate = 12;
+    BigInt new_total_supply = 13;
+}
+
+// Variable debt token events
+message VariableDebtTokenBorrowAllowanceDelegated {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string from_user = 6;
+    string to_user = 7;
+    string asset = 8;
+    BigInt amount = 9;
+}
+
+message VariableDebtTokenBurn {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string user = 6;
+    BigInt amount = 7;
+    BigInt index = 8;
+}
+
+message VariableDebtTokenInitialized {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string underlying_asset = 6;
+    string pool = 7;
+    string incentives_controller = 8;
+    BigInt debt_token_decimals = 9;
+    string debt_token_name = 10;
+    string debt_token_symbol = 11;
+    string params = 12;
+}
+
+message VariableDebtTokenMint {
+    int64 timestamp = 1;
+    string blockHash = 2;
+    string transactionHash = 3;
+    string address = 4;
+    uint32 logIndex = 5;
+
+    string from = 6;
+    string on_behalf_of = 7;
+    BigInt value = 8;
+    BigInt index = 9;
+}
