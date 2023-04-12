@@ -42,7 +42,7 @@ jobs:
         uses: jaxxstorm/action-install-gh-release@v1.7.1
         with:
           repo: streamingfast/substreams
-          tag: v0.0.21
+          tag: v1.0.1
           cache: enable
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -72,6 +72,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: build all
         run: |
-          chmod a+x /opt/hostedtoolcache/streamingfast/substreams/v0.0.21/linux-x64/substreams_0.0.21_linux_x86_64/substreams
-          export PATH="/opt/hostedtoolcache/streamingfast/substreams/v0.0.21/linux-x64/substreams_0.0.21_linux_x86_64/:$PATH"
+          chmod a+x /opt/hostedtoolcache/streamingfast/substreams/v1.0.1/linux-x64/substreams
+          export PATH="/opt/hostedtoolcache/streamingfast/substreams/v1.0.1/linux-x64/:$PATH"
           make build-all
