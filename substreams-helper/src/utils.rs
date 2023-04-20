@@ -72,6 +72,18 @@ pub fn read_string(input: &[u8]) -> Result<String, DecodeError> {
     Ok(String::from_utf8_lossy(&input[(offset + 32) as usize..end]).to_string())
 }
 
+/// Returns the timestamp for the start of the most recent day
+pub(crate) fn get_latest_day(timestamp: i64) -> i64 {
+    const SECONDS_IN_DAY: i64 = 86400_i64;
+    timestamp / SECONDS_IN_DAY
+}
+
+/// Returns the timestamp for the start of the most recent hour
+pub(crate) fn get_latest_hour(timestamp: i64) -> i64 {
+    const SECONDS_IN_HOUR: i64 = 3600_i64;
+    timestamp / SECONDS_IN_HOUR
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

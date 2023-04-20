@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package messari.eth_supply.v1;
+
+message BigInt {
+  bytes bytes = 1;
+}
+
+message EthSupply {
+  BigInt genesis = 1;
+  BigInt blockRewards = 2;
+  BigInt uncleRewards = 3;
+  BigInt burned = 4;
+  BigInt total = 5;
+}

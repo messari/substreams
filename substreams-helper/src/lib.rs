@@ -1,4 +1,6 @@
 pub mod abi;
+pub mod block;
+pub mod convert;
 pub mod erc20;
 pub mod keyer;
 pub mod math;
