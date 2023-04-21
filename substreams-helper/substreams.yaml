@@ -1,0 +1,18 @@
+specVersion: v0.1.0
+package:
+  name: substreams_helper
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+
+protobuf:
+  files:
+    - erc20.proto
+  importPaths:
+    - ../common/proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/substreams_helper.wasm"

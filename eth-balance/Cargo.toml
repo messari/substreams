@@ -16,6 +16,7 @@ hex-literal = "0.3.4"
 substreams = { workspace = true }
 substreams-ethereum = { workspace = true }
 substreams-helper = { path = "../substreams-helper" }
+substreams-entity-change = "0.3.0"
 
 [build-dependencies]
 anyhow = "1"

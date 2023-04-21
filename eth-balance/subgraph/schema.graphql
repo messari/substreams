@@ -1,0 +1,40 @@
+type Transfer @entity {
+    " {transaction hash} "
+    id: Bytes!
+
+    blockNumber: BigInt!
+    timestamp: BigInt!
+    logIndex: BigInt!
+    logOrdinal: BigInt
+
+    " The address of the token being transferred "
+    tokenAddress: Bytes!
+
+    " Address sending the tokens "
+    from: Bytes!
+
+    " Address receiving the tokens "
+    to: Bytes!
+
+    " Amount of tokens being transferred "
+    amount: BigInt!
+
+    balanceChanges: [BalanceChange!]! @derivedFrom(field: "transfer")
+}
+
+type BalanceChange @entity {
+    " {transaction hash}-{log ordinal} "
+    id: Bytes!
+
+    " Related Transfer event ID (ie, transaction hash) "
+    transfer: Bytes!
+
+    logOrdinal: BigInt
+
+    account: Bytes!
+
+    oldBalance: BigInt
+    newBalance: BigInt!
+
+    reason: Int!
+}

@@ -78,12 +78,16 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
                     name: base_asset.name,
                     symbol: base_asset.symbol,
                     decimals: base_asset.decimals,
+                    tx_created: "TODO".to_string(),
+                    block_created: 0, // TODO this should input store_tokens
                 }),
                 quote_asset: Some(Erc20Token {
                     address: quote_asset.address,
                     name: quote_asset.name,
                     symbol: quote_asset.symbol,
                     decimals: quote_asset.decimals,
+                    tx_created: "TODO".to_string(),
+                    block_created: 0, // TODO this should input store_tokens
                 }),
                 decimals: decimals.to_u64(),
             };

@@ -4,8 +4,8 @@ pub mod abi;
 pub mod pb;
 
 mod keyer;
+mod rpc;
 
-use pb::common::v1 as common;
 use pb::erc20::v1 as erc20;
 use pb::erc20_price::v1::Erc20Price;
 use std::str::FromStr;
@@ -25,7 +25,9 @@ use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
 use substreams_helper::keyer::chainlink_asset_key;
 use substreams_helper::types::Address;
 
-fn contract_bytecode_len(call: &pbeth::v2::Call) -> usize {
+const INITIALIZE_METHOD_HASH: [u8; 4] = hex!("1459457a");
+
+fn code_len(call: &pbeth::v2::Call) -> usize {
     let mut len = 0;
     for code_change in &call.code_changes {
         len += code_change.new_code.len()
@@ -34,34 +36,87 @@ fn contract_bytecode_len(call: &pbeth::v2::Call) -> usize {
     len
 }
 
+// TODO: this should be a store module
 /// Extracts erc20 contract deployments from the blocks
 #[substreams::handlers::map]
 fn map_block_to_erc20_contracts(
     block: pbeth::v2::Block,
-) -> Result<common::Addresses, substreams::errors::Error> {
-    let mut erc20_contracts = common::Addresses { items: vec![] };
+) -> Result<erc20::Erc20Tokens, substreams::errors::Error> {
+    let mut erc20_tokens = erc20::Erc20Tokens { items: vec![] };
 
-    for call_view in block.calls() {
-        let call = call_view.call;
-        if call.call_type == pbeth::v2::CallType::Create as i32 {
-            // skipping contracts that are too short to be an erc20 token
-            if contract_bytecode_len(call) < 150 {
+    for tx in block.transaction_traces {
+        for call in tx.calls {
+            if call.state_reverted {
                 continue;
             }
 
-            let address = Hex(call.address.clone()).to_string();
+            if call.call_type == pbeth::v2::CallType::Create as i32
+                || call.call_type == pbeth::v2::CallType::Call as i32
+            // proxy contract creation
+            {
+                let call_input_len = call.input.len();
+                if call.call_type == pbeth::v2::CallType::Call as i32
+                    && (call_input_len < 4 || call.input[0..4] != INITIALIZE_METHOD_HASH)
+                {
+                    // this will check if a proxy contract has been called to create a ERC20 contract.
+                    // if that is the case the Proxy contract will call the initialize function on the ERC20 contract
+                    // this is part of the OpenZeppelin Proxy contract standard
+                    continue;
+                }
 
-            // check if contract is an erc20 token
-            if substreams_helper::erc20::get_erc20_token(address.clone()).is_none() {
-                continue;
+                // Contract creation not from proxy contract
+                if call.call_type == pbeth::v2::CallType::Create as i32 {
+                    let code_change_len = code_len(&call);
+
+                    if code_change_len <= 150 {
+                        // skipping contracts with less than 150 bytes of code
+                        log::info!(
+                            "Skipping contract: {}. Contract code is less than 150 bytes.",
+                            Hex::encode(&call.address)
+                        );
+                        continue;
+                    }
+                }
+
+                log::info!(
+                    "Attempting to get metadata for erc20: {}",
+                    Hex::encode(&call.address)
+                );
+
+                let decimals: u64;
+                let decimal_result = rpc::get_erc20_decimals(&call.address);
+                match decimal_result {
+                    Ok(_decimals) => decimals = _decimals,
+                    Err(_e) => continue,
+                };
+
+                let symbol: String;
+                let symbaol_result = rpc::get_erc20_symbol(&call.address);
+                match symbaol_result {
+                    Ok(_symbol) => symbol = _symbol,
+                    Err(_e) => continue,
+                };
+
+                let name: String;
+                let name_result = rpc::get_erc20_name(&call.address);
+                match name_result {
+                    Ok(_name) => name = _name,
+                    Err(_e) => continue,
+                };
+
+                erc20_tokens.items.push(erc20::Erc20Token {
+                    address: Hex::encode(call.address.clone()),
+                    name: name,
+                    symbol: symbol,
+                    decimals: decimals,
+                    tx_created: Hex::encode(&tx.hash),
+                    block_created: block.number,
+                });
             }
-
-            log::info!("Create {}, len {}", address, contract_bytecode_len(call));
-            erc20_contracts.items.push(common::Address { address });
         }
     }
 
-    Ok(erc20_contracts)
+    Ok(erc20_tokens)
 }
 
 /// Extracts transfer events from the blocks
@@ -81,13 +136,23 @@ fn map_block_to_transfers(
             }
 
             transfer_events.items.push(erc20::TransferEvent {
-                tx_hash: Hex(log.receipt.transaction.clone().hash).to_string(),
+                tx_hash: Hex::encode(log.receipt.transaction.clone().hash),
+                block_number: block.number,
+                timestamp: block
+                    .header
+                    .as_ref()
+                    .unwrap()
+                    .timestamp
+                    .as_ref()
+                    .unwrap()
+                    .seconds as u64,
                 log_index: log.index(),
-                log_ordinal: log.ordinal(),
-                token_address: Hex(log.address()).to_string(),
-                from: Hex(event.from).to_string(),
-                to: Hex(event.to).to_string(),
+                log_ordinal: Some(log.ordinal()),
+                token_address: Hex::encode(log.address()),
+                from: Hex::encode(event.from),
+                to: Hex::encode(event.to),
                 amount: event.value.to_string(),
+                balance_changes: vec![],
             })
         }
     }
@@ -100,7 +165,7 @@ fn store_transfers(transfers: erc20::TransferEvents, output: store::StoreSetRaw)
     log::info!("Stored events {}", transfers.items.len());
     for transfer in transfers.items {
         output.set(
-            transfer.log_ordinal,
+            transfer.log_ordinal.unwrap(),
             Hex::encode(&transfer.token_address),
             &proto::encode(&transfer).unwrap(),
         );
@@ -112,14 +177,14 @@ fn store_balance(transfers: erc20::TransferEvents, output: store::StoreAddBigInt
     log::info!("Stored events {}", transfers.items.len());
     for transfer in transfers.items {
         output.add(
-            transfer.log_ordinal,
+            transfer.log_ordinal.unwrap(),
             keyer::account_balance_key(&transfer.to),
             &BigInt::from_str(transfer.amount.as_str()).unwrap(),
         );
 
         if Hex::decode(transfer.from.clone()).unwrap() != NULL_ADDRESS {
             output.add(
-                transfer.log_ordinal,
+                transfer.log_ordinal.unwrap(),
                 keyer::account_balance_key(&transfer.from),
                 &BigInt::from_str((transfer.amount).as_str()).unwrap().neg(),
             );
@@ -148,7 +213,7 @@ fn store_balance_usd(
 
         match balances.get_last(keyer::account_balance_key(&transfer.to)) {
             Some(balance) => output.set(
-                transfer.log_ordinal,
+                transfer.log_ordinal.unwrap(),
                 keyer::account_balance_usd_key(&transfer.to),
                 &(token_price.clone() * balance.to_decimal(token_decimals.into())),
             ),
@@ -158,7 +223,7 @@ fn store_balance_usd(
         if Hex::decode(transfer.from.clone()).unwrap() != NULL_ADDRESS {
             match balances.get_last(keyer::account_balance_key(&transfer.from)) {
                 Some(balance) => output.set(
-                    transfer.log_ordinal,
+                    transfer.log_ordinal.unwrap(),
                     keyer::account_balance_usd_key(&transfer.from),
                     &(token_price.clone() * balance.to_decimal(token_decimals.into())),
                 ),

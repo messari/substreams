@@ -5,12 +5,14 @@ package:
 
 imports:
   eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+  entity: https://github.com/streamingfast/substreams-entity-change/releases/download/v0.2.1/substreams-entity-change-v0.2.1.spkg
 
 protobuf:
   files:
-    - eth_balance.proto
+    - erc20.proto
+    -
   importPaths:
-    - proto/v1
+    - ../common/proto
 
 binaries:
   default:
@@ -18,9 +20,16 @@ binaries:
     file: "../target/wasm32-unknown-unknown/release/eth_balance.wasm"
 
 modules:
-  - name: store_balance
-    kind: store
-    updatePolicy: set
-    valueType: string
+  - name: map_balances
+    kind: map
     inputs:
       - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:messari.erc20.v1.TransferEvents
+
+  - name: map_entity_changes
+    kind: map
+    inputs:
+      - map: map_balances
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
