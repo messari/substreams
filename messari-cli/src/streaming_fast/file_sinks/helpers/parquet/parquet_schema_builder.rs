@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use parquet::basic::{LogicalType, Repetition};
+use parquet::basic::{Compression, LogicalType, Repetition};
 use parquet::file::properties::{WriterProperties, WriterPropertiesPtr};
 use parquet::schema::types::{GroupTypeBuilder, PrimitiveTypeBuilder, TypePtr};
 
@@ -46,7 +46,7 @@ impl ParquetSchemaBuilder {
         let parquet_schema = group_builder.with_fields(&mut group_fields).build().unwrap();
 
         // For now we will use the default, however later on we can use a non default setup to optimise for data storage
-        let writer_properties = Arc::new(WriterProperties::builder().build());
+        let writer_properties = Arc::new(WriterProperties::builder().set_compression(Compression::SNAPPY).build());
 
         (Arc::new(parquet_schema), writer_properties)
     }

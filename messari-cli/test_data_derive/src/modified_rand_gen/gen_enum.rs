@@ -1,10 +1,11 @@
-use crate::gen::{
-    generated_values_for_named_fields, generated_values_for_unnamed_fields, TraitMethods,
-};
-use crate::parser::{attrs_to_customizes, has_customize, Customize};
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::{DataEnum, Fields};
+
+use crate::modified_rand_gen::parser::{attrs_to_customizes, has_customize, Customize};
+use crate::modified_rand_gen::gen::{
+    generated_values_for_named_fields, generated_values_for_unnamed_fields, TraitMethods,
+};
 
 pub fn generate(name: &Ident, trait_methods: &mut TraitMethods, de: DataEnum) -> TokenStream {
     let variants = de
