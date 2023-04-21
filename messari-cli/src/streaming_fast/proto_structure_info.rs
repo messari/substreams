@@ -1,8 +1,10 @@
 use std::borrow::Borrow;
 use std::collections::{HashMap, HashSet};
+use futures::StreamExt;
 use parquet::basic::Repetition;
 use prost_types::field_descriptor_proto::{Label, Type};
 use prost_types::{DescriptorProto, EnumDescriptorProto, FieldDescriptorProto, FileDescriptorProto};
+use std::borrow::BorrowMut;
 
 use crate::streaming_fast::streamingfast_dtos::Package;
 
@@ -59,18 +61,28 @@ impl MessageInfo {
             });
         }
 
+        let oneof_groups = oneof_group_mappings.into_values().filter_map(|group| {
+            if group.len() > 1 {
+                Some(group.into_iter().collect())
+            } else {
+                // "Oneof groups of size one aren't actually oneof groups - they are just optional fields so we won't count these
+                None
+            }
+        }).collect::<Vec<_>>();
+
+        let oneof_fields = oneof_groups.clone().into_iter().flat_map(|x| x).collect::<Vec<_>>();
+        for field in fields.iter_mut() {
+            if oneof_fields.contains(&field.field_number) {
+                assert_eq!(field.field_specification, FieldSpecification::Required, "All oneof fields should be required! TODO: Flesh out this error");
+                field.set_as_optional_field(); // Once the oneof is taken to account each field inside will become optional so this needs to be taken into account
+            }
+        }
+
         MessageInfo {
             type_name: message.name().to_string(), // TODO: Should probably make sure this isn't a "full path type" and instead just the actual type name as specified in the proto
             field_specification,
             fields,
-            oneof_groups: oneof_group_mappings.into_values().filter_map(|group| {
-                if group.len() > 1 {
-                    Some(group.into_iter().collect())
-                } else {
-                    // "Oneof groups of size one aren't actually oneof groups - they are just optional fields so we won't count these
-                    None
-                }
-            }).collect(),
+            oneof_groups,
         }
     }
 
@@ -120,6 +132,20 @@ impl EnumInfo {
             enum_mappings: enum_type.value.iter().map(|enum_value| (enum_value.number.unwrap() as u64, enum_value.name().to_string())).collect(),
         }
     }
+
+    #[cfg(test)]
+    pub(crate) fn from_fields(mut starting_tag: u8, field_names: Vec<String>) -> Self {
+        let mut enum_mappings = HashMap::new();
+
+        for field_name in field_names {
+            enum_mappings.insert(starting_tag as u64, field_name);
+            starting_tag += 1;
+        }
+
+        EnumInfo {
+            enum_mappings,
+        }
+    }
 }
 
 #[derive(PartialEq, Clone)]
@@ -159,6 +185,13 @@ impl FieldInfo {
             &enum_info.enum_mappings
         } else {
             unreachable!()
+        }
+    }
+
+    pub(crate) fn set_as_optional_field(&mut self) {
+        self.field_specification = FieldSpecification::Optional;
+        if let FieldType::Message(message_info) = self.field_type.borrow_mut() {
+            message_info.field_specification = FieldSpecification::Optional;
         }
     }
 }
@@ -292,7 +325,7 @@ impl ProtoFieldExt for FieldDescriptorProto {
 }
 
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 pub(crate) enum FieldSpecification {
     Required,
     Optional,

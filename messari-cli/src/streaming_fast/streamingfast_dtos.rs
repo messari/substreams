@@ -216,15 +216,15 @@ pub struct StoreDelta {
 /// Nested message and enum types in `StoreDelta`.
 pub mod store_delta {
     #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    ::prost::Enumeration
     )]
     #[repr(i32)]
     pub enum Operation {
@@ -332,15 +332,15 @@ pub mod module {
     /// Nested message and enum types in `KindStore`.
     pub mod kind_store {
         #[derive(
-            Clone,
-            Copy,
-            Debug,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            ::prost::Enumeration
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
         )]
         #[repr(i32)]
         pub enum UpdatePolicy {
@@ -392,7 +392,7 @@ pub mod module {
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct Input {
-        #[prost(oneof = "input::Input", tags = "1, 2, 3")]
+        #[prost(oneof = "input::Input", tags = "1, 2, 3, 4")]
         pub input: ::core::option::Option<input::Input>,
     }
     /// Nested message and enum types in `Input`.
@@ -422,15 +422,15 @@ pub mod module {
         /// Nested message and enum types in `Store`.
         pub mod store {
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+            Clone,
+            Copy,
+            Debug,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            ::prost::Enumeration
             )]
             #[repr(i32)]
             pub enum Mode {
@@ -462,6 +462,12 @@ pub mod module {
             }
         }
         #[allow(clippy::derive_partial_eq_without_eq)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Params {
+            #[prost(string, tag = "1")]
+            pub value: ::prost::alloc::string::String,
+        }
+        #[allow(clippy::derive_partial_eq_without_eq)]
         #[derive(Clone, PartialEq, ::prost::Oneof)]
         pub enum Input {
             #[prost(message, tag = "1")]
@@ -470,6 +476,8 @@ pub mod module {
             Map(Map),
             #[prost(message, tag = "3")]
             Store(Store),
+            #[prost(message, tag = "4")]
+            Params(Params),
         }
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
@@ -581,20 +589,20 @@ pub mod stream_client {
     impl StreamClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
-        where
-            D: std::convert::TryInto<tonic::transport::Endpoint>,
-            D::Error: Into<StdError>,
+            where
+                D: std::convert::TryInto<tonic::transport::Endpoint>,
+                D::Error: Into<StdError>,
         {
             let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
             Ok(Self::new(conn))
         }
     }
     impl<T> StreamClient<T>
-    where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
-        T::Error: Into<StdError>,
-        T::ResponseBody: Body<Data = Bytes> + Send + 'static,
-        <T::ResponseBody as Body>::Error: Into<StdError> + Send,
+        where
+            T: tonic::client::GrpcService<tonic::body::BoxBody>,
+            T::Error: Into<StdError>,
+            T::ResponseBody: Body<Data = Bytes> + Send + 'static,
+            <T::ResponseBody as Body>::Error: Into<StdError> + Send,
     {
         pub fn new(inner: T) -> Self {
             let inner = tonic::client::Grpc::new(inner);
@@ -608,18 +616,18 @@ pub mod stream_client {
             inner: T,
             interceptor: F,
         ) -> StreamClient<InterceptedService<T, F>>
-        where
-            F: tonic::service::Interceptor,
-            T::ResponseBody: Default,
-            T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
-                Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+            where
+                F: tonic::service::Interceptor,
+                T::ResponseBody: Default,
+                T: tonic::codegen::Service<
+                    http::Request<tonic::body::BoxBody>,
+                    Response = http::Response<
+                        <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    >,
                 >,
-            >,
-            <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
-            >>::Error: Into<StdError> + Send + Sync,
+                <T as tonic::codegen::Service<
+                    http::Request<tonic::body::BoxBody>,
+                >>::Error: Into<StdError> + Send + Sync,
         {
             StreamClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -642,9 +650,9 @@ pub mod stream_client {
             &mut self,
             request: impl tonic::IntoRequest<super::Request>,
         ) -> Result<
-                tonic::Response<tonic::codec::Streaming<super::Response>>,
-                tonic::Status,
-            > {
+            tonic::Response<tonic::codec::Streaming<super::Response>>,
+            tonic::Status,
+        > {
             self.inner
                 .ready()
                 .await
@@ -671,10 +679,10 @@ pub mod stream_server {
     pub trait Stream: Send + Sync + 'static {
         /// Server streaming response type for the Blocks method.
         type BlocksStream: futures_core::Stream<
-                Item = Result<super::Response, tonic::Status>,
-            >
-            + Send
-            + 'static;
+            Item = Result<super::Response, tonic::Status>,
+        >
+        + Send
+        + 'static;
         async fn blocks(
             &self,
             request: tonic::Request<super::Request>,
@@ -703,8 +711,8 @@ pub mod stream_server {
             inner: T,
             interceptor: F,
         ) -> InterceptedService<Self, F>
-        where
-            F: tonic::service::Interceptor,
+            where
+                F: tonic::service::Interceptor,
         {
             InterceptedService::new(Self::new(inner), interceptor)
         }
@@ -722,10 +730,10 @@ pub mod stream_server {
         }
     }
     impl<T, B> tonic::codegen::Service<http::Request<B>> for StreamServer<T>
-    where
-        T: Stream,
-        B: Body + Send + 'static,
-        B::Error: Into<StdError> + Send + 'static,
+        where
+            T: Stream,
+            B: Body + Send + 'static,
+            B::Error: Into<StdError> + Send + 'static,
     {
         type Response = http::Response<tonic::body::BoxBody>;
         type Error = std::convert::Infallible;

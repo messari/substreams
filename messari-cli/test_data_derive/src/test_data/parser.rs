@@ -1,9 +1,10 @@
-use crate::parser::Customize::{AlwaysNone, AlwaysSome, Custom, Empty, Panic, Skip};
 use proc_macro2::TokenStream;
 #[allow(unused_imports)]
 use std::str::FromStr;
 use syn::parse::{Parse, ParseBuffer};
 use syn::Attribute;
+
+use crate::test_data::parser::Customize::{AlwaysNone, AlwaysSome, Custom, Empty, Panic, Skip};
 
 #[allow(clippy::ptr_arg)]
 pub(crate) fn attrs_to_customizes(attrs: &Vec<Attribute>) -> Vec<Customize> {

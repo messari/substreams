@@ -10,7 +10,7 @@ use crate::streaming_fast::proto_utils::FromUnsignedVarint;
 pub(in crate::streaming_fast::file_sinks) struct StructDecoder {
     field_decoders: BTreeMap<u64, Decoder>,
     field_specification: FieldSpecification,
-    non_repeated_nor_oneof_fields: Vec<u64>,
+    optional_and_required_fields: Vec<u64>,
     flattened_field_name: String,
     oneof_group_tracker: OneofGroupTracker
 }
@@ -25,13 +25,13 @@ impl StructDecoder {
         };
 
         let mut field_decoders = BTreeMap::new();
-        let mut non_repeated_nor_oneof_fields = Vec::new();
+        let mut optional_and_required_fields = Vec::new();
         let oneof_field_numbers = message_info.oneof_groups.clone().into_iter().flat_map(|x| x).collect::<Vec<_>>();
         for field_info in message_info.fields {
             match field_info.field_specification {
                 FieldSpecification::Required | FieldSpecification::Optional => {
                     if !oneof_field_numbers.contains(&field_info.field_number) {
-                        non_repeated_nor_oneof_fields.push(field_info.field_number);
+                        optional_and_required_fields.push(field_info.field_number);
                     }
                 },
                 _ => {}
@@ -42,7 +42,7 @@ impl StructDecoder {
         StructDecoder {
             field_decoders,
             field_specification: message_info.field_specification,
-            non_repeated_nor_oneof_fields,
+            optional_and_required_fields,
             flattened_field_name: parquet_schema_builder.get_flattened_field_name(&message_info.type_name),
             oneof_group_tracker: OneofGroupTracker::new(message_info.oneof_groups)
         }
@@ -88,7 +88,7 @@ impl StructDecoder {
             };
         }
 
-        for field in self.non_repeated_nor_oneof_fields.iter() {
+        for field in self.optional_and_required_fields.iter() {
             if !decoded_fields.contains(field) {
                 self.field_decoders.get_mut(field).unwrap().push_null_or_default_values(uncompressed_file_size, current_definition_lvl, last_repetition_lvl)?;
             }
@@ -104,9 +104,7 @@ impl StructDecoder {
     pub(in crate::streaming_fast::file_sinks) fn push_null_or_default_values(&mut self, uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<bool, String> {
         match self.field_specification {
             FieldSpecification::Required => {
-                // TODO: Should check if we should always get some data returned for a struct - if this is the case then we should just
-                // TODO: return an error and stop processing rather than propagating null or default values
-                for field_number in self.non_repeated_nor_oneof_fields.iter() {
+                for field_number in self.optional_and_required_fields.iter() {
                     self.field_decoders.get_mut(field_number).unwrap().push_null_or_default_values(uncompressed_file_size, current_definition_lvl, last_repetition_lvl)?;
                 }
                 Ok(true)
@@ -120,7 +118,7 @@ impl StructDecoder {
     }
 
     pub(in crate::streaming_fast::file_sinks) fn push_nulls(&mut self, uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<(), String> {
-        for field_number in self.non_repeated_nor_oneof_fields.iter() {
+        for field_number in self.optional_and_required_fields.iter() {
             self.field_decoders.get_mut(field_number).unwrap().push_nulls(uncompressed_file_size, current_definition_lvl, last_repetition_lvl)?;
         }
 
