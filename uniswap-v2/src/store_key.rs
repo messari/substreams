@@ -1,108 +1,87 @@
+use substreams::scalar::BigInt;
+
 #[derive(Clone)]
 pub(crate) enum StoreKey {
     Pool,
-    User,
-    UserBalance,
-    TokenWhitelist,
-    InputTokenBalance,
-    TokenPrice,
-
-    // Usage Metrics keys
-    PoolCount,
-    ActiveUser,
-    ActiveUserCount,
-    TransactionCount,
-    DepositCount,
-    WithdrawCount,
-    SwapCount,
-
-    // Liquidity Pool Keys
-    PoolTVL,
-    PoolVolume,
-    PoolOutputTokenSupply,
-    PoolSupplySideRevenue,
-    PoolProtocolSideRevenue,
-    PoolTotalRevenue,
+    TotalBalance,
+    LatestTimestamp,
+    LatestBlockNumber,
+    Token0Balance,
+    Token1Balance,
+    OutputTokenBalance,
+    TotalValueLockedUSD,
+    Volume,
+    DailySupplySideRevenueUSD,
+    HourlySupplySideRevenueUSD,
+    CumulativeSupplySideRevenueUSD,
+    DailyProtocolSideRevenueUSD,
+    HourlyProtocolSideRevenueUSD,
+    CumulativeProtocolSideRevenueUSD,
+    DailyTotalRevenueUSD,
+    HourlyTotalRevenueUSD,
+    CumulativeTotalRevenueUSD,
+    DailyVolumeUSD,
+    HourlyVolumeUSD,
+    CumulativeVolumeUSD,
 }
 
 impl StoreKey {
-    pub(crate) fn get_unique_pool_key(&self, pool_address: &String) -> String {
-        format!("1{}:{}", self.get_unique_id(), pool_address)
+    pub fn get_unique_pool_key(&self, key: &String) -> String {
+        format!("{}:{}", self.unique_id(), key)
     }
 
-    pub(crate) fn get_unique_token_key(&self, token_address: &String) -> String {
-        format!("2{}:{}", self.get_unique_id(), token_address)
+    pub fn get_unique_protocol_key(&self) -> String {
+        format!("[Protocol]:{}", self.unique_id())
     }
 
-    pub(crate) fn get_pool_specific_hourly_key(&self, timestamp: &i64, pool: &String) -> String {
-        format!("h:{}:{}:{}", self.get_unique_id(), timestamp, pool)
+    pub fn get_unique_daily_pool_key(&self, day_id: BigInt, key: &String) -> String {
+        format!("{}:{}:{}", self.unique_id(), day_id.to_string(), key)
     }
 
-    pub(crate) fn get_pool_specific_daily_key(&self, timestamp: &i64, pool: &String) -> String {
-        format!("d:{}:{}:{}", self.get_unique_id(), timestamp, pool)
+    pub fn get_unique_hourly_pool_key(&self, hour_id: BigInt, key: &String) -> String {
+        format!("{}:{}:{}", self.unique_id(), hour_id.to_string(), key)
     }
 
-    pub(crate) fn get_pool_specific_cumulative_key(&self, pool: &String) -> String {
-        format!("c:{}:{}", self.get_unique_id(), pool)
+    pub fn get_unique_daily_protocol_key(&self, day_id: BigInt) -> String {
+        format!("[Protocol]:{}:{}", self.unique_id(), day_id.to_string())
     }
 
-    pub(crate) fn get_protocol_specific_hourly_key(&self, timestamp: &i64) -> String {
-        format!("h:{}:{}", self.get_unique_id(), timestamp)
+    pub fn get_unique_snapshot_tracking_key(&self, key1: &String, key2: &String) -> String {
+        format!("{}:{}:{}", self.unique_id(), key1, key2)
     }
 
-    pub(crate) fn get_protocol_specific_daily_key(&self, timestamp: &i64) -> String {
-        format!("d:{}:{}", self.get_unique_id(), timestamp)
-    }
-
-    pub(crate) fn get_protocol_specific_cumulative_key(&self) -> String {
-        format!("c:{}", self.get_unique_id())
-    }
-
-    pub(crate) fn get_user_balance_key(&self, pool: &String, user: &String) -> String {
-        format!("{}:{}::{}", self.get_unique_id(), pool, user)
-    }
-
-    pub(crate) fn get_pool_token_balance_key(&self, pool: &String, token: &String) -> String {
-        format!("{}:{}:{}", self.get_unique_id(), pool, token)
-    }
-
-    pub(crate) fn get_pool_from_key(&self, key: &String) -> String {
+    pub fn get_pool(&self, key: &String) -> Option<String> {
         let chunks: Vec<&str> = key.split(":").collect();
 
-        return chunks[1].to_string();
-    }
-
-    pub(crate) fn get_pool_and_token_from_key(&self, key: &String) -> Option<(String, String)> {
-        let chunks: Vec<&str> = key.split(":").collect();
-
-        if chunks[0] != self.get_unique_id() {
+        if chunks[0] != self.unique_id() {
             return None;
         }
-
-        return Some((chunks[1].to_string(), chunks[2].to_string()));
+        return Some(chunks[1].to_string());
     }
 
-    pub(crate) fn get_unique_id(&self) -> String {
+    pub fn unique_id(&self) -> String {
         match self {
             StoreKey::Pool => "Pool".to_string(),
-            StoreKey::PoolCount => "PoolCount".to_string(),
-            StoreKey::UserBalance => "Balance".to_string(),
-            StoreKey::User => "User".to_string(),
-            StoreKey::ActiveUser => "ActiveUser".to_string(),
-            StoreKey::ActiveUserCount => "ActiveUserCount".to_string(),
-            StoreKey::PoolOutputTokenSupply => "PoolOutputTokenSupply".to_string(),
-            StoreKey::DepositCount => "DepositCount".to_string(),
-            StoreKey::WithdrawCount => "WithdrawCount".to_string(),
-            StoreKey::SwapCount => "SwapCount".to_string(),
-            StoreKey::TransactionCount => "TransactionCount".to_string(),
-            StoreKey::TokenWhitelist => "TokenWhitelist".to_string(),
-            StoreKey::InputTokenBalance => "InputTokenBalance".to_string(),
-            StoreKey::TokenPrice => "TokenPrice".to_string(),
-            StoreKey::PoolVolume => "PoolVolume".to_string(),
-            StoreKey::PoolTVL => "PoolTVL".to_string(),
-            StoreKey::PoolSupplySideRevenue => "PoolSupplySideRevenue".to_string(),
-            StoreKey::PoolProtocolSideRevenue => "PoolProtocolSideRevenue".to_string(),
-            StoreKey::PoolTotalRevenue => "PoolTotalRevenue".to_string(),
+            StoreKey::TotalBalance => "TotalBalance".to_string(),
+            StoreKey::LatestTimestamp => "LatestTimestamp".to_string(),
+            StoreKey::LatestBlockNumber => "LatestBlockNumber".to_string(),
+            StoreKey::Token0Balance => "Token0Balance".to_string(),
+            StoreKey::Token1Balance => "Token1Balance".to_string(),
+            StoreKey::OutputTokenBalance => "OutputTokenBalance".to_string(),
+            StoreKey::TotalValueLockedUSD => "TotalValueLockedUSD".to_string(),
+            StoreKey::Volume => "Volume".to_string(),
+            StoreKey::DailySupplySideRevenueUSD => "d:SupplySideRevenueUSD".to_string(),
+            StoreKey::HourlySupplySideRevenueUSD => "h:SupplySideRevenueUSD".to_string(),
+            StoreKey::CumulativeSupplySideRevenueUSD => "c:SupplySideRevenueUSD".to_string(),
+            StoreKey::DailyProtocolSideRevenueUSD => "d:ProtocolSideRevenueUSD".to_string(),
+            StoreKey::HourlyProtocolSideRevenueUSD => "h:ProtocolSideRevenueUSD".to_string(),
+            StoreKey::CumulativeProtocolSideRevenueUSD => "c:ProtocolSideRevenueUSD".to_string(),
+            StoreKey::DailyTotalRevenueUSD => "d:TotalRevenueUSD".to_string(),
+            StoreKey::HourlyTotalRevenueUSD => "h:TotalRevenueUSD".to_string(),
+            StoreKey::CumulativeTotalRevenueUSD => "c:TotalRevenueUSD".to_string(),
+            StoreKey::DailyVolumeUSD => "d:VolumeUSD".to_string(),
+            StoreKey::HourlyVolumeUSD => "h:VolumeUSD".to_string(),
+            StoreKey::CumulativeVolumeUSD => "c:VolumeUSD".to_string(),
         }
     }
 }
