@@ -53,9 +53,6 @@ type Token @entity {
 
   " Optional field to track the block number of the last token price "
   lastPriceBlockNumber: BigInt
-
-  " Optional field to track the block number of the last token price "
-  whitelistedPools: [String!]
 }
 
 enum RewardTokenType {
@@ -543,8 +540,6 @@ type LiquidityPoolDailySnapshot @entity {
 
   " Per-block reward token emission as of the current block normalized to a day, in USD value. This should be ideally calculated as the theoretical rate instead of the realized amount. "
   rewardTokenEmissionsUSD: [BigDecimal!]
-
-  _inputTokenPrices: [String!]
 }
 
 type LiquidityPoolHourlySnapshot @entity {
@@ -690,7 +685,7 @@ type Deposit implements Event @entity {
   outputToken: Token
 
   " Amount of input tokens in the token's native unit "
-  inputTokenAmounts: [String!]!
+  inputTokenAmounts: [BigInt!]!
 
   " Amount of output tokens in the token's native unit "
   outputTokenAmount: BigInt
@@ -734,7 +729,7 @@ type Withdraw implements Event @entity {
   outputToken: Token
 
   " Amount of input tokens in the token's native unit "
-  inputTokenAmounts: [String!]!
+  inputTokenAmounts: [BigInt!]!
 
   " Amount of output tokens in the token's native unit "
   outputTokenAmount: BigInt

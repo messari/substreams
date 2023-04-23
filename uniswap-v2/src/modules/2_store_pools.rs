@@ -1,6 +1,4 @@
-use substreams::store::StoreNew;
-use substreams::store::StoreSetIfNotExists;
-use substreams::store::StoreSetIfNotExistsProto;
+use substreams::store::{StoreNew, StoreSetIfNotExists, StoreSetIfNotExistsProto};
 
 use crate::pb::uniswap::v2::{Pool, Pools};
 use crate::store_key::StoreKey;

@@ -1,5 +1,5 @@
 use substreams::scalar::{BigDecimal, BigInt};
-use substreams::store::{StoreAdd, StoreGet, StoreSet};
+use substreams::store::{StoreAdd, StoreSet};
 use substreams::{log, store};
 
 pub trait StoreSetter {
@@ -43,27 +43,5 @@ impl StoreSetter for store::StoreSetBigDecimal {
 
     fn set_value<K: AsRef<str>>(&self, key: K, value: &Self::Input) {
         self.set(0, key, value)
-    }
-}
-
-pub trait StoreGetter {
-    type Output;
-
-    fn get<K: AsRef<str>>(&self, key: K) -> Self::Output;
-}
-
-impl StoreGetter for store::StoreGetBigInt {
-    type Output = BigInt;
-
-    fn get<K: AsRef<str>>(&self, key: K) -> Self::Output {
-        self.get_last(key).unwrap_or(BigInt::zero())
-    }
-}
-
-impl StoreGetter for store::StoreGetBigDecimal {
-    type Output = BigDecimal;
-
-    fn get<K: AsRef<str>>(&self, key: K) -> Self::Output {
-        self.get_last(key).unwrap_or(BigDecimal::zero()).with_prec(15)
     }
 }

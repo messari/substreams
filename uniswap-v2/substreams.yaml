@@ -4,7 +4,7 @@ package:
   version: v0.1.0
 
 imports:
-  erc20Price: ../erc20-price/target/erc20-price-substreams-v0.1.0.spkg
+  # erc20Price: ../erc20-price/target/erc20-price-substreams-v0.1.0.spkg
   eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
   entities_change: https://github.com/streamingfast/substreams-entity-change/releases/download/v0.2.0/substreams-entity-change-v0.2.0.spkg
 
@@ -23,7 +23,7 @@ binaries:
     file: ../target/wasm32-unknown-unknown/release/substreams_uniswap_v2.wasm
 
 modules:
-  - name: map_pools_created
+  - name: map_pool_created
     kind: map
     initialBlock: 10008300
     inputs:
@@ -31,136 +31,168 @@ modules:
     output:
       type: proto:messari.uniswap.v2.Pools
 
-  - name: initialize_pool
+  - name: store_pools
     kind: store
-    initialBlock: 10008300
     updatePolicy: set_if_not_exists
     valueType: proto:messari.uniswap.v2.Pool
     inputs:
-      - map: map_pools_created
+      - map: map_pool_created
 
-  - name: store_pool_user_balance
-    kind: store
-    initialBlock: 10008300
-    updatePolicy: add
-    valueType: bigint
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - store: initialize_pool
-
-  - name: map_pool_events
-    kind: map
-    initialBlock: 10008300
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - store: initialize_pool
-      - store: store_pool_user_balance
-        mode: deltas
-      - store: store_usd_prices
-    output:
-      type: proto:messari.uniswap.v2.Events
-
-  - name: store_unique_tracking
-    kind: store
-    updatePolicy: set
-    valueType: bigint
-    inputs:
-      - map: map_pools_created
-      - map: map_pool_events
-
-  - name: store_metrics_pre_aggregations
+  - name: store_output_token_supply
     kind: store
     updatePolicy: add
     valueType: bigint
     inputs:
-      - source: sf.substreams.v1.Clock
-      - map: map_pool_events
-      - store: store_unique_tracking
-        mode: deltas
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pools
 
-  - name: store_tokens_whitelist_pools
+  - name: store_input_token_balances
     kind: store
-    initialBlock: 10008300
-    updatePolicy: append
-    valueType: string
-    inputs:
-      - map: map_pools_created
-
-  - name: store_pool_native_tvl
-    kind: store
-    initialBlock: 10008300
     updatePolicy: set
     valueType: bigint
     inputs:
       - source: sf.ethereum.type.v2.Block
-      - store: initialize_pool
-
-  - name: store_usd_prices
-    kind: store
-    initialBlock: 10008300
-    updatePolicy: set
-    valueType: bigdecimal
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - store: initialize_pool
-      - store: store_pool_user_balance
-      - store: store_tokens_whitelist_pools
-      - store: store_pool_native_tvl
-      - store: erc20Price:store_chainlink_price
-  
-  - name: store_swaps_volume_and_revenue
-    kind: store
-    updatePolicy: add
-    valueType: bigdecimal
-    inputs:
-      - map: map_pool_events
+      - store: store_pools
 
   - name: store_pool_tvl
     kind: store
-    initialBlock: 10008300
     updatePolicy: set
     valueType: bigdecimal
     inputs:
-      - store: initialize_pool
-      - store: store_pool_native_tvl
-      - store: store_pool_native_tvl
+      - store: store_pools
+      - store: store_input_token_balances
+      - store: store_input_token_balances
         mode: deltas
-      - store: store_usd_prices
 
-  - name: store_financials_pre_aggregation
+  - name: map_pool_swaps
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pools
+    output:
+      type: proto:messari.uniswap.v2.Events
+
+  - name: store_volume
+    kind: store
+    updatePolicy: set
+    valueType: bigdecimal
+    inputs:
+      - map: map_pool_swaps
+
+  - name: store_cumulative_fields
+    kind: store
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - store: store_volume
+        mode: deltas
+
+  - name: map_liquidity_pool_entity
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - store: store_pools
+      - store: store_output_token_supply
+      - store: store_input_token_balances
+      - store: store_input_token_balances
+        mode: deltas
+      - store: store_pool_tvl
+      - store: store_cumulative_fields
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
+  - name: store_daily_and_hourly_fields
     kind: store
     updatePolicy: add
     valueType: bigdecimal
     inputs:
       - source: sf.substreams.v1.Clock
-      - store: store_pool_tvl
-        mode: deltas
-      - store: store_swaps_volume_and_revenue
+      - store: store_volume
         mode: deltas
 
-  - name: map_liquidity_pool_entities
+  - name: map_liquidity_pool_snapshots_entity
     kind: map
     initialBlock: 10008300
     inputs:
-      - store: initialize_pool
-      - store: store_pool_native_tvl
+      - source: sf.substreams.v1.Clock
+      - store: store_pools
+      - store: store_output_token_supply
+      - store: store_input_token_balances
+      - store: store_input_token_balances
         mode: deltas
-      - store: store_pool_native_tvl
       - store: store_pool_tvl
-      - store: store_swaps_volume_and_revenue
-      - store: store_pool_user_balance
+      - store: store_cumulative_fields
+      - store: store_daily_and_hourly_fields
     output:
       type: proto:substreams.entity.v1.EntityChanges
 
-  - name: map_metrics_aggregator_entities
+  - name: store_protocol_tvl
+    kind: store
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - store: store_pool_tvl
+        mode: deltas
+  
+  - name: store_protocol_cumulative_fields
+    kind: store
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - store: store_cumulative_fields
+        mode: deltas
+
+  - name: store_protocol_daily_fields
+    kind: store
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - store: store_daily_and_hourly_fields
+        mode: deltas
+  
+  - name: map_protocol_entity
     kind: map
     initialBlock: 10008300
     inputs:
-      - store: store_unique_tracking
+      - store: store_input_token_balances
         mode: deltas
-      - store: store_unique_tracking
-      - store: store_metrics_pre_aggregations
-      - store: store_financials_pre_aggregation
+      - store: store_protocol_tvl
+      - store: store_protocol_cumulative_fields
     output:
       type: proto:substreams.entity.v1.EntityChanges
 
+  - name: map_financial_daily_snapshot_entity
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - store: store_input_token_balances
+      - store: store_input_token_balances
+        mode: deltas
+      - store: store_protocol_tvl
+      - store: store_protocol_cumulative_fields
+      - store: store_protocol_daily_fields
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
+  - name: map_token_entity
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - map: map_pool_created
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
+  - name: graph_out
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - map: map_liquidity_pool_entity
+      - map: map_liquidity_pool_snapshots_entity
+      - map: map_protocol_entity
+      - map: map_financial_daily_snapshot_entity
+      - map: map_token_entity
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
