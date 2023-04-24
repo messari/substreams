@@ -6,6 +6,7 @@
 ######################
 
 **/target/
+**/build/
 **/*.spkg
 **/buf.gen.yaml
 Cargo.lock

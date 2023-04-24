@@ -98,10 +98,13 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         let mut pb_files_hash = HashMap::new();
         let pb_filenames = dir_filenames(&tmp_dir);
         for file in pb_filenames.iter() {
+            if file == "mod" {
+                continue;
+            }
+
             // parse version from file name
             let filename = file.split('.').collect::<Vec<&str>>();
-            // let package_name = filename[0];
-            let name = filename[1].to_string();
+            let name = format!("{}.{}", filename[0], filename[1]);
             let version = filename[2];
             pb_files_hash
                 .entry(name)
@@ -146,15 +149,18 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         let pb_file_content = pb_files
             .into_iter()
             .map(|(filename, versions)| {
+                let split = filename.split(".").collect::<Vec<&str>>();
+                let package_name = split[0];
+                let filename = split[1];
                 let (mod_content, registration_content): (Vec<String>, Vec<String>) = versions
                     .into_iter()
                     .map(|version| {
                         (
                             format!(
                                 "#[rustfmt::skip]\n\
-                                #[path = \"../{}/pb/messari.{}.{}.rs\"]\n\
-                                pub(in crate::pb) mod {1}_{2};\n",
-                                out_dir, filename, version
+                                #[path = \"../{}/pb/{}.{}.{}.rs\"]\n\
+                                pub(in crate::pb) mod {2}_{3};\n",
+                                out_dir, package_name, filename, version
                             ),
                             format!(
                                 "    pub mod {} {{\n        \
