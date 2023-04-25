@@ -31,3 +31,17 @@ test:
 .PHONY: install-cli
 install-cli:
 	cargo install --path ./messari-cli
+
+.PHONY: upload-cli-for-dagster
+install-cli:
+	$(MAKE) -C messari-cli build-dagster
+	messari upload-file-to-spkg-bucket ./messari-cli/dagster-cli/messari
+
+.PHONY: pack-all
+pack-all:
+	$(MAKE) -C erc20-price pack
+
+.PHONY: upload-all
+upload-all:
+	$(MAKE) -C erc20-price pack
+

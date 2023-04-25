@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+
 use crate::streaming_fast::file::{File, Location, LocationType};
 use crate::streaming_fast::file_sinks::file_sink::FileSink;
 use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
@@ -14,7 +15,7 @@ pub(crate) struct SingleFileSink {
 }
 
 impl SingleFileSink {
-    pub(crate) fn new(output_type_info: MessageInfo, encoding_type: EncodingType, location_type: LocationType, mut sink_output_path: PathBuf, starting_block_number: i64) -> Self {
+    pub(crate) fn new(output_type_info: MessageInfo, encoding_type: EncodingType, location_type: LocationType, mut sink_output_path: PathBuf) -> Self {
         sink_output_path = sink_output_path.join(&output_type_info.type_name);
 
         let file_sink = match encoding_type {
@@ -29,7 +30,7 @@ impl SingleFileSink {
         SingleFileSink {
             file_sink,
             sink_output_location,
-            starting_block_number,
+            starting_block_number: 0, // 0 set initially as a dummy value - will be overwritten later on
             encoding_type,
         }
     }
@@ -56,5 +57,13 @@ impl MultipleFilesSink for SingleFileSink {
 
         self.starting_block_number = block_number + 1;
         output
+    }
+
+    fn get_an_output_folder_location(&self) -> Location {
+        self.sink_output_location.clone()
+    }
+
+    fn set_starting_block_number(&mut self, starting_block_number: i64) {
+        self.starting_block_number = starting_block_number;
     }
 }

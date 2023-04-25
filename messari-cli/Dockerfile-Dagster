@@ -1,0 +1,7 @@
+FROM rust:slim
+RUN apt-get update \
+    && apt-get install pkg-config -y \
+    && apt-get install libssl-dev
+WORKDIR /cli_build_folder
+COPY . .
+RUN cargo install --path .
