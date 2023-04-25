@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use crate::streaming_fast::file::{File, LocationType};
+use crate::streaming_fast::file::{File, Location, LocationType};
 use crate::streaming_fast::multiple_files_sink::MultipleFilesSink;
 use crate::streaming_fast::process_substream::EncodingType;
 use crate::streaming_fast::proto_structure_info::FieldInfo;
@@ -13,10 +13,10 @@ pub(crate) struct SplitFilesSink {
 }
 
 impl SplitFilesSink {
-    pub(crate) fn new(oneof_fields: Vec<FieldInfo>, encoding_type: EncodingType, location_type: LocationType, sink_output_path: PathBuf, starting_block_number: i64) -> Self {
+    pub(crate) fn new(oneof_fields: Vec<FieldInfo>, encoding_type: EncodingType, location_type: LocationType, sink_output_path: PathBuf) -> Self {
         SplitFilesSink {
             file_sinks: oneof_fields.into_iter().map(|field| {
-                (field.field_number, SingleFileSink::new(field.get_struct_info(), encoding_type.clone(), location_type.clone(), sink_output_path.clone(), starting_block_number))
+                (field.field_number, SingleFileSink::new(field.get_struct_info(), encoding_type.clone(), location_type.clone(), sink_output_path.clone()))
             }).collect(),
         }
     }
@@ -71,5 +71,15 @@ impl MultipleFilesSink for SplitFilesSink {
         }
 
         output_files
+    }
+
+    fn get_an_output_folder_location(&self) -> Location {
+        self.file_sinks.values().next().unwrap().get_an_output_folder_location()
+    }
+
+    fn set_starting_block_number(&mut self, starting_block_number: i64) {
+        for sink in self.file_sinks.values_mut() {
+            sink.set_starting_block_number(starting_block_number);
+        }
     }
 }

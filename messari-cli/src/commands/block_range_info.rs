@@ -1,22 +1,23 @@
 use clap::{Parser, ValueEnum};
 use std::fs;
 use std::path::PathBuf;
+use prost::Message;
+use crate::streaming_fast::block_range_info::get_block_range_info;
 
-use crate::streaming_fast::process_substream::{EncodingType, process_substream};
+use crate::streaming_fast::process_substream::{EncodingType, get_block_range_info, process_substream};
 use crate::streaming_fast::file::LocationType as Location;
+use crate::streaming_fast::proto_structure_info::get_output_type_info;
+use crate::streaming_fast::streamingfast_dtos::Package;
+use crate::streaming_fast::sin
 
 #[derive(Parser)]
-pub(crate) struct Process {
+pub(crate) struct BlockRangeInfo {
     spkg_path: String,
     module_name: String,
-    #[arg(short, long, value_name = "Location Type", help="Defaults to saving to local filepath.")]
+    #[arg(short, long, value_name = "Location Type", help="Defaults to checking local filepath.")]
     location_type: Option<LocationType>,
-    #[arg(short, long, value_name = "Data location path", help="If not specified it will default to substreams on aws and ./data/ on local.")]
+    #[arg(short, long, value_name = "Data location path", help="If not specified it will default to check substreams on aws and ./data/ on local.")]
     data_location_path: Option<String>,
-    #[arg(short, long, value_name = "Start Block")]
-    start_block: Option<i64>,
-    #[arg(short, long, value_name = "Stop Block")]
-    stop_block: Option<u64>,
 }
 
 #[derive(ValueEnum, Clone)]
@@ -25,7 +26,7 @@ pub(crate) enum LocationType {
     Dwh
 }
 
-impl Process {
+impl BlockRangeInfo {
     pub(crate) async fn execute(&self) {
         let spkg_path = PathBuf::from(&self.spkg_path);
         if !spkg_path.exists() {
@@ -41,8 +42,9 @@ impl Process {
 
         let data_location_path = self.data_location_path.clone().map(|path| PathBuf::from(path));
 
-        process_substream(spkg_data, self.module_name.clone(), EncodingType::Parquet, location_type, data_location_path, self.start_block, self.stop_block).await;
+        let (start_block, stop_block) = get_block_range_info(spkg_data, self.module_name.clone(), location_type, data_location_path).await;
 
-        println!("Processing complete!!!");
+        println!("{{start_block: {}, stop_block: {}}}", start_block, stop_block);
     }
 }
+

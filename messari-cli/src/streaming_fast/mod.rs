@@ -9,3 +9,5 @@ pub(crate) mod process_substream;
 pub(crate) mod split_files_sink;
 pub(crate) mod single_file_sink;
 pub(crate) mod multiple_files_sink;
+pub(crate) mod block_client;
+pub(crate) mod eth;

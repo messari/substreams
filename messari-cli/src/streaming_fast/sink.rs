@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::streaming_fast::file::{File, LocationType};
+use crate::streaming_fast::file::{File, Location, LocationType};
 use crate::streaming_fast::multiple_files_sink::MultipleFilesSink;
 use crate::streaming_fast::proto_structure_info::MessageInfo;
 use crate::streaming_fast::process_substream::EncodingType;
@@ -14,27 +14,31 @@ pub(crate) struct Sink {
 }
 
 impl Sink {
-    pub(crate) fn new(output_type_info: MessageInfo, encoding_type: EncodingType, location_type: LocationType, sink_output_path: PathBuf, starting_block_number: i64) -> Self {
+    pub(crate) fn new(output_type_info: MessageInfo, encoding_type: EncodingType, location_type: LocationType, sink_output_path: PathBuf) -> Self {
         if output_type_info.is_collection_of_items() {
             let (inner_type_info, items_field_number) = output_type_info.get_item_type_info();
 
             if inner_type_info.is_oneof_type() {
                 Sink {
                     items_field_number: Some(items_field_number),
-                    multiple_files_sink: Box::new(SplitFilesSink::new(inner_type_info.fields, encoding_type, location_type, sink_output_path, starting_block_number)),
+                    multiple_files_sink: Box::new(SplitFilesSink::new(inner_type_info.fields, encoding_type, location_type, sink_output_path)),
                 }
             } else {
                 Sink {
                     items_field_number: Some(items_field_number),
-                    multiple_files_sink: Box::new(SingleFileSink::new(inner_type_info, encoding_type, location_type, sink_output_path, starting_block_number)),
+                    multiple_files_sink: Box::new(SingleFileSink::new(inner_type_info, encoding_type, location_type, sink_output_path)),
                 }
             }
         } else {
             Sink {
                 items_field_number: None,
-                multiple_files_sink: Box::new(SingleFileSink::new(output_type_info, encoding_type, location_type, sink_output_path, starting_block_number)),
+                multiple_files_sink: Box::new(SingleFileSink::new(output_type_info, encoding_type, location_type, sink_output_path)),
             }
         }
+    }
+
+    pub(crate) fn set_starting_block_number(&mut self, starting_block_number: i64) {
+        self.multiple_files_sink.set_starting_block_number(starting_block_number);
     }
 
     pub(crate) fn process(&mut self, proto_data: Vec<u8>, block_number: i64) -> Result<Vec<File>, String> {
@@ -71,6 +75,12 @@ impl Sink {
         } else {
             self.multiple_files_sink.process(&mut proto_data.as_slice(), block_number)
         }
+    }
+
+    /// Resulting path used for calculating the start block_number based off previously processed data
+    /// (if even multiple file types produced by the sink only one file type is needed for tracking)
+    pub(crate) fn get_an_output_folder_path(&self) -> Location {
+        self.multiple_files_sink.get_an_output_folder_location()
     }
 
     /// Instead of waiting for file to "fill" to required size, instead you can call this method to
