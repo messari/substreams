@@ -15,6 +15,7 @@ binaries:
 modules:
   - name: map_supply_delta
     kind: map
+    initialBlock: 12965000
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:

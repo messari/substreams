@@ -22,7 +22,7 @@ fn map_entity_changes(
     let block_num = clock.number;
 
     let entity_changes = vec![EntityChange {
-        entity: "Supply".to_string(),
+        entity: "FeesBurnt".to_string(),
         id: block_hash.to_string(),
         ordinal: 1,
         operation: Operation::Create.into(),
@@ -31,40 +31,10 @@ fn map_entity_changes(
             block_num.to_field("blockNumber".to_string()),
             timestamp.to_field("timestamp".to_string()),
             cumulative
-                .total
-                .unwrap()
-                .deserialize()
-                .to_field("currentSupply"),
-            cumulative
-                .genesis
-                .unwrap()
-                .deserialize()
-                .to_field("genesisSupply"),
-            cumulative
-                .block_rewards
-                .unwrap()
-                .deserialize()
-                .to_field("cumulativeMiningRewards"),
-            cumulative
-                .uncle_rewards
-                .unwrap()
-                .deserialize()
-                .to_field("cumulativeUncleRewards"),
-            cumulative
                 .burned
                 .unwrap()
                 .deserialize()
                 .to_field("cumulativeBurnedFees"),
-            block_delta
-                .block_rewards
-                .unwrap()
-                .deserialize()
-                .to_field("blockMiningReward"),
-            block_delta
-                .uncle_rewards
-                .unwrap()
-                .deserialize()
-                .to_field("blockUncleReward"),
             block_delta
                 .burned
                 .unwrap()
