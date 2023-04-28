@@ -1,7 +1,7 @@
 use std::ops::Not;
 
 use substreams::scalar::BigInt;
-use substreams::store::{StoreNew, StoreSet, StoreSetProto};
+use substreams::store::{StoreNew, StoreSetIfNotExists, StoreSetIfNotExistsProto};
 use substreams::{log, Hex};
 use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams_ethereum::Function;
@@ -12,7 +12,7 @@ use crate::pb::erc20::v1::Erc20Token;
 use crate::{keyer, utils};
 
 #[substreams::handlers::store]
-fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregator>) {
+fn store_chainlink_aggregator(block: eth::Block, output: StoreSetIfNotExistsProto<Aggregator>) {
     for call in block.calls() {
         if let Some(decoded_call) = price_feed::functions::ConfirmAggregator::match_and_decode(call)
         {
@@ -88,7 +88,7 @@ fn store_chainlink_aggregator(block: eth::Block, output: StoreSetProto<Aggregato
                 decimals: decimals.to_u64(),
             };
 
-            output.set(
+            output.set_if_not_exists(
                 0,
                 keyer::chainlink_aggregator_key(&aggregator.address),
                 &aggregator,

@@ -5,10 +5,11 @@ pub mod pb;
 
 mod keyer;
 
-use pb::common::v1 as common;
-use pb::erc20::v1 as erc20;
-use pb::erc20_price::v1::Erc20Price;
+use std::collections::HashMap;
 use std::str::FromStr;
+
+use ethabi::ethereum_types::Address;
+use substreams::pb::substreams::Clock;
 use substreams::scalar::BigDecimal;
 use substreams::scalar::BigInt;
 use substreams::store::StoreAdd;
@@ -20,10 +21,18 @@ use substreams::store::StoreNew;
 use substreams::store::StoreSet;
 use substreams::store::StoreSetBigDecimal;
 use substreams::store::StoreSetRaw;
-use substreams::{hex, log, proto, store, Hex};
+use substreams::{log, proto, store, Hex};
 use substreams_ethereum::{pb::eth as pbeth, Event, NULL_ADDRESS};
+
+use substreams_entity_change::change::ToField;
+use substreams_entity_change::pb::entity::entity_change::Operation;
+use substreams_entity_change::pb::entity::{EntityChange, EntityChanges};
+
 use substreams_helper::keyer::chainlink_asset_key;
-use substreams_helper::types::Address;
+
+use pb::common::v1 as common;
+use pb::erc20::v1 as erc20;
+use pb::erc20_price::v1::Erc20Price;
 
 fn contract_bytecode_len(call: &pbeth::v2::Call) -> usize {
     let mut len = 0;
@@ -67,16 +76,17 @@ fn map_block_to_erc20_contracts(
 /// Extracts transfer events from the blocks
 #[substreams::handlers::map]
 fn map_block_to_transfers(
+    params: String,
     block: pbeth::v2::Block,
 ) -> Result<erc20::TransferEvents, substreams::errors::Error> {
-    // NOTE: Update TRACKED_CONTRACT to the address of the contract you want to track
-    const TRACKED_CONTRACT: Address = hex!("c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"); // WETH
+    let tracked_contract: Address = Address::from_str(params.as_str()).unwrap();
+    // let tracked_contract: Address =
+    //     Address::from_str("0x5283d291dbcf85356a21ba090e6db59121208b44").unwrap();
 
     let mut transfer_events = erc20::TransferEvents { items: vec![] };
-
     for log in block.logs() {
         if let Some(event) = abi::erc20::events::Transfer::match_and_decode(log) {
-            if log.address() != TRACKED_CONTRACT {
+            if Address::from_slice(log.address()) != tracked_contract {
                 continue;
             }
 
@@ -165,5 +175,76 @@ fn store_balance_usd(
                 None => {}
             };
         }
+    }
+}
+
+#[substreams::handlers::map]
+fn map_entity_changes(
+    clock: Clock,
+    balances: store::Deltas<store::DeltaBigInt>,
+    // balances_usd: store::StoreGetBigDecimal,
+) -> Result<EntityChanges, substreams::errors::Error> {
+    // EntityChange hashmap indexed by string.
+    let mut entity_changes: HashMap<String, EntityChange> = HashMap::new();
+
+    for delta in balances.deltas {
+        let account = keyer::account_from_balance_key(&delta.key);
+        let new_balance = delta.new_value;
+        let new_balance_usd = BigDecimal::zero();
+        // balances_usd
+        //     .get_last(&delta.key)
+        //     .unwrap_or(BigDecimal::zero());
+
+        // let snapshot = take_balance_snapshot(
+        //     &clock,
+        //     account.clone(),
+        //     new_balance.clone(),
+        //     new_balance_usd.clone(),
+        // );
+        let balance_update = make_balance_update(account, new_balance, new_balance_usd);
+
+        // entity_changes.insert(snapshot.id.clone(), snapshot);
+        entity_changes.insert(balance_update.id.clone(), balance_update);
+    }
+
+    Ok(EntityChanges {
+        entity_changes: entity_changes.values().cloned().collect(),
+    })
+}
+
+fn make_balance_update(account: String, balance: BigInt, balance_usd: BigDecimal) -> EntityChange {
+    EntityChange {
+        entity: "AccountBalance".to_string(),
+        id: account,
+        operation: Operation::Update.into(),
+        ordinal: 1,
+        fields: vec![
+            balance.to_field("balance"),
+            balance_usd.to_field("balanceUSD"),
+        ],
+    }
+}
+
+fn take_balance_snapshot(
+    clock: &Clock,
+    account: String,
+    balance: BigInt,
+    balance_usd: BigDecimal,
+) -> EntityChange {
+    let account_address = Address::from_str(account.as_str()).unwrap();
+    let mut snapshot_id = account;
+    snapshot_id.insert_str(0, clock.number.to_string().as_str());
+    EntityChange {
+        entity: "AccountBalanceSnapshot".to_string(),
+        id: snapshot_id,
+        operation: Operation::Create.into(),
+        ordinal: 1,
+        fields: vec![
+            account_address.as_bytes().to_vec().to_field("account"),
+            balance.to_field("balance"),
+            balance_usd.to_field("balanceUSD"),
+            clock.number.clone().to_field("blockNumber"),
+            BigInt::from(clock.timestamp.as_ref().unwrap().seconds).to_field("timestamp"),
+        ],
     }
 }

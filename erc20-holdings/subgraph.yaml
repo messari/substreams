@@ -1,0 +1,17 @@
+specVersion: 0.0.4
+description: ERC20 holdings subgraph powered by substreams
+repository: https://github.com/messari/substreams/erc20-holdings
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: substreams
+    name: erc20-holdings
+    network: mainnet
+    source:
+      package:
+        moduleName: map_entity_changes
+        file: substreams-erc20-holdings-v0.1.0.spkg
+    mapping:
+      kind: substreams/graph-entities
+      apiVersion: 0.0.5

@@ -46,7 +46,7 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
       - store: store_chainlink_aggregator
-  
+
   - name: store_pair_created_events
     kind: store
     initialBlock: 10040530
@@ -54,7 +54,7 @@ modules:
     valueType: proto:messari.uniswap.v1.PairCreatedEvent
     inputs:
       - source: sf.ethereum.type.v2.Block
-  
+
   - name: store_uniswap_price
     kind: store
     initialBlock: 10040530

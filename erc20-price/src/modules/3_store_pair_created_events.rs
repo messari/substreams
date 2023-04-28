@@ -1,4 +1,4 @@
-use substreams::store::{StoreNew, StoreSet, StoreSetProto};
+use substreams::store::{StoreNew, StoreSetIfNotExists, StoreSetIfNotExistsProto};
 use substreams::Hex;
 use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams_ethereum::Event;
@@ -10,7 +10,10 @@ use crate::pb::uniswap::v1::PairCreatedEvent;
 use crate::utils;
 
 #[substreams::handlers::store]
-fn store_pair_created_events(block: eth::Block, output: StoreSetProto<PairCreatedEvent>) {
+fn store_pair_created_events(
+    block: eth::Block,
+    output: StoreSetIfNotExistsProto<PairCreatedEvent>,
+) {
     for log in block.logs() {
         if let Some(event) = factory::events::PairCreated::match_and_decode(log) {
             let factory_address = Hex(log.address()).to_string();
@@ -41,7 +44,7 @@ fn store_pair_created_events(block: eth::Block, output: StoreSetProto<PairCreate
                 factory: factory_address,
             };
 
-            output.set(
+            output.set_if_not_exists(
                 log.ordinal(),
                 keyer::pair_info_key(&pair_created_event.pair),
                 &pair_created_event,

@@ -1,11 +1,12 @@
 specVersion: v0.1.0
 package:
   name: "substreams_erc20_holdings"
-  version: v0.1.0
+  version: v0.1.2
 
 imports:
   eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
   erc20Price: ../erc20-price/target/erc20-price-substreams-v0.1.0.spkg
+  entity: https://github.com/streamingfast/substreams-entity-change/releases/download/v0.2.1/substreams-entity-change-v0.2.1.spkg
 
 protobuf:
   files:
@@ -22,7 +23,6 @@ binaries:
 modules:
   - name: map_block_to_erc20_contracts
     kind: map
-    initialBlock: 1
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
@@ -30,8 +30,9 @@ modules:
 
   - name: map_block_to_transfers
     kind: map
-    initialBlock: 10606500
+    initialBlock: 16528709
     inputs:
+      - params: string
       - source: sf.ethereum.type.v2.Block
     output:
       type: proto:messari.erc20.v1.TransferEvents
@@ -49,13 +50,25 @@ modules:
     valueType: bigint
     inputs:
       - map: map_block_to_transfers
-  
+
   - name: store_balance_usd
     kind: store
-    initialBlock: 10606500
+    initialBlock: 16528709
     updatePolicy: set
     valueType: bigdecimal
     inputs:
       - map: map_block_to_transfers
       - store: store_balance
-      - store: erc20Price:store_chainlink_price
+      - store: erc20Price:store_uniswap_price
+
+  - name: map_entity_changes
+    kind: map
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - store: store_balance
+        mode: deltas
+      # - store: store_balance_usd
+    output:
+      type: "proto:substreams.entity.v1.EntityChanges"
+params:
+  map_block_to_transfers: "0x5283d291dbcf85356a21ba090e6db59121208b44"

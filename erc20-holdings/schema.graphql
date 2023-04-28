@@ -1,0 +1,14 @@
+type AccountBalance @entity {
+  id: Bytes!
+  balance: BigInt!
+  balanceUSD: BigDecimal!
+}
+
+type AccountBalanceSnapshot @entity {
+  id: Bytes!
+  account: Bytes!
+  balance: BigInt!
+  balanceUSD: BigDecimal!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+}
