@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+import "erc20.proto";
+package messari.uniswap.v3;
+
+message DataSources {
+  repeated DataSource data_sources = 1;
+}
+
+message DataSource {
+  DataSourceType data_source_type = 1;
+  bytes address = 2;
+}
+
+enum DataSourceType {
+  UniswapV3Pool = 0;
+  UniswapV3Factory = 1;
+}
+
+message PrunedBlock {
+  uint64 number = 1;
+  uint64 timestamp = 2;
+  repeated PrunedTransaction transactions = 3;
+}
+
+message PrunedTransaction {
+  bytes to = 1;
+  bytes from = 2;
+  bytes hash = 3;
+  uint64 nonce = 4;
+  uint64 gas_limit = 5;
+  uint64 gas_used = 6;
+  string gas_price = 7;
+
+  repeated Call calls = 8;
+}
+
+message Call {
+  bytes address = 1;
+  repeated Event events = 2;
+}
+
+message Event {
+  oneof type {
+    PoolCreated pool_created = 1;
+    Mint mint = 2;
+    Burn burn = 3;
+    Swap swap = 4;
+  }
+  uint32 log_index = 101;
+  uint64 log_ordinal = 102;
+}
+
+message PoolCreated {
+  bytes pool = 1;
+  bytes token0 = 2;
+  bytes token1 = 3;
+  string fee = 4;
+  string tickSpacing = 5;
+}
+
+message Mint {
+  string amount = 1;
+  string amount0 = 2;
+  string amount1 = 3;
+  bytes owner = 4;
+  bytes sender = 5;
+  string tickLower = 6;
+  string tickUpper = 7;
+}
+
+message Burn {
+  string amount = 1;
+  string amount0 = 2;
+  string amount1 = 3;
+  bytes owner = 4;
+  string tickLower = 5;
+  string tickUpper = 6;
+}
+
+message Swap {
+  string amount0 = 1;
+  string amount1 = 2;
+  string liquidity = 3;
+  bytes recipient = 4;
+  bytes sender = 5;
+  string sqrtPriceX96 = 6;
+  string tick = 7;
+}

@@ -1,0 +1,91 @@
+specVersion: v0.1.0
+package:
+  name: "substreams_uniswap_v3"
+  version: v0.1.0
+
+imports:
+  # erc20Price: ../erc20-price/target/erc20-price-substreams-v0.1.0.spkg
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+  entities_change: https://github.com/streamingfast/substreams-entity-change/releases/download/v0.2.0/substreams-entity-change-v0.2.0.spkg
+
+protobuf:
+  files:
+    - common.proto
+    - erc20.proto
+    - uniswap.proto
+  importPaths:
+    - ./proto/v1
+    - ../common/proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: ../target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm
+
+modules:
+  - name: map_data_sources
+    kind: map
+    initialBlock: 12369620
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:messari.uniswap.v3.DataSources
+
+  - name: store_data_sources
+    kind: store
+    updatePolicy: set
+    valueType: proto:messari.uniswap.v3.DataSources
+    inputs:
+      - map: map_data_sources
+
+  - name: map_extract_data_types
+    kind: map
+    initialBlock: 12369620
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_data_sources
+    output:
+      type: proto:messari.uniswap.v3.PrunedBlock
+
+  - name: store_add_bigint
+    kind: store
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: map_extract_data_types
+
+  - name: store_add_bigdecimal
+    kind: store
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - map: map_extract_data_types
+
+  - name: store_add_int64
+    kind: store
+    updatePolicy: add
+    valueType: int64
+    inputs:
+      - map: map_extract_data_types
+  
+  - name: store_set_bytes
+    kind: store
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_extract_data_types
+
+  - name: map_graph_out
+    kind: map
+    initialBlock: 12369620
+    inputs:
+      - map: map_extract_data_types
+      - store: store_add_bigdecimal
+        mode: deltas
+      - store: store_add_bigint
+        mode: deltas
+      - store: store_add_int64
+        mode: deltas
+      - store: store_set_bytes
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
