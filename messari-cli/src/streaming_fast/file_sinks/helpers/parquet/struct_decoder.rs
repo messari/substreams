@@ -5,7 +5,7 @@ use crate::streaming_fast::file_sinks::helpers::parquet::decoder::{Decoder};
 use crate::streaming_fast::file_sinks::helpers::parquet::parquet_schema_builder::ParquetSchemaBuilder;
 use crate::streaming_fast::file_sinks::helpers::parquet::file_buffer::FileBuffer;
 use crate::streaming_fast::proto_structure_info::{FieldSpecification, MessageInfo};
-use crate::streaming_fast::proto_utils::FromUnsignedVarint;
+use crate::streaming_fast::streaming_fast_utils::FromUnsignedVarint;
 
 pub(in crate::streaming_fast::file_sinks) struct StructDecoder {
     field_decoders: BTreeMap<u64, Decoder>,

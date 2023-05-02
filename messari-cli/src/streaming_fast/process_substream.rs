@@ -1,7 +1,9 @@
 use std::{env, fs};
+use std::collections::HashSet;
 use std::path::PathBuf;
 use futures::StreamExt;
 use prost::Message;
+use regex::Regex;
 use s3::Bucket;
 use s3::creds::Credentials;
 use tonic::metadata::MetadataValue;
@@ -16,12 +18,50 @@ use crate::streaming_fast::streamingfast_dtos::ForkStep::StepIrreversible;
 use crate::streaming_fast::streamingfast_dtos::{Package, Request, Response};
 use crate::streaming_fast::streamingfast_dtos::module_output::Data;
 use crate::streaming_fast::proto_structure_info::get_output_type_info;
+use crate::streaming_fast::streaming_config::{Chain, StreamingConfig};
+use crate::streaming_fast::streamingfast_dtos::module::input::Input;
 
-pub(crate) async fn process_substream(spkg: Vec<u8>, module_name: String, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, start_block_arg: Option<i64>, stop_block_arg: Option<u64>) {
-    let package = Package::decode(spkg).unwrap();
-    let mut sink = get_sink(&package, module_name, encoding_type, location_type, data_location_path);
+pub(crate) async fn process_substream(spkg: Vec<u8>, config: StreamingConfig, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, mut start_block_arg: Option<i64>, stop_block_arg: Option<u64>) {
+    let mut package = Package::decode(spkg.as_slice()).unwrap();
 
-    let (start_block, stop_block) = get_block_range(&sink, start_block_arg, stop_block_arg).await;
+    let chain = if let Some(chain_override) = config.chain_override {
+        for module in package.modules.as_mut().unwrap().modules.iter_mut() {
+            for input in module.inputs.iter_mut() {
+                if let Input::Source(source) = input.input.as_mut().unwrap() {
+                    if source.r#type.ends_with(".Block") {
+                        source.r#type = chain_override.get_proto_block_type();
+                    }
+                }
+            }
+        }
+        chain_override
+    } else {
+        get_chain_info(&package)
+    };
+
+    let (mut sink, proto_type_name) = get_sink_and_proto_type_name(&package, config.output_module.as_str(), encoding_type, location_type, data_location_path, &chain);
+
+    if let Some(substream_name) = config.substream_name_override {
+        package.package_meta.iter_mut().next().unwrap().name = substream_name;
+    }
+    for module in package.modules.as_mut().unwrap().modules.iter_mut() {
+        for param_override in config.param_overrides.iter() {
+            if param_override.module == module.name {
+                for input in module.inputs.iter_mut() {
+                    if let Input::Params(param) = input.input.as_mut().unwrap() {
+                        param.value = param_override.value.clone();
+                    }
+                }
+            }
+        }
+        for start_block_override in config.start_block_overrides.iter() {
+            if start_block_override.module == module.name {
+                module.initial_block = start_block_override.block_number;
+            }
+        }
+    }
+
+    let (start_block, stop_block) = get_block_range(&sink, &package, &proto_type_name, &chain, start_block_arg, stop_block_arg).await;
 
     sink.set_starting_block_number(start_block);
 
@@ -32,7 +72,7 @@ pub(crate) async fn process_substream(spkg: Vec<u8>, module_name: String, encodi
         fork_steps: vec![StepIrreversible as i32],
         irreversibility_condition: "".to_string(),
         modules: package.modules,
-        output_modules: vec![module_name],
+        output_modules: vec![config.output_module],
         production_mode: true,
         ..Default::default()
     };
@@ -41,7 +81,7 @@ pub(crate) async fn process_substream(spkg: Vec<u8>, module_name: String, encodi
     let token_metadata = MetadataValue::try_from(streamingfast_token.as_str()).unwrap();
 
     let mut client = streamingfast_dtos::stream_client::StreamClient::with_interceptor(
-        Channel::from_static("https://mainnet.eth.streamingfast.io:443").connect_lazy(),
+        Channel::builder(chain.get_endpoint()).connect_lazy(),
         move |mut r: tonic::Request<()>| {
             r.metadata_mut().insert("authorization", token_metadata.clone());
             Ok(r)
@@ -73,8 +113,8 @@ pub(crate) async fn process_substream(spkg: Vec<u8>, module_name: String, encodi
 }
 
 /// Returns block range info in the form -> (start_block_num, stop_block_num)
-async fn get_block_range(sink: &Sink, start_block_arg: Option<i64>, stop_block_arg: Option<u64>) -> (i64, i64) {
-    let mut stop_block= get_latest_block_number().await;
+async fn get_block_range(sink: &Sink, package: &Package, proto_type_name: &str, chain: &Chain, start_block_arg: Option<i64>, stop_block_arg: Option<u64>) -> (i64, i64) {
+    let mut stop_block= get_latest_block_number(chain).await;
     if let Some(stop_block_unwrapped) = stop_block_arg {
         let stop_block_i64 = stop_block_unwrapped as i64;
         if stop_block_i64 < stop_block {
@@ -94,13 +134,13 @@ async fn get_block_range(sink: &Sink, start_block_arg: Option<i64>, stop_block_a
             start_block
         }
     } else {
-        get_start_block_num(sink.get_an_output_folder_path(), &package, &proto_type_name).await
+        get_start_block_num(sink.get_an_output_folder_path(), package, proto_type_name).await
     };
 
     (start_block, stop_block)
 }
 
-fn get_sink(package: &Package, module_name: String, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>) -> Sink {
+fn get_sink_and_proto_type_name(package: &Package, module_name: &str, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, chain: &Chain) -> (Sink, String) {
     let mut sink_output_path = if let Some(data_location_path) = data_location_path {
         data_location_path
     } else {
@@ -110,18 +150,71 @@ fn get_sink(package: &Package, module_name: String, encoding_type: EncodingType,
         }
     };
 
-    let (output_type_info, proto_type_name) = get_output_type_info(package, &module_name);
+    sink_output_path = chain.add_chain_folders_to_path(sink_output_path);
+
+    let substream_name = package.package_meta.iter().next().unwrap().name.as_str(); // Assumes the first package specified is always the main spkg rather than a sub-spkg (haven't check this though)
+    sink_output_path = sink_output_path.join(substream_name);
+
+    let (output_type_info, proto_type_name) = get_output_type_info(package, module_name);
     sink_output_path = add_package_partitions_to_output_folder_path(sink_output_path, &proto_type_name, &output_type_info.type_name);
 
-    Sink::new(output_type_info, encoding_type, location_type, sink_output_path)
+    let package_version = get_package_version(package);
+    sink_output_path = sink_output_path.join(package_version);
+
+    let sink = Sink::new(output_type_info, encoding_type, location_type, sink_output_path);
+
+    (sink, proto_type_name)
+}
+
+/// Gets package version and reforms it into semver form but with underscores instead of full-stops (eg. X_Y_Z)
+fn get_package_version(package: &Package) -> String {
+    let spkg_version = package.package_meta.first().unwrap().version.as_str(); // Assumes the first package specified is always the main spkg rather than a sub-spkg (haven't check this though)
+
+    // Only expecting spkg_version to be in forms: either vX.Y.Z or X.Y.Z
+    let v_semver = Regex::new(r"^v\d+.\d+.\d+$").unwrap();
+    let semver = Regex::new(r"^\d+.\d+.\d+$").unwrap();
+    let semver_str = if v_semver.is_match(spkg_version) {
+        spkg_version[1..].to_string()
+    } else if semver.is_match(spkg_version) {
+        spkg_version.to_string()
+    } else {
+        panic!("Couldn't extract proper versioning from spkg! Expecting version to be either in form: vX.Y.Z or X.Y.Z - actual version given: {}", spkg_version);
+    };
+
+    semver_str.replace(".", "_")
+}
+
+fn get_chain_info(package: &Package) -> Chain {
+    let mut block_containing_inputs = HashSet::new();
+    for module in package.modules.as_ref().unwrap().modules.iter() {
+        for input in module.inputs.iter() {
+            if let Input::Source(input_type) = input.input.as_ref().unwrap() {
+                if input_type.r#type.ends_with(".Block") {
+                    block_containing_inputs.insert(input_type.r#type.clone());
+                }
+            }
+        }
+    }
+
+    let block_input_types =  block_containing_inputs.into_iter().collect::<Vec<_>>();
+    if block_input_types.len() == 0 {
+        panic!("Couldn't determine default chain from block type! Either specify a block input in one of your substream modules or specify a block override in your config file corresponding to this substream!");
+    } else if block_input_types.len() > 1 {
+        panic!("Couldn't determine default chain from block type! More than one module input type ending in \".Block\" was specified for this substream leading to too much ambiguity for deciding which chain to pick!");
+    }
+
+    let block_type = block_input_types.into_iter().next().unwrap();
+
+    Chain::default_for_block_type(&block_type)
 }
 
 /// Returns block range info in the form -> (start_block_num, stop_block_num)
-pub(crate) async fn get_block_range_info(spkg: Vec<u8>, module_name: String, location_type: LocationType, data_location_path: Option<PathBuf>) -> (i64, i64) {
-    let package = Package::decode(spkg).unwrap();
-    let sink = get_sink(&package, module_name, EncodingType::Parquet, location_type, data_location_path);
+pub(crate) async fn get_block_range_info(spkg: Vec<u8>, module_name: &str, location_type: LocationType, data_location_path: Option<PathBuf>, start_block_override: Option<i64>, chain_override: Option<Chain>) -> (i64, i64) {
+    let package = Package::decode(spkg.as_slice()).unwrap();
+    let chain = chain_override.unwrap_or(get_chain_info(&package));
+    let (sink, proto_type_name) = get_sink_and_proto_type_name(&package, module_name, EncodingType::Parquet, location_type, data_location_path, &chain);
 
-    get_block_range(&sink, start_block_arg, stop_block_arg).await
+    get_block_range(&sink, &package, &proto_type_name, &chain, start_block_override, None).await
 }
 
 async fn get_start_block_num(location: Location, package: &Package, proto_type_name: &str) -> i64 {

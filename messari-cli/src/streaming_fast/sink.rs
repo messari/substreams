@@ -4,7 +4,7 @@ use crate::streaming_fast::file::{File, Location, LocationType};
 use crate::streaming_fast::multiple_files_sink::MultipleFilesSink;
 use crate::streaming_fast::proto_structure_info::MessageInfo;
 use crate::streaming_fast::process_substream::EncodingType;
-use crate::streaming_fast::proto_utils::FromUnsignedVarint;
+use crate::streaming_fast::streaming_fast_utils::FromUnsignedVarint;
 use crate::streaming_fast::single_file_sink::SingleFileSink;
 use crate::streaming_fast::split_files_sink::SplitFilesSink;
 

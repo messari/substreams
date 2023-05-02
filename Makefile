@@ -43,5 +43,5 @@ pack-all:
 
 .PHONY: upload-all
 upload-all:
-	$(MAKE) -C erc20-price pack
+	$(MAKE) -C erc20-price upload
 
