@@ -1,5 +1,25 @@
 use std::fmt::Debug;
 
+pub(crate) fn get_file_size_string(file_size: usize) -> String {
+    if file_size < 1024 { // (<100B)
+        format!("{}B", file_size)
+    } else if file_size < 100*1024 { // (<100KB)
+        format!("{:.2}KB", (file_size as f64)/1024_f64)
+    } else if file_size < 1024*1024 { // (<1MB)
+        format!("{}KB", file_size)
+    } else if file_size < 100*1024*1024 { // (<100MB)
+        format!("{:.2}MB", (file_size as f64)/(1024_f64*1024_f64))
+    } else if file_size < 1024*1024*1024 { // (<1GB)
+        format!("{}MB", file_size)
+    } else if file_size < 100*1024*1024*1024 { // (<100GB)
+        format!("{:.2}GB", (file_size as f64)/(1024_f64*1024_f64*1024_f64))
+    } else { // (>100GB)
+        // We are expecting to produce file around the block size of
+        // 128MB so some of the above is already overkill here..
+        format!("{:+e}B", file_size as f64)
+    }
+}
+
 pub(crate) trait FromSignedVarint: Sized
 {
     fn from_signed_varint(data: &mut &[u8]) -> Option<Self>;

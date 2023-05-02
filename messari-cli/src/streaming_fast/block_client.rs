@@ -8,58 +8,29 @@ use tonic::transport::Channel;
 use crate::streaming_fast::block_client::fetch_client::FetchClient;
 use crate::streaming_fast::block_client::single_block_request::BlockNumber;
 use crate::streaming_fast::eth;
+use crate::streaming_fast::streaming_config::Chain;
 
-pub(crate) async fn get_latest_block_number() -> i64 {
+pub(crate) async fn get_latest_block_number(chain: &Chain) -> i64 {
     let streamingfast_token = env::var("SUBSTREAMS_API_TOKEN").unwrap();
     let token_metadata = MetadataValue::try_from(streamingfast_token.as_str()).unwrap();
 
     let mut client = FetchClient::with_interceptor(
-        Channel::from_static("https://mainnet.eth.streamingfast.io:443").connect_lazy(),
+        Channel::builder(chain.get_endpoint()).connect_lazy(),
         move |mut r: tonic::Request<()>| {
             r.metadata_mut().insert("authorization", token_metadata.clone());
             Ok(r)
         },
     );
 
-    let mut block_num = 10_000_000; // Chosen a rough order of magnitude for an average block number at the head of a chain..
-
-    let (mut low, mut high) = if block_exists(&mut client, block_num).await {
-        let mut low = block_num;
-        let mut high = block_num;
-        while block_exists(&mut client, high) {
-            low = high;
-            high *= 2;
-        }
-        (low, high)
-    } else {
-        (0, block_num)
-    };
-
-    while high-low > 1 {
-        let mid = ((high - low) / 2) + low;
-        if block_exists(&mut client, block_num).await {
-            low = mid;
-        } else {
-            high = mid;
-        }
-    }
-
-    high as i64
-}
-
-async fn block_exists(client: &mut FetchClient<InterceptedService<Channel, impl Fn(tonic::Request<()>)->Result<tonic::Request<()>, Status>>>, block_num: u64) -> bool {
     let req = SingleBlockRequest {
         transforms: [].to_vec(),
-        reference: Some(single_block_request::Reference::BlockNumber(BlockNumber{num: block_num})),
+        reference: Some(single_block_request::Reference::BlockNumber(BlockNumber{num: u64::MAX})),
     };
 
     let response = client.block(req).await.unwrap();
-    response.get_ref().block.is_some()
-    // let response_block = eth::Block::decode(response.get_ref().block.as_ref().unwrap().value.as_ref()).unwrap();
-    // let resp_text = format!("{:?}", response_block);
-    // fs::write("block.json", resp_text).unwrap();
-    // panic!("Response: {:?}", response_block);
-    // true;
+    let response_block = eth::Block::decode(response.get_ref().block.as_ref().unwrap().value.as_ref()).unwrap();
+
+    response_block.number as i64
 }
 
 #[allow(clippy::derive_partial_eq_without_eq)]

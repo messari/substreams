@@ -7,6 +7,7 @@ use tokio::fs::File as TokioFile;
 use tokio::io::AsyncWriteExt;
 
 use crate::streaming_fast::process_substream::EncodingType;
+use crate::streaming_fast::streaming_fast_utils::get_file_size_string;
 
 pub(crate) struct File {
     file_data: Vec<u8>,
@@ -41,26 +42,6 @@ impl File {
     }
 }
 
-fn get_file_size_string(file_size: usize) -> String {
-    if file_size < 1024 { // (<100B)
-        format!("{}B", file_size)
-    } else if file_size < 100*1024 { // (<100KB)
-        format!("{:.2}KB", (file_size as f64)/1024)
-    } else if file_size < 1024*1024 { // (<1MB)
-        format!("{}KB", file_size)
-    } else if 100*1024*1024 { // (<100MB)
-        format!("{:.2}MB", (file_size as f64)/(1024*1024))
-    } else if file_size < 1024*1024*1024 { // (<1GB)
-        format!("{}MB", file_size)
-    } else if 100*1024*1024*1024 { // (<100GB)
-        format!("{:.2}GB", (file_size as f64)/(1024*1024*1024))
-    } else { // (>100GB)
-        // We are expecting to produce file around the block size of
-        // 128MB so some of the above is already overkill here..
-        format!("{:+e}B", file_size as f64)
-    }
-}
-
 #[derive(Clone)]
 pub(crate) enum Location {
     DataWarehouse(PathBuf),
@@ -78,7 +59,7 @@ impl Location {
         }
     }
 
-    pub(crate) fn get_file_location<T: Display>(&self, first_block_number: i64, last_block_number: i64, encoding_type: &EncodingType) -> Location {
+    pub(crate) fn get_file_location(&self, first_block_number: i64, last_block_number: i64, encoding_type: &EncodingType) -> Location {
         let filename = match encoding_type {
             EncodingType::Parquet => format!("{}_{}.parquet", first_block_number, last_block_number)
         };

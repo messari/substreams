@@ -4,7 +4,8 @@ use crate::commands::block_range_info::BlockRangeInfo;
 
 use crate::commands::init::Init;
 use crate::commands::process::Process;
-use crate::commands::upload_file_to_spkg_bucket::UploadFileToSpkgBucket;
+use crate::commands::upload_cli_to_aws::UploadCliToAws;
+use crate::commands::upload_config_and_spkg_to_bucket::UploadConfigAndSpkgToAws;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -13,7 +14,8 @@ pub(crate) enum CommandLineClient {
     Add(Add),
     Process(Process),
     BlockRangeInfo(BlockRangeInfo),
-    UploadFileToSpkgBucket(UploadFileToSpkgBucket)
+    UploadConfigAndSpkgToAws(UploadConfigAndSpkgToAws),
+    UploadCliToAws(UploadCliToAws)
 }
 
 impl CommandLineClient {
@@ -23,7 +25,8 @@ impl CommandLineClient {
             CommandLineClient::Add(cmd) => cmd.execute(),
             CommandLineClient::Process(cmd) => cmd.execute().await,
             CommandLineClient::BlockRangeInfo(cmd) => cmd.execute().await,
-            CommandLineClient::UploadFileToSpkgBucket(cmd) => cmd.execute().await
+            CommandLineClient::UploadConfigAndSpkgToAws(cmd) => cmd.execute().await,
+            CommandLineClient::UploadCliToAws(cmd) => cmd.execute().await
         }
     }
 }
