@@ -155,7 +155,7 @@ dependencies = [
  "anyhow",
  "ethabi",
  "num-bigint",
- "prost 0.11.6",
+ "prost 0.11.9",
  "substreams 0.5.6",
  "substreams-common",
  "substreams-ethereum",
@@ -207,7 +207,7 @@ dependencies = [
  "anyhow",
  "ethabi",
  "hex-literal",
- "prost 0.11.6",
+ "prost 0.11.9",
  "serde_json",
  "substreams 0.5.6",
  "substreams-common",
@@ -224,7 +224,7 @@ dependencies = [
  "ethabi",
  "hex-literal",
  "lazy_static",
- "prost 0.11.6",
+ "prost 0.11.9",
  "substreams 0.5.6",
  "substreams-common",
  "substreams-ethereum",
@@ -238,7 +238,7 @@ dependencies = [
  "anyhow",
  "ethabi",
  "hex-literal",
- "prost 0.11.6",
+ "prost 0.11.9",
  "substreams 0.5.6",
  "substreams-common",
  "substreams-ethereum",
@@ -253,7 +253,7 @@ dependencies = [
  "ethabi",
  "hex-literal",
  "num-bigint",
- "prost 0.11.6",
+ "prost 0.11.9",
  "substreams 0.5.6",
  "substreams-common",
  "substreams-ethereum",
@@ -269,7 +269,7 @@ dependencies = [
  "hex",
  "hex-literal",
  "num-bigint",
- "prost 0.11.6",
+ "prost 0.11.9",
  "substreams 0.5.6",
  "substreams-common",
  "substreams-entity-change",
@@ -542,7 +542,7 @@ dependencies = [
  "chrono",
  "ethabi",
  "hex-literal",
- "prost 0.11.6",
+ "prost 0.11.9",
  "prost-types 0.11.1",
  "substreams 0.5.6",
  "substreams-common",
@@ -699,12 +699,12 @@ dependencies = [
 
 [[package]]
 name = "prost"
-version = "0.11.6"
+version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21dc42e00223fc37204bd4aa177e69420c604ca4a183209a8f9de30c6d934698"
+checksum = "0b82eaa1d779e9a4bc1c3217db8ffbeabaae1dca241bf70183242128d48681cd"
 dependencies = [
  "bytes",
- "prost-derive 0.11.6",
+ "prost-derive 0.11.9",
 ]
 
 [[package]]
@@ -742,7 +742,7 @@ dependencies = [
  "log",
  "multimap",
  "petgraph",
- "prost 0.11.6",
+ "prost 0.11.9",
  "prost-types 0.11.1",
  "regex",
  "tempfile",
@@ -764,9 +764,9 @@ dependencies = [
 
 [[package]]
 name = "prost-derive"
-version = "0.11.6"
+version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8bda8c0881ea9f722eb9629376db3d0b903b462477c1aafcb0566610ac28ac5d"
+checksum = "e5d2d8d10f3c6ded6da8b05b5fb3b8a5082514344d56c9f871412d29b4e075b4"
 dependencies = [
  "anyhow",
  "itertools",
@@ -792,7 +792,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4dfaa718ad76a44b3415e6c4d53b17c8f99160dcb3a99b10470fce8ad43f6e3e"
 dependencies = [
  "bytes",
- "prost 0.11.6",
+ "prost 0.11.9",
 ]
 
 [[package]]
@@ -1005,7 +1005,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "pad",
- "prost 0.11.6",
+ "prost 0.11.9",
  "prost-build 0.11.1",
  "prost-types 0.11.1",
  "substreams-macro 0.5.6",
@@ -1017,7 +1017,7 @@ dependencies = [
 name = "substreams-common"
 version = "0.1.0"
 dependencies = [
- "prost 0.11.6",
+ "prost 0.11.9",
  "regex",
  "substreams 0.5.6",
  "substreams-ethereum",
@@ -1031,7 +1031,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c81fb0794efb438c5743c821ec76528c38878010c30d4a79d70799eac68837f6"
 dependencies = [
  "base64",
- "prost 0.11.6",
+ "prost 0.11.9",
  "prost-types 0.11.1",
  "substreams 0.5.6",
 ]
@@ -1044,7 +1044,7 @@ dependencies = [
  "ethabi",
  "getrandom",
  "hex-literal",
- "prost 0.11.6",
+ "prost 0.11.9",
  "substreams 0.5.6",
  "substreams-common",
  "substreams-ethereum",
@@ -1058,7 +1058,7 @@ dependencies = [
  "anyhow",
  "ethabi",
  "hex-literal",
- "prost 0.11.6",
+ "prost 0.11.9",
  "substreams 0.5.6",
  "substreams-common",
  "substreams-ethereum",
@@ -1104,7 +1104,7 @@ dependencies = [
  "ethabi",
  "getrandom",
  "num-bigint",
- "prost 0.11.6",
+ "prost 0.11.9",
  "prost-build 0.11.1",
  "prost-types 0.11.1",
  "substreams 0.5.6",
@@ -1136,7 +1136,8 @@ dependencies = [
  "hex-literal",
  "num-bigint",
  "pad",
- "prost 0.11.6",
+ "prost 0.11.9",
+ "prost-types 0.10.1",
  "substreams 0.5.6",
  "substreams-common",
  "substreams-ethereum",
@@ -1201,7 +1202,7 @@ dependencies = [
  "hex",
  "hex-literal",
  "pad",
- "prost 0.11.6",
+ "prost 0.11.9",
  "substreams 0.5.6",
  "substreams-common",
  "substreams-ethereum",
