@@ -8,10 +8,11 @@ homepage = "https://messari.io/"
 repository = "https://github.com/messari/substreams/substreams-helper"
 
 [dependencies]
-ethabi = "17.0"
+ethabi = "17.2.0"
 hex = "0.4.3"
 hex-literal = "0.3.4"
-prost = "^0.11.0"
+prost = "0.11.8"
+prost-types = "0.10.1"
 num-bigint = "0.4"
 bigdecimal = "0.3"
 pad = "0.1"
@@ -21,6 +22,5 @@ substreams-ethereum = { workspace = true }
 thiserror = "1.0.37"
 
 [build-dependencies]
-anyhow = "1"
+anyhow = "1.0.69"
 substreams-common = { path = "../common" }
-
