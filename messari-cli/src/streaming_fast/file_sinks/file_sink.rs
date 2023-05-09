@@ -1,4 +1,4 @@
-use crate::streaming_fast::proto_structure_info::MessageInfo;
+use derives::proto_structure_info::MessageInfo;
 
 pub(crate) trait FileSink {
     /// Initialises itself from a message type field

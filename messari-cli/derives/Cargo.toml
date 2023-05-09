@@ -1,0 +1,11 @@
+[package]
+name = "derives"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+derive_macros = { path= "test_data_derive" }
+parquet = "35.0.0"
+prost-types = "0.11.6"
+rand = "0.8.5"
+prost = "0.11.6"

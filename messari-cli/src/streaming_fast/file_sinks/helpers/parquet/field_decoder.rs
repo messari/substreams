@@ -1,10 +1,10 @@
 use std::borrow::BorrowMut;
 use parquet::data_type::{BoolType, ByteArray, ByteArrayType, DoubleType, FloatType, Int32Type, Int64Type};
 use parquet::file::writer::SerializedRowGroupWriter;
+use derives::proto_structure_info::{FieldInfo, FieldSpecification, FieldType};
 
 use crate::streaming_fast::file_sinks::helpers::parquet::file_buffer::FileBuffer;
 use crate::streaming_fast::file_sinks::helpers::parquet::parquet_schema_builder::ParquetSchemaBuilder;
-use crate::streaming_fast::proto_structure_info::{FieldInfo, FieldSpecification, FieldType};
 use crate::streaming_fast::streaming_fast_utils::{FromSignedVarint, FromUnsignedVarint};
 
 pub(in crate::streaming_fast::file_sinks) struct FieldDecoder {

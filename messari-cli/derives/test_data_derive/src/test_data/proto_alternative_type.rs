@@ -1,8 +1,10 @@
-use syn::Token;
+use syn::{Token, TypeArray, TypeTuple};
 use proc_macro2::{Ident, TokenStream};
+use quote::ToTokens;
 use syn::parse::Parse;
 use syn::parse::ParseStream;
 use syn::punctuated::Punctuated;
+
 use crate::test_data::gen_struct::{FieldAssociation, ParquetType};
 
 pub(crate) fn parse_proto_alternate_type(field: &syn::Field) -> Option<ProtoAlternativeType> {
@@ -30,7 +32,7 @@ pub(crate) enum ProtoAlternativeType {
     Sint32,
     Sint64,
     Enum,
-    Oneof(Vec<Ident>)
+    Oneof(Vec<(String, String)>) // Each item in vec in form -> (field_name, field_type)
 }
 
 impl ProtoAlternativeType {
@@ -63,9 +65,9 @@ impl ProtoAlternativeType {
         }
     }
 
-    pub(crate) fn get_field_assocation(&self, field_name: String) -> Option<FieldAssociation> {
-        if let ProtoAlternativeType::Oneof(field_idents) = self {
-            Some(FieldAssociation::from_oneof_field_and_type_idents(field_name, field_idents))
+    pub(crate) fn get_field_assocation(&self, field_name: String, field_type: String) -> Option<FieldAssociation> {
+        if let ProtoAlternativeType::Oneof(oneof_field_and_type_info) = self {
+            Some(FieldAssociation::from_oneof_field_and_type_idents(field_name, field_type, oneof_field_and_type_info.clone()))
         } else {
             None
         }
@@ -80,7 +82,7 @@ impl ProtoAlternativeType {
             ProtoAlternativeType::Sint32 => "sint32".to_string(),
             ProtoAlternativeType::Sint64 => "sint64".to_string(),
             ProtoAlternativeType::Enum => format!("enumeration=\"{}\"", inner_type),
-            ProtoAlternativeType::Oneof => format!("oneof=\"{}\"", inner_type),
+            ProtoAlternativeType::Oneof(_) => format!("oneof=\"{}\"", inner_type),
         }
     }
 }
@@ -100,8 +102,8 @@ impl Parse for ProtoTypeInfo {
         let ident_string = ident.to_string();
         if ident_string=="oneof" {
             let group = proc_macro2::Group::parse(input).unwrap();
-            let field_idents = match syn::parse2::<OneofFieldIdents>(group.stream()) {
-                Ok(oneofFieldIdents) => oneofFieldIdents.0,
+            let field_idents = match syn::parse2::<OneofFieldInfo>(group.stream()) {
+                Ok(oneof_field_info) => oneof_field_info.0,
                 Err(_) => panic!("TODO@!!123")
             };
 
@@ -110,7 +112,7 @@ impl Parse for ProtoTypeInfo {
             }
 
             if field_idents.len() == 1 {
-                panic!("Only 1 field was specified for oneof type! Please specify at least 2 field names for a oneof type. Field name specified: {}", field_idents.first().unwrap().to_string());
+                panic!("Only 1 field was specified for oneof type! Please specify at least 2 field names for a oneof type. Field name specified: {}", field_idents.first().unwrap().0.to_string());
             }
 
             Ok(ProtoTypeInfo(ProtoAlternativeType::Oneof(field_idents)))
@@ -129,11 +131,17 @@ impl Parse for ProtoTypeInfo {
     }
 }
 
-struct OneofFieldIdents(Vec<Ident>);
+struct OneofFieldInfo(Vec<(String, String)>); // In form: Vec<(field_name, field_type)
 
-impl Parse for OneofFieldIdents {
+impl Parse for OneofFieldInfo {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let parsed = Punctuated::<Ident, Token![,]>::parse_terminated(input).unwrap();
-        Ok(OneofFieldIdents(parsed.into_iter().collect()))
+        let parsed = Punctuated::<TypeTuple, Token![,]>::parse_terminated(input).unwrap();
+        Ok(OneofFieldInfo(parsed.into_iter().map(|x| {
+            let mut info_iterator = x.elems.into_iter().map(|x| x.to_token_stream().to_string());
+            (info_iterator.next().unwrap(), info_iterator.next().unwrap())
+        }).collect()))
     }
 }
+
+// struct OneofFieldIdentTuplesGroup((String, String));
+// impl Parse for OneofFieldIdentTuplesGroup {}

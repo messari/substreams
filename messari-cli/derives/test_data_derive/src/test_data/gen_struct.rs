@@ -1,7 +1,8 @@
 use std::any::type_name;
+use std::fmt::Debug;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, format_ident};
-use syn::{DataStruct, Fields, parse::{Parse, ParseBuffer}};
+use syn::{DataStruct, Fields, parse::{Parse, ParseBuffer}, Type};
 use quote::ToTokens;
 use syn::{
     parse::{ParseStream},
@@ -11,107 +12,166 @@ use syn::{
 use syn::Token;
 use syn::punctuated::Punctuated;
 use crate::test_data::proto_alternative_type::{parse_proto_alternate_type, ProtoAlternativeType};
-use crate::test_data::gen::{
-    generated_values_for_named_fields, TraitMethods,
-};
 
-pub fn generate(name: &Ident, trait_methods: &mut TraitMethods, data_struct: DataStruct) -> TokenStream {
-    let field_info = parse_field_info(data_struct);
+pub fn generate(name: &Ident, data_struct: DataStruct, starting_tag: u8) -> TokenStream {
+    let field_info = parse_field_info(data_struct, starting_tag);
 
     let name_dto = format_ident!("{}Dto", name);
-    const DESERIALIZED_ROW_VARIABLE: &str = "deserialized_row";
     let proto_field_attributes = field_info.proto_field_attributes;
     let field_value_initialisations = field_info.field_value_initialisations;
     let field_names = field_info.field_names;
     let proto_field_types = field_info.proto_field_types;
+    let field_types = field_info.field_types;
+
+    let oneof_groups_initialisation = get_oneof_groups_initialisation(&field_info.field_associations, starting_tag);
 
     let struct_and_oneof_match_statements = field_info.field_associations.into_iter().flat_map(|field_assocation| {
         field_assocation.get_match_statements()
     }).collect::<Vec<_>>();
 
-    let oneof_groups_initialisation = get_oneof_groups_initialisation(&field_info.field_associations);
+    let field_numbers = (1..=field_names.len() as u8).into_iter().collect::<Vec<_>>();
 
-    // TODO: Add field_seen logic also... and then we're kinda done!!
-
-    quote!{
+    quote! {
         #[derive(Clone, PartialEq, ::prost::Message)]
         pub struct #name_dto {
             #(#proto_field_attributes
-            pub #field_names: proto_field_types,
+            pub #field_names: #proto_field_types,
             )*
         }
 
         impl TestData for #name {
-            type ProtoStruct = #name_dto
+            type ProtoType = #name_dto;
+
+            fn to_proto_bytes(&self) -> Vec<u8> {
+                let proto_struct = #name_dto {
+                    #(#field_names: #field_value_initialisations,
+                    )*
+                };
+
+                use prost::Message as _Message;
+                proto_struct.encode_to_vec()
+            }
 
             fn get_proto_value(&self) -> Self::ProtoType {
                 #name_dto {
                     #(#field_names: #field_value_initialisations,
-                    )
+                    )*
                 }
             }
 
-            fn get_from_parquet_row(row: Row) -> (Self, u64) where Self: Sized {
-                #(let mut #field_names = None;)
-
-                let mut fields_seen = Vec::new();
+            fn get_from_parquet_row(row: parquet::record::Row) -> (Self, u64) where Self: Sized {
+                #(let mut #field_names = None;
+                )*
                 let mut block_number = None;
                 for (field_name, field_value) in row.get_column_iter() {
                     match field_name.as_str() {
-                        #(#struct_and_oneof_match_statements,
-                        )
+                        #(#struct_and_oneof_match_statements
+                        )*
                         "block_number" => {
-                            if let Field::ULong(block_num) = field_value {
-                                block_num = Some(block_num);
+                            if let parquet::record::Field::ULong(block_num) = field_value {
+                                block_number = Some(block_num.clone());
                             } else {
                                 panic!("Block number field not of type u64!\nField_value: {:?}", field_value);
                             }
                         },
                         _ => {
-                            assert!("{} is not a valid field name for this struct. Accepted field names = {:?}", field_name, REQUIRED_FIELDS);
-                            panic!("field name: {} called more than once! Field value: {:?}!", field_name, field_value);
+                            panic!("{} is not a valid field name for this struct.", field_name);
                         }
                     }
                 }
 
                 (Self {
-                    #(#field_names = #field_names.expect(concat!("Field: ", #field_names, "was not seen in parquet row!")))
-                }, block_num.expect("Unable to retrieve block number from parquet row!"))
+                    #(#field_names: #field_names.expect(concat!("Field: ", stringify!(#field_names), ", was not seen in parquet row!")),
+                    )*
+                }, block_number.expect("Unable to retrieve block number from parquet row!"))
+            }
+        }
+
+        impl derives::ProtoInfo for #name {
+            fn get_proto_field_info(field_name: String, field_number: u8) -> derives::proto_structure_info::FieldInfo {
+                derives::proto_structure_info::FieldInfo {
+                    field_name,
+                    field_type: derives::proto_structure_info::FieldType::Message(Self::get_proto_structure_info()),
+                    field_specification: derives::proto_structure_info::FieldSpecification::Required,
+                    field_number: field_number as u64,
+                }
             }
 
-            fn get_proto_structure_info() -> MessageInfo {
-                let fields = Vec::new();
-                #(fields.push(self.#field_names.get_proto_structure_info()); // TODO: If field is struct and is not required type then we need to update it's field specificatioN
-                )
+            fn get_proto_structure_info() -> derives::proto_structure_info::MessageInfo {
+                let mut fields = Vec::new();
+                #(fields.push(#field_types::get_proto_field_info(stringify!(#field_names).to_string(), #field_numbers));
+                )*
 
-                MessageInfo {
-                    type_name: #name,
-                    field_specification: FieldSpecification::Required, // Get's overriden by parent struct later if a subfield to another type
+                derives::proto_structure_info::MessageInfo {
+                    type_name: stringify!(#name).to_string(),
+                    field_specification: derives::proto_structure_info::FieldSpecification::Required, // Get's overriden by parent struct later if a subfield to another type
                     fields,
                     oneof_groups: #oneof_groups_initialisation
                 }
             }
         }
-    };
 
-    TokenStream::new().into()
+        impl derives::GenRandSamples for #name {
+            fn get_sample<R: rand::Rng>(rng: &mut R) -> Self where Self: Sized {
+                Self {
+                    #(#field_names: #field_types::get_sample(rng),
+                    )*
+                }
+            }
+        }
+
+        impl Default for #name {
+            fn default() -> Self {
+                Self {
+                    #(#field_names: Default::default(),
+                    )*
+                }
+            }
+        }
+
+        impl Clone for #name {
+            fn clone(&self) -> Self {
+                Self {
+                    #(#field_names: self.#field_names.clone(),
+                    )*
+                }
+            }
+        }
+
+        impl PartialEq for #name {
+            fn eq(&self, other: &Self) -> bool {
+                let mut equal = true;
+                #(if !self.#field_names.eq(&other.#field_names) {
+                    equal = false;
+                })*
+                equal
+            }
+        }
+
+        impl std::fmt::Debug for #name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.debug_struct(stringify!(#name))
+                 #(.field(stringify!(#field_names), &self.#field_names)
+                 )*
+                 .finish()
+            }
+        }
+    }
 }
 
-fn get_oneof_groups_initialisation(field_associations: Vec<FieldAssociation>) -> TokenStream {
+fn get_oneof_groups_initialisation(field_associations: &Vec<FieldAssociation>, mut tag_number: u8) -> TokenStream {
     let mut oneof_group_array_initialisations = Vec::new();
-    let mut tag_number = 1;
     for field_association in field_associations.iter() {
         match field_association {
             FieldAssociation::OneofField { oneof_fields, .. } => {
                 let mut field_nums = Vec::new();
-                let mut oneof_fields_iter = oneof_fields.iter();
                 let first_field_number = tag_number.clone();
                 tag_number += 1;
-                for oneof_field in oneof_fields_iter {
+                for oneof_field in 0..oneof_fields.len() {
                     field_nums.push(tag_number);
                     tag_number += 1;
                 }
-                oneof_group_array_initialisations.push(quote!(vec![first_field_number#(, #field_nums)]));
+                oneof_group_array_initialisations.push(quote!(vec![#first_field_number#(, #field_nums)*]));
             }
             FieldAssociation::FieldName(_) => {
                 tag_number += 1;
@@ -119,11 +179,15 @@ fn get_oneof_groups_initialisation(field_associations: Vec<FieldAssociation>) ->
         }
     }
 
-    let oneof_group_array_initialisations_iter = oneof_group_array_initialisations.into_iter();
-    let first_group_initialisation = oneof_group_array_initialisations_iter.next().unwrap();
-    let group_initialisations = oneof_group_array_initialisations_iter.collect();
+    if oneof_group_array_initialisations.is_empty() {
+        quote!(vec![])
+    } else {
+        let mut oneof_group_array_initialisations_iter = oneof_group_array_initialisations.into_iter();
+        let first_group_initialisation = oneof_group_array_initialisations_iter.next().unwrap();
+        let group_initialisations = oneof_group_array_initialisations_iter.collect::<Vec<_>>();
 
-    quote!(vec![#first_group_initialisation, #(, #group_initialisations)])
+        quote!(vec![#first_group_initialisation, #(, #group_initialisations)*])
+    }
 }
 
 enum RepetitionType {
@@ -142,7 +206,7 @@ impl RepetitionType {
     }
 }
 
-fn parse_field_info(data_struct: DataStruct) -> FieldInfo {
+fn parse_field_info(data_struct: DataStruct, mut tag_number: u8) -> FieldInfo {
     let fields_named = match data_struct.fields {
         Fields::Named(fields_named) => {
             fields_named
@@ -156,7 +220,6 @@ fn parse_field_info(data_struct: DataStruct) -> FieldInfo {
     };
 
     let mut field_info = FieldInfo::default();
-    let mut tag_number = 1_u8;
     for field in fields_named.named.into_iter() {
         let proto_alternative_type = parse_proto_alternate_type(&field);
 
@@ -165,50 +228,53 @@ fn parse_field_info(data_struct: DataStruct) -> FieldInfo {
         check_type(&type_string, &proto_alternative_type);
 
         let is_struct_type = is_struct_type(&type_string, &outer_type);
-        let (is_oneof_type, field_association) = if let Some(proto_type) = proto_alternative_type {
-            (proto_type.is_oneof_type(), proto_type.g)
+        let is_oneof_type = if let Some(proto_type) = proto_alternative_type.as_ref() {
+            proto_type.is_oneof_type()
         } else {
             false
         };
 
         let (proto_field_type, option_added) = get_proto_field_type(&type_string, &outer_type, is_oneof_type, is_struct_type);
 
-        let repetition_type = get_repetition_type(type_string, is_struct_type);
+        let repetition_type = get_repetition_type(&type_string, is_struct_type);
 
         let field_ident = field.ident.unwrap();
 
         let field_value_initialisation = if option_added {
-            quote!{ Some(self.#field_ident.to_proto_value()) }
+            quote!{ Some(self.#field_ident.get_proto_value()) }
         } else {
-            quote!{ self.#field_ident.to_proto_value() }
+            quote!{ self.#field_ident.get_proto_value() }
         };
 
-        let proto_type = get_proto_type(&proto_alternative_type, is_struct_type, get_inner_type(&type_string));
+        let inner_type = get_inner_type(&type_string);
+        let proto_type = get_proto_type(&proto_alternative_type, is_struct_type, &inner_type);
         let tag_info = get_tag_info(&mut tag_number, &proto_alternative_type);
 
         let proto_field_attribute = format!("#[prost({},{}{})]", proto_type, repetition_type.get_repetition_contribution(), tag_info);
 
-        let parquet_type = get_parquet_type(type_string, &proto_alternative_type, is_struct_type);
-
-        let field_association = if let Some(proto_alternative_type) = proto_alternative_type {
-            if let Some(field_association) = proto_alternative_type.get_field_assocation(field_ident.to_string()) {
+        let field_association = if proto_alternative_type.is_some() {
+            if let Some(field_association) = proto_alternative_type.as_ref().unwrap().get_field_assocation(field_ident.to_string(), inner_type) {
                 field_association
             } else {
+                let parquet_type = get_parquet_type(&type_string, &proto_alternative_type, is_struct_type);
+
                 FieldAssociation::from_field_name(BasicFieldInfo {
-                    field_name,
+                    field_name: field_ident.to_string(),
                     field_type: parquet_type,
                     repetition_type
                 })
             }
         } else {
+            let parquet_type = get_parquet_type(&type_string, &proto_alternative_type, is_struct_type);
+
             FieldAssociation::from_field_name(BasicFieldInfo {
-                field_name,
+                field_name: field_ident.to_string(),
                 field_type: parquet_type,
                 repetition_type
             })
         };
 
-        field_info.add_field_info(field_ident, field_value_initialisation, proto_field_type, proto_field_attribute, field_association);
+        field_info.add_field_info(field_ident, field.ty, field_value_initialisation, proto_field_type, proto_field_attribute, field_association);
     }
 
     field_info
@@ -226,7 +292,7 @@ fn get_parquet_type(type_string: &str, proto_alternative_type: &Option<ProtoAlte
     if let Some(proto_alternative_type) = proto_alternative_type {
         proto_alternative_type.get_parquet_type(&inner_type)
     } else {
-        match &inner_type {
+        match inner_type.as_str() {
             "bool" => ParquetType::Bool,
             "i32" => ParquetType::Int,
             "i64" => ParquetType::Long,
@@ -234,8 +300,8 @@ fn get_parquet_type(type_string: &str, proto_alternative_type: &Option<ProtoAlte
             "u64" => ParquetType::ULong,
             "f32" => ParquetType::Float,
             "f64" => ParquetType::Double,
-            "Vec<u8>" => ParquetType::String,
-            "String" => ParquetType::Bytes,
+            "Vec<u8>" => ParquetType::Bytes,
+            "String" => ParquetType::String,
             _ => unreachable!()
         }
     }
@@ -261,8 +327,8 @@ impl ParquetType {
         macro_rules! val_unwrap {
             ($value_type:ident) => {
                 concat!("let val = if let parquet::record::Field::",
-                $value_type,
-                "(val) = field_value {val.clone()) else {unreachable!(\"Parquet type read does not match expected type. Expected: ",
+                stringify!($value_type),
+                "(val) = field_value {val.clone()} else {unreachable!(\"Parquet type read does not match expected type. Expected: ",
                 stringify!($value_type),
                 "actual: {:?}\", field_value)};").to_string()
             }
@@ -296,14 +362,14 @@ fn get_tag_info(tag_number: &mut u8, proto_alternative_type: &Option<ProtoAltern
 
     if num_tags==1 {
         let tag_info = format!("tag=\"{}\"", tag_number);
-        tag_number += 1;
+        *tag_number += 1;
         tag_info
     } else {
         let mut tag_info = format!("tags=\"{}", tag_number);
-        tag_number += 1;
+        *tag_number += 1;
         for _ in 1..num_tags {
             tag_info.push_str(&format!(", {}", tag_number));
-            tag_number += 1;
+            *tag_number += 1;
         }
         tag_info.push('"');
         tag_info
@@ -327,6 +393,7 @@ fn get_proto_type(proto_alternative_type: &Option<ProtoAlternativeType>, is_stru
                 "u64" => "uint64".to_string(),
                 "bool" => "bool".to_string(),
                 "String" => "string".to_string(),
+                _ => unreachable!()
             }
         }
     }
@@ -338,7 +405,7 @@ fn get_proto_field_type(type_string: &str, outer_type: &str, is_oneof_type: bool
         let inner_type = get_inner_type(type_string);
         let type_name = inner_type.split('<').next().unwrap().to_string();
         let type_name_dto = format!("{}Dto", type_name);
-        type_string.replace(type_name, type_name_dto)
+        type_string.replace(&type_name, &type_name_dto)
     } else {
         type_string.to_string()
     };
@@ -375,7 +442,7 @@ fn get_repetition_type(type_string: &str, is_struct_type: bool) -> RepetitionTyp
 }
 
 fn is_struct_type(type_string: &str, outer_type: &str) -> bool {
-    const NonStructTypes: [&str; 10] = ["Vec<u8>", "f32", "f64", "i32", "i64", "u32", "u64", "bool", "String"];
+    const NonStructTypes: [&str; 9] = ["Vec<u8>", "f32", "f64", "i32", "i64", "u32", "u64", "bool", "String"];
     let inner_type = get_inner_type(type_string);
     !NonStructTypes.contains(&inner_type.as_str())
 }
@@ -397,16 +464,23 @@ fn get_inner_type(type_string: &str) -> String {
 
 #[derive(Default)]
 struct FieldInfo {
-    field_names: Vec<Ident>,
+    field_names: Vec<TokenStream>,
+    field_types: Vec<TokenStream>,
     field_value_initialisations: Vec<TokenStream>,
     proto_field_types: Vec<TokenStream>,
     proto_field_attributes: Vec<TokenStream>,
-    field_associations: Vec<FieldAssociation>
+    field_associations: Vec<FieldAssociation>,
 }
 
 impl FieldInfo {
-    fn add_field_info(&mut self, field_ident: Ident, field_value_initialisation: TokenStream, proto_field_type: String, proto_field_attribute: String, field_association: FieldAssociation) {
-        self.field_names.push(field_ident);
+    fn add_field_info(&mut self, field_ident: Ident, field_type: Type, field_value_initialisation: TokenStream, proto_field_type: String, proto_field_attribute: String, field_association: FieldAssociation) {
+        self.field_names.push(field_ident.to_token_stream());
+        let field_type_string = field_type.to_token_stream().to_string();
+        if field_type_string.contains("<") {
+            self.field_types.push(field_type_string.replace("<", "::<").parse().unwrap())
+        } else {
+            self.field_types.push(field_type.to_token_stream());
+        }
         self.field_value_initialisations.push(field_value_initialisation);
         self.proto_field_types.push(proto_field_type.parse().unwrap());
         self.proto_field_attributes.push(proto_field_attribute.parse().unwrap());
@@ -414,7 +488,7 @@ impl FieldInfo {
     }
 }
 
-struct BasicFieldInfo {
+pub(crate) struct BasicFieldInfo {
     field_name: String,
     field_type: ParquetType,
     repetition_type: RepetitionType
@@ -436,15 +510,15 @@ impl BasicFieldInfo {
                         self.field_type.get_unwrap_statement())
             },
             RepetitionType::Repeated => {
-                format!("if let parquet::record::Field::ListInternal(list) = field_value {{\n            \
-                                    let parsed_values = Vec::new();
+                format!("let val = if let parquet::record::Field::ListInternal(list) = field_value {{\n            \
+                                    let mut parsed_values = Vec::new();
                                     for field_value in list.elements() {{\n                \
                                         {}\n                \
                                         parsed_values.push(val);\n            \
                                     }}\n        \
                                     parsed_values\n    \
                                 }} else {{\n       \
-                                    panic!(\"Field is repeated although list type was not returned! field_value: {{:?}}\", field_type)\n    \
+                                    panic!(\"Field is repeated although list type was not returned! field_value: {{:?}}\", field_value)\n    \
                                 }};",
                         self.field_type.get_unwrap_statement())
             },
@@ -466,9 +540,9 @@ impl FieldAssociation {
         FieldAssociation::FieldName(field_info)
     }
 
-    pub(crate) fn from_oneof_field_and_type_idents(fieldname: String, field_type: String, oneof_field_and_type_idents: Vec<(Ident, Ident)>) -> Self {
-        fn parse_parquet_type(type_ident: Ident) {
-            match type_ident.to_string().as_str() {
+    pub(crate) fn from_oneof_field_and_type_idents(field_name: String, field_type: String, oneof_field_and_type_info: Vec<(String, String)>) -> Self {
+        fn parse_parquet_type(type_ident: &str) -> ParquetType {
+            match type_ident {
                 "bool" => ParquetType::Bool,
                 "i32" => ParquetType::Int,
                 "i64" => ParquetType::Long,
@@ -476,8 +550,8 @@ impl FieldAssociation {
                 "u64" => ParquetType::ULong,
                 "f32" => ParquetType::Float,
                 "f64" => ParquetType::Double,
-                "Vec<u8>" => ParquetType::String,
-                "String" => ParquetType::Bytes,
+                "Vec<u8>" => ParquetType::Bytes,
+                "String" => ParquetType::String,
                 _ => ParquetType::Struct(type_ident.to_string()) // TODO: Here we should really do a check just before to make sure type is not repeated or optional
             }
         }
@@ -485,10 +559,23 @@ impl FieldAssociation {
         FieldAssociation::OneofField {
             field_name,
             field_type,
-            oneof_fields: oneof_field_and_type_idents.into_iter().map(|(field_ident, type_ident)| {
+            oneof_fields: oneof_field_and_type_info.into_iter().map(|(field_ident, type_ident)| {
+                let field_type = match type_ident.as_str() {
+                    "bool" => ParquetType::Bool,
+                    "i32" => ParquetType::Int,
+                    "i64" => ParquetType::Long,
+                    "u32" => ParquetType::UInt,
+                    "u64" => ParquetType::ULong,
+                    "f32" => ParquetType::Float,
+                    "f64" => ParquetType::Double,
+                    "Vec<u8>" => ParquetType::Bytes,
+                    "String" => ParquetType::String,
+                    _ => ParquetType::Struct(type_ident.to_string()) // TODO: Here we should really do a check just before to make sure type is not repeated or optional
+                };
+
                 BasicFieldInfo {
-                    field_name: field_ident.to_string(),
-                    field_type: parse_parquet_type(type_ident),
+                    field_name: field_ident,
+                    field_type: parse_parquet_type(&type_ident),
                     repetition_type: RepetitionType::Required,
                 }
             }).collect(),
@@ -510,8 +597,9 @@ impl FieldAssociation {
                                                                 {1}\n    \
                                                                 if {0}.is_some() {{\n    \
                                                                     panic!(\"There is more than one value set for oneof field: {0}!\");\n     \
-                                                                }} else {{\n    \
-                                                                    {0} = Some({2}::{});\n\
+                                                                }} else {{\n        \
+                                                                    {0} = Some({2}::{});\n    \
+                                                                }}
                                                             }},", field_info.field_name, field_info.get_unwrap_statement(), field_type);
 
                     match_block.parse().unwrap()

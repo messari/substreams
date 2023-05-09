@@ -726,6 +726,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_macros"
+version = "0.1.18"
+dependencies = [
+ "proc-macro2",
+ "proc_macro2_helper",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "derives"
+version = "0.1.0"
+dependencies = [
+ "derive_macros",
+ "parquet",
+ "prost",
+ "prost-types",
+ "rand",
+]
+
+[[package]]
 name = "dialoguer"
 version = "0.10.2"
 source = "git+https://github.com/robinbernon/dialoguer?branch=replace_prompt_when_finished#5d6d5021bc92281e1541f3a7b06a8880251a058a"
@@ -1556,6 +1577,7 @@ dependencies = [
  "bytes",
  "cargo-edit",
  "clap",
+ "derives",
  "dialoguer",
  "futures",
  "lazy_static",
@@ -1927,6 +1949,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ea3d908b0e36316caf9e9e2c4625cdde190a7e6f440d794667ed17a1855e725"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "proc_macro2_helper"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de7d18393e9ef5104442cde71ea51a7fcca8e2dbba4285887176ce78da3ac799"
+dependencies = [
+ "proc-macro2",
+ "syn",
 ]
 
 [[package]]
