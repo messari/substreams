@@ -1,12 +1,12 @@
 use std::borrow::BorrowMut;
 use parquet::file::writer::SerializedRowGroupWriter;
-use crate::streaming_fast::file_sinks::helpers::parquet::enum_decoder::EnumDecoder;
+use derives::proto_structure_info::FieldInfo;
 
+use crate::streaming_fast::file_sinks::helpers::parquet::enum_decoder::EnumDecoder;
 use crate::streaming_fast::file_sinks::helpers::parquet::field_decoder::FieldDecoder;
 use crate::streaming_fast::file_sinks::helpers::parquet::file_buffer::FileBuffer;
 use crate::streaming_fast::file_sinks::helpers::parquet::parquet_schema_builder::ParquetSchemaBuilder;
 use crate::streaming_fast::file_sinks::helpers::parquet::struct_decoder::StructDecoder;
-use crate::streaming_fast::proto_structure_info::FieldInfo;
 use crate::streaming_fast::streaming_fast_utils::FromUnsignedVarint;
 
 pub(in crate::streaming_fast::file_sinks) enum Decoder {

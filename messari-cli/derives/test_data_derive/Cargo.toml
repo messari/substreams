@@ -1,5 +1,5 @@
 [package]
-name = "rand_derive2"
+name = "derive_macros"
 version = "0.1.18"
 edition = "2018"
 

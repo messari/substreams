@@ -2,12 +2,12 @@ use parquet::data_type::Int64Type;
 use parquet::file::properties::WriterPropertiesPtr;
 use parquet::file::writer::SerializedFileWriter;
 use parquet::schema::types::TypePtr;
+use derives::proto_structure_info::MessageInfo;
 
 use crate::streaming_fast::file_sinks::file_sink::FileSink;
 use crate::streaming_fast::file_sinks::helpers::parquet::file_buffer::FileBuffer;
 use crate::streaming_fast::file_sinks::helpers::parquet::parquet_schema_builder::ParquetSchemaBuilder;
 use crate::streaming_fast::file_sinks::helpers::parquet::struct_decoder::StructDecoder;
-use crate::streaming_fast::proto_structure_info::MessageInfo;
 
 const UNCOMPRESSED_FILE_SIZE_THRESHOLD: usize = 500 * 1024 * 1024; // 500MB
 
@@ -79,38 +79,21 @@ impl FileSink for ParquetFileSink {
 
 #[cfg(test)]
 mod tests {
-    use parquet::file::reader::{FileReader, SerializedFileReader};
-    use rand::rngs::StdRng;
-    use rand::SeedableRng;
-    use crate::streaming_fast::file_sinks::file_sink::FileSink;
-    use crate::streaming_fast::file_sinks::helpers::parquet::test_helpers::{FlatSimple, GenRandSamples, get_parquet_sink, TestSinkType};
-    use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
+    use derives::TestData;
 
-    const DUMMY_BLOCK_NUMBER: i64 = 1;
+    use crate::streaming_fast::streaming_fast_utils::assert_data_sinks_to_parquet_correctly;
+
+    #[derive(TestData)]
+    struct FlatSimple {
+        field1: u32,
+        field2: u64,
+        field3: i32,
+        field4: i64,
+        // TODO: Put all types here for testing
+    }
 
     #[test]
     fn test_flat_simple() {
-        let mut rng = StdRng::seed_from_u64(42);
-        let flat_simple_samples = FlatSimple::get_samples(50, &mut rng);
-
-        let mut sink = get_parquet_sink::<FlatSimple>();
-
-        assert_data_sinks_correctly_from_proto_to_parquet(flat_simple_samples, &mut sink);
-    }
-
-    fn assert_data_sinks_correctly_from_proto_to_parquet<T: TestSinkType>(test_data: Vec<T>, sink: &mut ParquetFileSink) {
-        for test_datum in test_data.iter() {
-            let bytes: Vec<u8> = test_datum.encode_to_proto();
-
-            sink.process(&mut bytes.as_slice(), DUMMY_BLOCK_NUMBER).unwrap();
-        }
-
-        let parquet_file_data = sink.make_file();
-        let reader = SerializedFileReader::new(bytes::Bytes::from(parquet_file_data)).unwrap();
-
-        for (parquet_row, test_datum) in reader.get_row_iter(None).unwrap().zip(test_data) {
-            let parsed_data = T::get_from_parquet_row(parquet_row).0;
-            assert_eq!(parsed_data, test_datum);
-        }
+        assert_data_sinks_to_parquet_correctly::<FlatSimple>()
     }
 }

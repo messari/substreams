@@ -1,4 +1,39 @@
 use std::fmt::Debug;
+use futures::StreamExt;
+use parquet::file::reader::{FileReader, SerializedFileReader};
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
+use derives::TestData;
+
+use crate::streaming_fast::file_sinks::file_sink::FileSink;
+use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
+
+const DUMMY_BLOCK_NUMBER: i64 = 1;
+
+#[cfg(test)]
+pub(crate) fn assert_data_sinks_to_parquet_correctly<T: TestData>() {
+    const NUM_SAMPLES: usize = 50;
+
+    let mut rng = StdRng::seed_from_u64(42);
+    let test_data = T::get_samples(NUM_SAMPLES, &mut rng);
+    let test_block_numbers = (0..NUM_SAMPLES).into_iter().map(|_| rng.gen()).collect::<Vec<i64>>();
+
+    let mut sink = ParquetFileSink::new(T::get_proto_structure_info());
+    for (test_datum, test_block_number) in test_data.iter().zip(test_block_numbers.iter()) {
+        let bytes: Vec<u8> = test_datum.to_proto_bytes();
+
+        sink.process(&mut bytes.as_slice(), *test_block_number).unwrap();
+    }
+
+    let parquet_file_data = sink.make_file();
+    let reader = SerializedFileReader::new(bytes::Bytes::from(parquet_file_data)).unwrap();
+
+    for ((parquet_row, test_datum), test_block_number) in reader.get_row_iter(None).unwrap().zip(test_data).zip(test_block_numbers.into_iter()) {
+        let (parsed_data, block_number) = T::get_from_parquet_row(parquet_row);
+        assert_eq!(parsed_data, test_datum);
+        assert_eq!(block_number as i64, test_block_number);
+    }
+}
 
 pub(crate) fn get_file_size_string(file_size: usize) -> String {
     if file_size < 1024 { // (<100B)

@@ -1,11 +1,11 @@
 use std::path::PathBuf;
+use derives::proto_structure_info::MessageInfo;
 
 use crate::streaming_fast::file::{File, Location, LocationType};
 use crate::streaming_fast::file_sinks::file_sink::FileSink;
 use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
 use crate::streaming_fast::multiple_files_sink::MultipleFilesSink;
 use crate::streaming_fast::process_substream::EncodingType;
-use crate::streaming_fast::proto_structure_info::MessageInfo;
 
 pub(crate) struct SingleFileSink {
     file_sink: Box<dyn FileSink>,

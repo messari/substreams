@@ -29,7 +29,7 @@ prost-types = "0.11.6"
 tokio = { version ="1.25.0", features = ["macros", "rt-multi-thread", "fs"] }
 tonic = { version = "0.8.3", features = ["tls-roots", "gzip"] }
 rand = "0.8.5"
-#rand_derive2 = { version="0.1.18", path= "test_data_derive" }
+derives = { path= "derives" }
 
 #[dev-dependencies]
 #rand = "0.8.5"

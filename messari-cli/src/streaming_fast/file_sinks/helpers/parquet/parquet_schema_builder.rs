@@ -2,8 +2,7 @@ use std::sync::Arc;
 use parquet::basic::{Compression, LogicalType, Repetition};
 use parquet::file::properties::{WriterProperties, WriterPropertiesPtr};
 use parquet::schema::types::{GroupTypeBuilder, PrimitiveTypeBuilder, TypePtr};
-
-use crate::streaming_fast::proto_structure_info::{FieldSpecification, FieldType};
+use derives::proto_structure_info::{FieldSpecification, FieldType};
 
 pub(in crate::streaming_fast::file_sinks) struct ParquetSchemaBuilder {
     subgroup_fields: Vec<Vec<TypePtr>>,
