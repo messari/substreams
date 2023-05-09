@@ -18,6 +18,8 @@ substreams.workspace = true
 substreams-ethereum.workspace = true
 substreams-helper = { path = "../substreams-helper" }
 substreams-entity-change = "0.3.0"
+strum = "0.24.1"
+strum_macros = "0.24.3"
 
 [build-dependencies]
 anyhow = "1"

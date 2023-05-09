@@ -4,13 +4,14 @@ use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams_ethereum::Event;
 
 use crate::abi::factory as FactoryContract;
-use crate::pb::uniswap::v3::{DataSources, DataSource, DataSourceType};
+use crate::pb::dex_amm::v3_0_3::{DataSource, DataSources, DataSourceType};
 use crate::utils::UNISWAP_V3_FACTORY_SLICE;
 
 #[substreams::handlers::map]
 pub fn map_data_sources(block: eth::Block) -> Result<DataSources, Error> {
     let mut data_sources = vec![];
 
+    // Fix so does not store multiple times.
     data_sources.push(
         DataSource {
             data_source_type: DataSourceType::UniswapV3Factory as i32,

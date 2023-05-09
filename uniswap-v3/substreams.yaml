@@ -10,11 +10,11 @@ imports:
 
 protobuf:
   files:
+    - dex_amm.proto
     - common.proto
     - erc20.proto
-    - uniswap.proto
   importPaths:
-    - ./proto/v1
+    - ./src/schema_lib/dex_amm/v_3_0_3
     - ../common/proto
 
 binaries:
@@ -68,10 +68,10 @@ modules:
     inputs:
       - map: map_extract_data_types
   
-  - name: store_set_bytes
+  - name: store_append_string
     kind: store
-    updatePolicy: set
-    valueType: bytes
+    updatePolicy: append
+    valueType: string
     inputs:
       - map: map_extract_data_types
 
@@ -79,6 +79,7 @@ modules:
     kind: map
     initialBlock: 12369620
     inputs:
+      - source: sf.substreams.v1.Clock
       - map: map_extract_data_types
       - store: store_add_bigdecimal
         mode: deltas
@@ -86,6 +87,6 @@ modules:
         mode: deltas
       - store: store_add_int64
         mode: deltas
-      - store: store_set_bytes
+      - store: store_append_string
     output:
       type: proto:substreams.entity.v1.EntityChanges

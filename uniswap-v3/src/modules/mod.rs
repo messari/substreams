@@ -13,22 +13,26 @@ mod store_add_bigdecimal;
 #[path = "5_store_add_bigint.rs"]
 mod store_add_bigint;
 
-#[path = "6_store_add_int64.rs"]
+#[path = "6_store_set_bigint.rs"]
+mod store_set_bigint;
+
+#[path = "7_store_add_int64.rs"]
 mod store_add_int64;
 
-#[path = "7_store_set_bytes.rs"]
-mod store_set_bytes;
+#[path = "8_store_append_string.rs"]
+mod store_append_string;
 
-#[path = "8_map_graph_out.rs"]
+#[path = "9_map_graph_out.rs"]
 mod map_graph_out;
 
 pub use map_data_sources::map_data_sources;
 pub use store_data_sources::store_data_sources;
 pub use map_extract_data_types::map_extract_data_types;
 pub use store_add_bigint::store_add_bigint;
+pub use store_set_bigint::store_set_bigint;
 pub use store_add_bigdecimal::store_add_bigdecimal;
 pub use store_add_int64::store_add_int64;
-pub use store_set_bytes::store_set_bytes;
+pub use store_append_string::store_append_string;
 pub use map_graph_out::map_graph_out;
 
 

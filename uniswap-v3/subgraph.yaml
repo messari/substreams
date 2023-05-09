@@ -14,4 +14,4 @@ dataSources:
         file: substreams-uniswap-v3-v0.1.0.spkg
     mapping:
       kind: substreams/graph-entities
-      apiVersion: 0.0.5
+      apiVersion: 0.0.6

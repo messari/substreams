@@ -1,22 +1,22 @@
 use substreams::prelude::*;
-use substreams::store::{StoreAddBigInt};
+use substreams::store::{StoreSetBigInt};
 use substreams::scalar::BigInt;
 
 use crate::pb::dex_amm::v3_0_3::{MappedDataSources, store_instruction, AddManyBigInt, AddBigInt};
 
 
 #[substreams::handlers::store]
-pub fn store_add_bigint(
+pub fn store_set_bigint(
     mapped_data_sources: MappedDataSources,
-    add_bigint_store: StoreAddBigInt,
+    set_bigint_store: StoreSetBigInt,
 ) {
     for store_instruction in mapped_data_sources.store_instructions {
         match store_instruction.r#type.unwrap() {
-            store_instruction::Type::AddBigInt(item) => {
-                add_bigint_store.add(item.ordinal, item.key, BigInt::try_from(item.value).unwrap());
+            store_instruction::Type::SetBigInt(item) => {
+                set_bigint_store.set(item.ordinal, item.key, BigInt::try_from(item.value).unwrap());
             }, 
-            store_instruction::Type::AddManyBigInt(item) => {
-                add_bigint_store.add_many(item.ordinal, &item.key, BigInt::try_from(item.value).unwrap());
+            store_instruction::Type::SetManyBigInt(item) => {
+                set_bigint_store.set_many(item.ordinal, &item.key, BigInt::try_from(item.value).unwrap());
             },
             _ => continue,
         }

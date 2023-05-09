@@ -49,7 +49,7 @@ enum TokenType {
 
 type Token @entity {
   " Smart contract address of the token "
-  id: Bytes!
+  id: ID!
 
   " Name of the token, mirrored from the smart contract "
   name: String!
@@ -1194,7 +1194,7 @@ contracts.
 """
 type Deposit @entity(immutable: true) {
   " { Transaction hash }-{ Log index } "
-  id: Bytes!
+  id: ID!
 
   " Transaction hash of the transaction that emitted this event "
   hash: Bytes!
@@ -1203,7 +1203,7 @@ type Deposit @entity(immutable: true) {
   nonce: BigInt!
 
   " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
+  logIndex: BigInt!
 
   " Gas limit of the transaction that emitted this event "
   gasLimit: BigInt
@@ -1215,7 +1215,7 @@ type Deposit @entity(immutable: true) {
   gasPrice: BigInt
 
   " The protocol this transaction belongs to "
-  protocol: DexAmmProtocol!
+  protocol: String!
 
   " Account that emitted this event "
   account: Account!
@@ -1242,7 +1242,7 @@ type Deposit @entity(immutable: true) {
   liquidity: BigInt!
 
   " Input tokens of the pool. E.g. WETH and USDC to a WETH-USDC pool "
-  inputTokens: [Token!]!
+  inputTokens: [Bytes!]!
 
   " Amount of input tokens in the token's native unit "
   inputTokenAmounts: [BigInt!]!
@@ -1253,7 +1253,7 @@ type Deposit @entity(immutable: true) {
 
 type Withdraw @entity(immutable: true) {
   " { Transaction hash }-{ Log index }"
-  id: Bytes!
+  id: ID!
 
   " Transaction hash of the transaction that emitted this event "
   hash: Bytes!
@@ -1262,7 +1262,7 @@ type Withdraw @entity(immutable: true) {
   nonce: BigInt!
 
   " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
+  logIndex: BigInt!
 
   " Gas limit of the transaction that emitted this event "
   gasLimit: BigInt
@@ -1274,7 +1274,7 @@ type Withdraw @entity(immutable: true) {
   gasPrice: BigInt
 
   " The protocol this transaction belongs to "
-  protocol: DexAmmProtocol!
+  protocol: String!
 
   " Account that emitted this event "
   account: Account!
@@ -1312,7 +1312,7 @@ type Withdraw @entity(immutable: true) {
 
 type Swap @entity(immutable: true) {
   " { Transaction hash }-{ Log index } "
-  id: Bytes!
+  id: ID!
 
   " Transaction hash of the transaction that emitted this event "
   hash: Bytes!
@@ -1321,7 +1321,7 @@ type Swap @entity(immutable: true) {
   nonce: BigInt!
 
   " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
+  logIndex: BigInt!
 
   " Gas limit of the transaction that emitted this event "
   gasLimit: BigInt
@@ -1333,7 +1333,7 @@ type Swap @entity(immutable: true) {
   gasPrice: BigInt
 
   " The protocol this transaction belongs to "
-  protocol: DexAmmProtocol!
+  protocol: String!
 
   " Account that emitted this event "
   account: Account!
