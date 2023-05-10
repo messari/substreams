@@ -1,7 +1,8 @@
 use substreams::{log, Hex, proto};
+use crate::pb::dex_amm::v3_0_3::{BigInt};
 
-pub fn get_event_key(hash: &Vec<u8>, log_index: &u32) -> String {
-    format!("{}:{}", Hex(hash).to_string(), log_index)
+pub fn get_event_key(hash: &Vec<u8>, log_index: &BigInt) -> String {
+    format!("{}:{}", Hex(hash).to_string(), log_index.value)
 }
 
 pub fn get_pool_name(protocol: &str, input_tokens: &Vec<Vec<u8>>) -> String {

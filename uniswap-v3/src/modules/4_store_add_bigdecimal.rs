@@ -12,10 +12,12 @@ pub fn store_add_bigdecimal(
     for store_instruction in mapped_data_sources.store_instructions {
         match store_instruction.r#type.unwrap() {
             store_instruction::Type::AddBigDecimal(item) => {
-                add_bigdecimal_store.add(item.ordinal, item.key, BigDecimal::try_from(item.value).unwrap());
+                let item_value: BigDecimal = BigDecimal::try_from(item.value.unwrap().value).unwrap();
+                add_bigdecimal_store.add(item.ordinal, item.key, item_value);
             }, 
             store_instruction::Type::AddManyBigDecimal(item) => {
-                add_bigdecimal_store.add_many(item.ordinal, &item.key, BigDecimal::try_from(item.value).unwrap());
+                let item_value: BigDecimal = BigDecimal::try_from(item.value.unwrap().value).unwrap();
+                add_bigdecimal_store.add_many(item.ordinal, &item.key, item_value);
             },
             _ => continue,
         }

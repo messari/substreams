@@ -5,71 +5,69 @@ use substreams_entity_change::pb::entity::{EntityChange, entity_change::Operatio
 
 use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, CreateLiquidityPool};
 use crate::schema_lib::dex_amm::v_3_0_3::keys;
+use crate::tables::{Tables, Row};
+use crate::constants;
 
 pub fn create_liquidity_pool_entity_change(
+    tables: &mut Tables,
     block_number: &u64,
     timestamp: &i64,
     pruned_transaction: &PrunedTransaction,
-    create_liquidity_pool: CreateLiquidityPool,
-) -> EntityChange {
-    let mut liquidity_pool_change: EntityChange =
-        EntityChange::new("LiquidityPool", &format!("0x{}", hex::encode(create_liquidity_pool.pool_address)), 0, Operation::Create);
-    
-    
-    liquidity_pool_change
-        .change("protocol", create_liquidity_pool.protocol)
-        .change("name", keys::get_pool_name("Uniswap V3", &create_liquidity_pool.input_tokens))
-        .change("symbol", keys::get_pool_symbol(&create_liquidity_pool.input_tokens))
-        .change("inputTokens", create_liquidity_pool.input_tokens)
-        .change("fees", create_liquidity_pool.fees)
-        .change("isSingleSided", create_liquidity_pool.is_single_sided)
-        .change("CreatedBlockNumber", BigInt::from(*block_number))
-        .change("CreatedTimestamp", BigInt::from(*timestamp))
-        .change("totalValueLockedUSD", BigDecimal::from(0))
-        .change("totalLiquidity", BigInt::from(0))
-        .change("totalLiquidityUSD", BigDecimal::from(0))
-        .change("activeLiquidity", BigInt::from(0))
-        .change("activeLiquidityUSD", BigDecimal::from(0))
-        .change("uncollectedProtocolSideTokenAmounts", &vec![BigInt::from(0).to_string(); create_liquidity_pool.input_tokens.len()])
-        .change("uncollectedProtocolSideValuesUSD", &vec![BigDecimal::from(0).to_string(); create_liquidity_pool.input_tokens.len()])
-        .change("uncollectedSupplySideTokenAmounts", &vec![BigInt::from(0).to_string(); create_liquidity_pool.input_tokens.len()])
-        .change("uncollectedSupplySideValuesUSD", &vec![BigDecimal::from(0).to_string(); create_liquidity_pool.input_tokens.len()])
-        .change("cumulativeSupplySideRevenueUSD", BigDecimal::from(0))
-        .change("cumulativeProtocolSideRevenueUSD", BigDecimal::from(0))
-        .change("cumulativeTotalRevenueUSD", BigDecimal::from(0))
-        .change("cumulativeVolumeTokenAmounts", &vec![BigInt::from(0).to_string(); create_liquidity_pool.input_tokens.len()])
-        .change("cumulativeVolumesUSD", &vec![BigDecimal::from(0).to_string(); create_liquidity_pool.input_tokens.len()])
-        .change("cumulativeVolumeUSD", &vec![BigDecimal::from(0).to_string(); create_liquidity_pool.input_tokens.len()])
-        .change("inputTokenBalances", &vec![BigInt::from(0).to_string(); create_liquidity_pool.input_tokens.len()])
-        .change("inputTokenBalancesUSD", &vec![BigDecimal::from(0).to_string(); create_liquidity_pool.input_tokens.len()])
-        .change("inputTokenWeights", &vec![BigDecimal::from(0).to_string(); create_liquidity_pool.input_tokens.len()])
-        .change("stakedOutputTokenAmount", BigInt::from(0))
-        .change("cumulativeDepositCount", 0)
-        .change("cumulativeWithdrawCount", 0)
-        .change("cumulativeSwapCount", 0)
-        .change("positionCount", 0)
-        .change("openPositionCount", 0)
-        .change("closedPositionCount", 0);
+    create_liquidity_pool: &CreateLiquidityPool,
+) {
+    let row: &mut Row = tables.create_row("LiquidityPool", &format!("0x{}", hex::encode(&create_liquidity_pool.pool_address)));
+    row
+        .set("protocol", &create_liquidity_pool.protocol)
+        .set("name", keys::get_pool_name("Uniswap V3", &create_liquidity_pool.input_tokens))
+        .set("symbol", keys::get_pool_symbol(&create_liquidity_pool.input_tokens))
+        .set("inputTokens", &create_liquidity_pool.input_tokens)
+        .set("fees", &create_liquidity_pool.fees)
+        .set("isSingleSided", create_liquidity_pool.is_single_sided)
+        .set("CreatedBlockNumber", BigInt::from(*block_number))
+        .set("CreatedTimestamp", BigInt::from(*timestamp))
+        .set("totalValueLockedUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("totalLiquidity", constants::BIGINT_ZERO.clone())
+        .set("totalLiquidityUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("activeLiquidity", constants::BIGINT_ZERO.clone())
+        .set("activeLiquidityUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("uncollectedProtocolSideTokenAmounts", &vec![constants::BIGINT_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
+        .set("uncollectedProtocolSideValuesUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
+        .set("uncollectedSupplySideTokenAmounts", &vec![constants::BIGINT_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
+        .set("uncollectedSupplySideValuesUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
+        .set("cumulativeSupplySideRevenueUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("cumulativeProtocolSideRevenueUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("cumulativeTotalRevenueUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("cumulativeVolumeTokenAmounts", &vec![constants::BIGINT_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
+        .set("cumulativeVolumesUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
+        .set("cumulativeVolumeUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
+        .set("inputTokenBalances", &vec![constants::BIGINT_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
+        .set("inputTokenBalancesUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
+        .set("inputTokenWeights", &vec![constants::BIGDECIMAL_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
+        .set("stakedOutputTokenAmount", constants::BIGINT_ZERO.clone())
+        .set("cumulativeDepositCount", 0)
+        .set("cumulativeWithdrawCount", 0)
+        .set("cumulativeSwapCount", 0)
+        .set("positionCount", 0)
+        .set("openPositionCount", 0)
+        .set("closedPositionCount", 0);
 
 
     
-    if let Some(tick) = create_liquidity_pool.tick {
-        liquidity_pool_change.change("tick", tick);
+    if let Some(tick) = &create_liquidity_pool.tick {
+        row.set("tick", tick);
     }
-    if let Some(liquidity_token) = create_liquidity_pool.liquidity_token {
-        liquidity_pool_change.change("liquidityToken", liquidity_token);
+    if let Some(liquidity_token) = &create_liquidity_pool.liquidity_token {
+        row.set("liquidityToken", liquidity_token);
     }
-    if let Some(liquidity_token_type) = create_liquidity_pool.liquidity_token_type {
-        liquidity_pool_change.change("liquidityTokenType", liquidity_token_type);
+    if let Some(liquidity_token_type) = &create_liquidity_pool.liquidity_token_type {
+        row.set("liquidityTokenType", liquidity_token_type);
     }
 
     if create_liquidity_pool.reward_tokens.len() > 0 {
-        liquidity_pool_change.change("rewardTokens", create_liquidity_pool.reward_tokens);
-        liquidity_pool_change.change("rewardTokenEmissionsAmount", &vec![BigInt::from(0).to_string(); create_liquidity_pool.reward_tokens.len()]);
-        liquidity_pool_change.change("rewardTokenEmissionsUSD", &vec![BigDecimal::from(0).to_string(); create_liquidity_pool.reward_tokens.len()]);
+        row.set("rewardTokens", &create_liquidity_pool.reward_tokens);
+        row.set("rewardTokenEmissionsAmount", &vec![constants::BIGINT_ZERO.clone(); create_liquidity_pool.reward_tokens.len()]);
+        row.set("rewardTokenEmissionsUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); create_liquidity_pool.reward_tokens.len()]);
     }
-    
-    liquidity_pool_change
 }
 
 // pub fn liquidity_pool_balance_entity_change(
@@ -80,25 +78,25 @@ pub fn create_liquidity_pool_entity_change(
 //         EntityChange::new("LiquidityPool", &format!("0x{}", hex::encode(pool_address)), 0, Operation::Create);
     
 //     liquidity_pool_change
-//         .change("totalValueLockedUSD", BigDecimal::from(0))
-//         .change("totalLiquidity", BigInt::from(0))
-//         .change("totalLiquidityUSD", BigDecimal::from(0))
-//         .change("activeLiquidity", BigInt::from(0))
-//         .change("activeLiquidityUSD", BigDecimal::from(0))
-//         .change("uncollectedProtocolSideTokenAmounts", &vec![BigInt::from(0); input_tokens.len()])
-//         .change("uncollectedProtocolSideValuesUSD", &vec![BigDecimal::from(0); input_tokens.len()])
-//         .change("uncollectedSupplySideTokenAmounts", &vec![BigInt::from(0); input_tokens.len()])
-//         .change("uncollectedSupplySideValuesUSD", &vec![BigDecimal::from(0); input_tokens.len()])
-//         .change("cumulativeSupplySideRevenueUSD", BigDecimal::from(0))
-//         .change("cumulativeProtocolSideRevenueUSD", BigDecimal::from(0))
-//         .change("cumulativeTotalRevenueUSD", BigDecimal::from(0))
-//         .change("cumulativeVolumeTokenAmounts", &vec![BigInt::from(0); input_tokens.len()])
-//         .change("cumulativeVolumesUSD", &vec![BigDecimal::from(0); input_tokens.len()])
-//         .change("cumulativeVolumeUSD", &vec![BigDecimal::from(0); input_tokens.len()])
-//         .change("inputTokenBalances", &vec![BigInt::from(0); input_tokens.len()])
-//         .change("inputTokenBalancesUSD", &vec![BigDecimal::from(0); input_tokens.len()])
-//         .change("inputTokenWeights", &vec![BigDecimal::from(0); input_tokens.len()])
-//         .change("stakedOutputTokenAmount", BigInt::from(0));
+//         .change("totalValueLockedUSD", constants::BIGDECIMAL_ZERO.clone())
+//         .change("totalLiquidity", constants::BIGINT_ZERO.clone())
+//         .change("totalLiquidityUSD", constants::BIGDECIMAL_ZERO.clone())
+//         .change("activeLiquidity", constants::BIGINT_ZERO.clone())
+//         .change("activeLiquidityUSD", constants::BIGDECIMAL_ZERO.clone())
+//         .change("uncollectedProtocolSideTokenAmounts", &vec![constants::BIGINT_ZERO.clone(); input_tokens.len()])
+//         .change("uncollectedProtocolSideValuesUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); input_tokens.len()])
+//         .change("uncollectedSupplySideTokenAmounts", &vec![constants::BIGINT_ZERO.clone(); input_tokens.len()])
+//         .change("uncollectedSupplySideValuesUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); input_tokens.len()])
+//         .change("cumulativeSupplySideRevenueUSD", constants::BIGDECIMAL_ZERO.clone())
+//         .change("cumulativeProtocolSideRevenueUSD", constants::BIGDECIMAL_ZERO.clone())
+//         .change("cumulativeTotalRevenueUSD", constants::BIGDECIMAL_ZERO.clone())
+//         .change("cumulativeVolumeTokenAmounts", &vec![constants::BIGINT_ZERO.clone(); input_tokens.len()])
+//         .change("cumulativeVolumesUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); input_tokens.len()])
+//         .change("cumulativeVolumeUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); input_tokens.len()])
+//         .change("inputTokenBalances", &vec![constants::BIGINT_ZERO.clone(); input_tokens.len()])
+//         .change("inputTokenBalancesUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); input_tokens.len()])
+//         .change("inputTokenWeights", &vec![constants::BIGDECIMAL_ZERO.clone(); input_tokens.len()])
+//         .change("stakedOutputTokenAmount", constants::BIGINT_ZERO.clone());
 
 //     liquidity_pool_change
 // }

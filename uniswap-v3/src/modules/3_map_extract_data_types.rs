@@ -17,6 +17,8 @@ use crate::pb::dex_amm::v3_0_3::store_instruction;
 use crate::abi::pool as PoolContract;
 use crate::abi::factory as FactoryContract;
 use crate::schema_lib::dex_amm::v_3_0_3::store_keys;
+use crate::interactions;
+use crate::constants;
 
 use crate::keyer::{get_data_source_key};
 
@@ -26,10 +28,10 @@ fn initialize_pruned_transaction(transaction_trace: eth::TransactionTrace) -> Pr
         hash: transaction_trace.hash.clone(),
         from: transaction_trace.from.clone(),
         to: transaction_trace.to.clone(),
-        nonce: transaction_trace.nonce,
-        gas_limit: transaction_trace.gas_limit,
-        gas_used: transaction_trace.gas_used,
-        gas_price: "0".to_string(),
+        nonce: Some(transaction_trace.nonce.into()),
+        gas_limit: Some(transaction_trace.gas_limit.into()),
+        gas_used: Some(transaction_trace.gas_used.into()),
+        gas_price: Some(constants::BIGINT_ZERO.clone().into()),
         updates: Vec::<Update>::new(),
     }
 }
@@ -53,75 +55,18 @@ pub fn map_extract_data_types(
                     0 => {
                         for log in &call_view.call.logs {
                             if let Some(swap_event) = PoolContract::events::Swap::match_and_decode(&log) {
-                                pruned_transaction.updates.push(
-                                    Update {
-                                        r#type: Some(SwapType(Swap { 
-                                            pool: call_view.call.address.clone(),
-                                            protocol: UNISWAP_V3_FACTORY_SLICE.to_vec(),
-                                            account: pruned_transaction.from.clone(),
-                                            amounts: vec![swap_event.amount0.to_string(), swap_event.amount1.to_string()],
-                                            liquidity: swap_event.liquidity.to_string(),
-                                            tick: swap_event.tick.to_string(),
-                                            log_index: log.index,
-                                            log_ordinal: log.ordinal,
-                                        }))
-                                    }
-                                );
+                                interactions::swap::handle_swap(&mut mapped_data_sources, &mut pruned_transaction, swap_event, call_view.call, log);
                             } else if let Some(mint_event) = PoolContract::events::Mint::match_and_decode(&log) {
-                                pruned_transaction.updates.push(
-                                    Update {
-                                        r#type: Some(DepositType(Deposit {
-                                            pool: call_view.call.address.clone(),
-                                            protocol: UNISWAP_V3_FACTORY_SLICE.to_vec(),
-                                            account: pruned_transaction.from.clone(),
-                                            position: None,
-                                            liquidity: mint_event.amount.to_string(),
-                                            input_token_amounts: vec![mint_event.amount0.to_string(), mint_event.amount1.to_string()],
-                                            tick_lower: Some(mint_event.tick_lower.to_string()),
-                                            tick_upper:Some( mint_event.tick_upper.to_string()),
-                                            log_index: log.index,
-                                            log_ordinal: log.ordinal,
-                                        }))
-                                    }
-                                );
+                                interactions::mint::handle_mint(&mut mapped_data_sources, &mut pruned_transaction, mint_event, call_view.call, log);
                             } else if let Some(burn_event) = PoolContract::events::Burn::match_and_decode(&log) {
-                                pruned_transaction.updates.push(
-                                    Update {
-                                        r#type: Some(WithdrawType(Withdraw {
-                                            pool: call_view.call.address.clone(),
-                                            protocol: UNISWAP_V3_FACTORY_SLICE.to_vec(),
-                                            account: pruned_transaction.from.clone(),
-                                            position: None,
-                                            liquidity: burn_event.amount.to_string(),
-                                            input_token_amounts: vec![burn_event.amount0.to_string(), burn_event.amount1.to_string()],
-                                            tick_lower: Some(burn_event.tick_lower.to_string()),
-                                            tick_upper: Some(burn_event.tick_upper.to_string()),
-                                            log_index: log.index,
-                                            log_ordinal: log.ordinal,
-                                        }))
-                                    }
-                                );
+                                interactions::burn::handle_burn(&mut mapped_data_sources, &mut pruned_transaction, burn_event, call_view.call, log);
                             }
                         }
                     }
                     1 => {
                         for log in &call_view.call.logs {
                             if let Some(pool_created_event) = FactoryContract::events::PoolCreated::match_and_decode(&log) {
-                                pruned_transaction.updates.push(
-                                    Update {
-                                        r#type: Some(CreateLiquidityPoolType(CreateLiquidityPool {
-                                            protocol: UNISWAP_V3_FACTORY_SLICE.to_vec(),
-                                            pool_address: pool_created_event.pool.clone(),
-                                            input_tokens: vec![pool_created_event.token0.clone(), pool_created_event.token1.clone()],
-                                            reward_tokens: vec![],
-                                            fees: vec![],
-                                            is_single_sided: false,
-                                            tick: None,
-                                            liquidity_token: None,
-                                            liquidity_token_type: None,
-                                        }))
-                                    }
-                                );
+                                interactions::pool_created::handle_pool_created(&mut mapped_data_sources, &mut pruned_transaction, pool_created_event, call_view.call, log);
                             }
                         }
                     }

@@ -4,6 +4,7 @@ use substreams::errors::Error;
 use substreams::store::{DeltaBigDecimal, DeltaInt64, DeltaBigInt, StoreGetRaw, StoreGet, StoreGetArray};
 use substreams_entity_change::pb::entity::{EntityChange, EntityChanges};
 
+use crate::tables::Tables;
 use crate::pb::dex_amm::v3_0_3::{MappedDataSources, PrunedTransaction};
 use crate::schema_lib::dex_amm::v_3_0_3::map::map_dex_amm_v_3_0_3_entity_changes;
 
@@ -16,27 +17,26 @@ pub fn map_graph_out(
     add_int64_store_deltas: Deltas<DeltaInt64>,
     store_append_string: StoreGetArray<String>,
 ) -> Result<EntityChanges, ()> {
-    let mut entity_changes: Vec<EntityChange> = Vec::new();
+    let mut tables: Tables = Tables::new();
+
     let block_number = clock.number;
     let timestamp = clock.timestamp.unwrap().seconds;
 
-    // Parallelize w/ Rayon
-    for pruned_transaction in &mapped_data_sources.pruned_transactions {
-        for update in pruned_transaction.updates {
-            entity_changes.extend(
-                map_dex_amm_v_3_0_3_entity_changes(
-                    &block_number,
-                    &timestamp,
-                    &pruned_transaction,
-                    update, 
-                    &add_bigdecimal_store_deltas,
-                    &add_bigint_store_deltas,
-                    &add_int64_store_deltas,
-                    &store_append_string
-                )
+    for pruned_transaction in mapped_data_sources.pruned_transactions {
+        for update in &pruned_transaction.updates {
+            map_dex_amm_v_3_0_3_entity_changes(
+                &mut tables,
+                &block_number,
+                &timestamp,
+                &pruned_transaction,
+                &update, 
+                &add_bigdecimal_store_deltas,
+                &add_bigint_store_deltas,
+                &add_int64_store_deltas,
+                &store_append_string
             );
         }
     }
 
-    Ok(EntityChanges { entity_changes })
+    Ok(tables.to_entity_changes())
 }

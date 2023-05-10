@@ -1,47 +1,44 @@
 use substreams::{Hex};
 use substreams::prelude::*;
 use substreams::pb::substreams::Clock;
-use substreams_entity_change::pb::entity::{EntityChange, entity_change::Operation};
+use crate::tables::Tables;
 
 use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, CreateDexAmmProtocol};
 use crate::schema_lib::dex_amm::v_3_0_3::keys;
+use crate::constants;
 
 pub fn create_dex_amm_protocol_entity_change(
+    tables: &mut Tables,
     block_number: &u64,
     timestamp: &i64,
     pruned_transaction: &PrunedTransaction,
-    create_dex_amm_protocol: CreateDexAmmProtocol,
-) -> EntityChange {
-    let mut protocol_change: EntityChange =
-        EntityChange::new("DexAmmProtocol", &format!("0x{}", hex::encode(create_dex_amm_protocol.protocol_address)), 0, Operation::Create);
-
-    protocol_change
-        .change("name", create_dex_amm_protocol.name)
-        .change("slug", create_dex_amm_protocol.slug)
-        .change("schemaVersion", create_dex_amm_protocol.schema_version)
-        .change("subgraphVersion", create_dex_amm_protocol.subgraph_version)
-        .change("methodologyVersion", create_dex_amm_protocol.methodology_version)
-        .change("network", create_dex_amm_protocol.network)
-        .change("type", create_dex_amm_protocol.r#type)
-        .change("totalValueLockedUSD", BigDecimal::from(0))
-        .change("totalLiquidityUSD", BigDecimal::from(0))
-        .change("activeLiquidityUSD", BigDecimal::from(0))
-        .change("uncollectedProtocolSideValueUSD", BigDecimal::from(0))
-        .change("uncollectedSupplySideValueUSD", BigDecimal::from(0))
-        .change("protocolControlledValueUSD", BigDecimal::from(0))
-        .change("cumulativeVolumeUSD", BigDecimal::from(0))
-        .change("cumulativeSupplySideRevenueUSD", BigDecimal::from(0))
-        .change("cumulativeProtocolSideRevenueUSD", BigDecimal::from(0))
-        .change("cumulativeTotalRevenueUSD", BigDecimal::from(0))
-        .change("cumulativeUniqueUsers", 0)
-        .change("cumulativeUniqueLPs", 0)
-        .change("cumulativeUniqueTraders", 0)
-        .change("totalPoolCount", 0)
-        .change("openPositionCount", 0)
-        .change("cumulativePositionCount", 0)
-        .change("lastSnapshotDayID", 0)
-        .change("lastUpdateTimestamp", BigInt::from(0))
-        .change("lastUpdateBlockNumber", BigInt::from(0));
-
-    protocol_change
+    create_dex_amm_protocol: &CreateDexAmmProtocol,
+) {
+    tables.create_row("DexAmmProtocol", &format!("0x{}", hex::encode(&create_dex_amm_protocol.protocol_address)))
+        .set("name", &create_dex_amm_protocol.name)
+        .set("slug", &create_dex_amm_protocol.slug)
+        .set("schemaVersion", &create_dex_amm_protocol.schema_version)
+        .set("subgraphVersion", &create_dex_amm_protocol.subgraph_version)
+        .set("methodologyVersion", &create_dex_amm_protocol.methodology_version)
+        .set("network", &create_dex_amm_protocol.network)
+        .set("type", &create_dex_amm_protocol.r#type)
+        .set("totalValueLockedUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("totalLiquidityUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("activeLiquidityUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("uncollectedProtocolSideValueUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("uncollectedSupplySideValueUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("protocolControlledValueUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("cumulativeVolumeUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("cumulativeSupplySideRevenueUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("cumulativeProtocolSideRevenueUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("cumulativeTotalRevenueUSD", constants::BIGDECIMAL_ZERO.clone())
+        .set("cumulativeUniqueUsers", 0)
+        .set("cumulativeUniqueLPs", 0)
+        .set("cumulativeUniqueTraders", 0)
+        .set("totalPoolCount", 0)
+        .set("openPositionCount", 0)
+        .set("cumulativePositionCount", 0)
+        .set("lastSnapshotDayID", 0)
+        .set("lastUpdateTimestamp", constants::BIGINT_ZERO.clone())
+        .set("lastUpdateBlockNumber", constants::BIGINT_ZERO.clone());
 }

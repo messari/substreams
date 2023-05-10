@@ -13,10 +13,12 @@ pub fn store_set_bigint(
     for store_instruction in mapped_data_sources.store_instructions {
         match store_instruction.r#type.unwrap() {
             store_instruction::Type::SetBigInt(item) => {
-                set_bigint_store.set(item.ordinal, item.key, BigInt::try_from(item.value).unwrap());
+                let item_value: BigInt = BigInt::try_from(item.value.unwrap().value).unwrap();
+                set_bigint_store.set(item.ordinal, item.key, &item_value);
             }, 
             store_instruction::Type::SetManyBigInt(item) => {
-                set_bigint_store.set_many(item.ordinal, &item.key, BigInt::try_from(item.value).unwrap());
+                let item_value: BigInt = BigInt::try_from(item.value.unwrap().value).unwrap();
+                set_bigint_store.set_many(item.ordinal, &item.key, &item_value);
             },
             _ => continue,
         }

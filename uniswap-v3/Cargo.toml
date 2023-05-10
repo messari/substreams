@@ -17,9 +17,11 @@ pad = "0.1"
 substreams.workspace = true
 substreams-ethereum.workspace = true
 substreams-helper = { path = "../substreams-helper" }
-substreams-entity-change = "0.3.0"
+substreams-entity-change = {git = "https://github.com/streamingfast/substreams-entity-change/", branch = "develop"}
 strum = "0.24.1"
 strum_macros = "0.24.3"
+base64 = "0.21.0"
+lazy_static = "1.4.0"
 
 [build-dependencies]
 anyhow = "1"

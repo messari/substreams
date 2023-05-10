@@ -3,6 +3,14 @@ syntax = "proto3";
 import "erc20.proto";
 package messari.dex_amm.v3_0_3;
 
+message BigInt {
+  string value = 1;
+}
+
+message BigDecimal {
+  string value = 1;
+}
+
 message DataSources {
   repeated DataSource data_sources = 1;
 }
@@ -26,10 +34,10 @@ message PrunedTransaction {
   bytes to = 1;
   bytes from = 2;
   bytes hash = 3;
-  uint64 nonce = 4;
-  uint64 gas_limit = 5;
-  uint64 gas_used = 6;
-  string gas_price = 7;
+  BigInt nonce = 4;
+  BigInt gas_limit = 5;
+  BigInt gas_used = 6;
+  BigInt gas_price = 7;
 
   repeated Update updates = 8;
 }
@@ -63,7 +71,7 @@ message CreateLiquidityPool {
   repeated bytes reward_tokens = 4;
   repeated bytes fees = 5;
   bool is_single_sided = 6;
-  optional string tick = 7;
+  optional BigInt tick = 7;
   optional bytes liquidity_token = 8;
   optional string liquidity_token_type = 9;
 }
@@ -80,12 +88,12 @@ message Deposit {
   bytes pool = 2;
   bytes account = 3;
   optional bytes position = 4;  
-  string liquidity = 5;
-  repeated string input_token_amounts = 6;
-  optional string tick_lower = 7;
-  optional string tick_upper = 8;
-  uint32 log_index = 9;
-  uint64 log_ordinal = 10;
+  BigInt liquidity = 5;
+  repeated BigInt input_token_amounts = 6;
+  optional BigInt tick_lower = 7;
+  optional BigInt tick_upper = 8;
+  BigInt log_index = 9;
+  BigInt log_ordinal = 10;
 }
 
 message Withdraw {
@@ -93,23 +101,23 @@ message Withdraw {
   bytes pool = 2;
   bytes account = 3;
   optional bytes position = 4;
-  string liquidity = 5;
-  repeated string input_token_amounts = 6;
-  optional string tick_lower = 7;
-  optional string tick_upper = 8;
-  uint32 log_index = 9;
-  uint64 log_ordinal = 10;
+  BigInt liquidity = 5;
+  repeated BigInt input_token_amounts = 6;
+  optional BigInt tick_lower = 7;
+  optional BigInt tick_upper = 8;
+  BigInt log_index = 9;
+  BigInt log_ordinal = 10;
 }
 
 message Swap {
   bytes protocol = 1;
   bytes pool = 2;
   bytes account = 3;
-  repeated string amounts =  4;
-  string liquidity = 5;
-  string tick = 6;
-  uint32 log_index = 7;
-  uint64 log_ordinal = 8;
+  repeated BigInt amounts =  4;
+  BigInt liquidity = 5;
+  BigInt tick = 6;
+  BigInt log_index = 7;
+  BigInt log_ordinal = 8;
 }
 
 message StoreInstruction {
@@ -151,25 +159,25 @@ message AddManyInt64 {
 message AddBigDecimal {
   uint64 ordinal = 1;
   string key = 2;
-  string value = 3;
+  BigDecimal value = 3;
 }
 
 message AddManyBigDecimal {
   uint64 ordinal = 1;
   repeated string key = 2;
-  string value = 3;
+  BigDecimal value = 3;
 }
 
 message AddBigInt {
   uint64 ordinal = 1;
   string key = 2;
-  string value = 3;
+  BigInt value = 3;
 }
 
 message AddManyBigInt {
   uint64 ordinal = 1;
   repeated string key = 2;
-  string value = 3;
+  BigInt value = 3;
 }
 
 message SetBytes {
@@ -193,19 +201,19 @@ message SetString {
 message SetBigDecimal {
   uint64 ordinal = 1;
   string key = 2;
-  string value = 3;
+  BigDecimal value = 3;
 }
 
 message SetBigInt {
   uint64 ordinal = 1;
   string key = 2;
-  string value = 3;
+  BigInt value = 3;
 }
 
 message SetManyBigInt {
   uint64 ordinal = 1;
   repeated string key = 2;
-  string value = 3;
+  BigInt value = 3;
 }
 
 
@@ -230,11 +238,11 @@ message AppendString {
 message AppendBigDecimal {
   uint64 ordinal = 1;
   string key = 2;
-  string value = 3;
+  BigDecimal value = 3;
 }
 
 message AppendBigInt {
   uint64 ordinal = 1;
   string key = 2;
-  string value = 3;
+  BigInt value = 3;
 }

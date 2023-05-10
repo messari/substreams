@@ -13,10 +13,12 @@ pub fn store_add_bigint(
     for store_instruction in mapped_data_sources.store_instructions {
         match store_instruction.r#type.unwrap() {
             store_instruction::Type::AddBigInt(item) => {
-                add_bigint_store.add(item.ordinal, item.key, BigInt::try_from(item.value).unwrap());
+                let item_value: BigInt = BigInt::try_from(item.value.unwrap().value).unwrap();
+                add_bigint_store.add(item.ordinal, item.key, item_value);
             }, 
             store_instruction::Type::AddManyBigInt(item) => {
-                add_bigint_store.add_many(item.ordinal, &item.key, BigInt::try_from(item.value).unwrap());
+                let item_value: BigInt = BigInt::try_from(item.value.unwrap().value).unwrap();
+                add_bigint_store.add_many(item.ordinal, &item.key, item_value);
             },
             _ => continue,
         }
