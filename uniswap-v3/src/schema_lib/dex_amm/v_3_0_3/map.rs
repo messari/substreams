@@ -1,9 +1,8 @@
 use substreams::prelude::*;
 
-use substreams::store::{DeltaBigDecimal, DeltaInt64, DeltaBigInt, StoreGetRaw, StoreGet, StoreGetArray};
-use substreams_entity_change::pb::entity::{EntityChange, EntityChanges};
+use substreams::store::{DeltaBigDecimal, DeltaInt64, DeltaBigInt, StoreGetArray};
 
-use crate::pb::dex_amm::v3_0_3::{MappedDataSources, PrunedTransaction, Update};
+use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, Update};
 use crate::pb::dex_amm::v3_0_3::update::Type;
 
 use crate::tables::Tables;

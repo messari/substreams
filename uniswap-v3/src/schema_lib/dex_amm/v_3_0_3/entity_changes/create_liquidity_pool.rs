@@ -1,7 +1,4 @@
-use substreams::{Hex};
-use substreams::prelude::*;
-use substreams::pb::substreams::Clock;
-use substreams_entity_change::pb::entity::{EntityChange, entity_change::Operation};
+use substreams::scalar::{BigInt};
 
 use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, CreateLiquidityPool};
 use crate::schema_lib::dex_amm::v_3_0_3::keys;
@@ -23,8 +20,8 @@ pub fn create_liquidity_pool_entity_change(
         .set("inputTokens", &create_liquidity_pool.input_tokens)
         .set("fees", &create_liquidity_pool.fees)
         .set("isSingleSided", create_liquidity_pool.is_single_sided)
-        .set("CreatedBlockNumber", BigInt::from(*block_number))
-        .set("CreatedTimestamp", BigInt::from(*timestamp))
+        .set("createdBlockNumber", BigInt::from(*block_number))
+        .set("createdTimestamp", BigInt::from(*timestamp))
         .set("totalValueLockedUSD", constants::BIGDECIMAL_ZERO.clone())
         .set("totalLiquidity", constants::BIGINT_ZERO.clone())
         .set("totalLiquidityUSD", constants::BIGDECIMAL_ZERO.clone())

@@ -1,4 +1,3 @@
-use substreams::prelude::*;
 use substreams::errors::Error;
 use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams_ethereum::Event;

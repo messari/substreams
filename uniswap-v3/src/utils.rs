@@ -2,9 +2,7 @@ use std::ops::Sub;
 
 use substreams::hex;
 use substreams::scalar::{BigDecimal, BigInt};
-use substreams::store::{DeltaBigDecimal, StoreGet, StoreGetBigInt};
-
-use crate::pb::erc20::v1::Erc20Token;
+use substreams::store::{DeltaBigDecimal};
 
 pub const UNISWAP_V3_FACTORY: &str = "1f98431c8ad98523631ae4a59f267346ea31f984";
 pub const UNISWAP_V3_FACTORY_SLICE: [u8; 20] = hex!("1f98431c8ad98523631ae4a59f267346ea31f984");

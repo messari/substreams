@@ -1,10 +1,6 @@
-use substreams::{Hex};
-use substreams::prelude::*;
-use substreams::pb::substreams::Clock;
 use crate::tables::Tables;
 
 use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, CreateDexAmmProtocol};
-use crate::schema_lib::dex_amm::v_3_0_3::keys;
 use crate::constants;
 
 pub fn create_dex_amm_protocol_entity_change(

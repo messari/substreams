@@ -1,4 +1,4 @@
-use substreams::{log, Hex, proto};
+use substreams::{Hex};
 use crate::pb::dex_amm::v3_0_3::{BigInt};
 
 pub fn get_event_key(hash: &Vec<u8>, log_index: &BigInt) -> String {

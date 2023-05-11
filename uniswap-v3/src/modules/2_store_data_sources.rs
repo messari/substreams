@@ -1,8 +1,7 @@
 use substreams::prelude::*;
 use substreams::store::{StoreSetProto};
-use substreams::{log, Hex};
 
-use crate::pb::dex_amm::v3_0_3::{DataSource, DataSources, DataSourceType};
+use crate::pb::dex_amm::v3_0_3::{DataSource, DataSources};
 use crate::keyer::{get_data_source_key};
 
 #[substreams::handlers::store]

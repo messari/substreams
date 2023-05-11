@@ -1,9 +1,6 @@
 use ethabi::Bytes;
-use substreams::{Hex};
-use substreams::prelude::*;
-use substreams_entity_change::pb::entity::{EntityChange, entity_change::Operation};
-use substreams::store::{DeltaBigDecimal, DeltaInt64, DeltaBigInt, StoreGetRaw, StoreGet, StoreGetArray};
-use substreams::scalar::{BigDecimal, BigInt};
+use substreams::store::{StoreGetArray};
+use substreams::scalar::{BigInt};
 use substreams_ethereum::NULL_ADDRESS;
 
 use crate::pb;
@@ -93,7 +90,7 @@ pub fn create_deposit_entity_change(
     deposit: &Deposit,
     store_append_string: &StoreGetArray<String>
 ) {
-    let input_tokens: Vec<Bytes> = Vec::new();
+    let input_tokens: Vec<Bytes> = vec![NULL_ADDRESS.to_vec(), NULL_ADDRESS.to_vec()];
 
     let row: &mut Row = tables.create_row("Deposit", &keys::get_event_key(&pruned_transaction.hash, &deposit.log_index.clone().unwrap()));
     row
@@ -132,7 +129,7 @@ pub fn create_withdraw_entity_change(
     withdraw: &Withdraw,
     store_append_string: &StoreGetArray<String>
 ) {
-    let input_tokens: Vec<Bytes> = Vec::new();
+    let input_tokens: Vec<Bytes> = vec![NULL_ADDRESS.to_vec(), NULL_ADDRESS.to_vec()];
 
     let row: &mut Row = tables.create_row("Withdraw", &keys::get_event_key(&pruned_transaction.hash, &withdraw.log_index.clone().unwrap()));
     row

@@ -1,24 +1,17 @@
-use substreams::prelude::*;
-use substreams::errors::Error;
 use substreams::Hex;
-use substreams_ethereum::{pb::eth::v2::{self as eth}, Event, NULL_ADDRESS};
-use substreams::scalar::{BigDecimal, BigInt};
-use substreams::store::{StoreGetProto};
-use crate::pb;
+use substreams_ethereum::{pb::eth::v2::{self as eth}};
 
 use crate::{pb::dex_amm::v3_0_3::{
-    DataSource, MappedDataSources, PrunedTransaction, StoreInstruction, 
-    Update, Swap, Deposit, Withdraw, CreateLiquidityPool, AddInt64, AddManyInt64, AddBigInt, AddManyBigInt}, 
-    utils::UNISWAP_V3_FACTORY_SLICE, dex_amm::v_3_0_3::map
+    MappedDataSources, PrunedTransaction, StoreInstruction, 
+    Update, Swap, AddManyInt64, AddManyBigInt}, 
+    utils::UNISWAP_V3_FACTORY_SLICE
 
 };
-use crate::pb::dex_amm::v3_0_3::update::Type::{Swap as SwapType, Deposit as DepositType, Withdraw as WithdrawType, CreateLiquidityPool as CreateLiquidityPoolType};
+use crate::pb::dex_amm::v3_0_3::update::Type::{Swap as SwapType};
 use crate::pb::dex_amm::v3_0_3::store_instruction;
 
 use crate::abi::pool as PoolContract;
 use crate::schema_lib::dex_amm::v_3_0_3::store_keys;
-
-use crate::keyer::{get_data_source_key};
 
 pub fn handle_swap(
     mapped_data_sources: &mut MappedDataSources, 

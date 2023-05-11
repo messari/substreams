@@ -1,11 +1,10 @@
 use substreams::prelude::*;
 use substreams::pb::substreams::Clock;
-use substreams::errors::Error;
-use substreams::store::{DeltaBigDecimal, DeltaInt64, DeltaBigInt, StoreGetRaw, StoreGet, StoreGetArray};
-use substreams_entity_change::pb::entity::{EntityChange, EntityChanges};
+use substreams::store::{DeltaBigDecimal, DeltaInt64, DeltaBigInt, StoreGet, StoreGetArray};
+use substreams_entity_change::pb::entity::{EntityChanges};
 
 use crate::tables::Tables;
-use crate::pb::dex_amm::v3_0_3::{MappedDataSources, PrunedTransaction};
+use crate::pb::dex_amm::v3_0_3::{MappedDataSources};
 use crate::schema_lib::dex_amm::v_3_0_3::map::map_dex_amm_v_3_0_3_entity_changes;
 
 #[substreams::handlers::map]

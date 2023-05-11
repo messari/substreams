@@ -1,10 +1,4 @@
-use substreams::{Hex};
-use substreams::prelude::*;
-use substreams::pb::substreams::Clock;
-use substreams_entity_change::pb::entity::{EntityChange, entity_change::Operation};
-
 use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, CreateToken};
-use crate::schema_lib::dex_amm::v_3_0_3::keys;
 use crate::tables::{Tables};
 
 pub fn create_token_entity_change(

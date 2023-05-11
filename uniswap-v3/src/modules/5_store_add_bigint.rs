@@ -2,7 +2,7 @@ use substreams::prelude::*;
 use substreams::store::{StoreAddBigInt};
 use substreams::scalar::BigInt;
 
-use crate::pb::dex_amm::v3_0_3::{MappedDataSources, store_instruction, AddManyBigInt, AddBigInt};
+use crate::pb::dex_amm::v3_0_3::{MappedDataSources, store_instruction};
 
 
 #[substreams::handlers::store]

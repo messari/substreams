@@ -1,5 +1,5 @@
 use substreams_entity_change::pb::entity::value::Typed;
-use substreams_entity_change::pb::entity::{Array, EntityChange, EntityChanges, Field, Value};
+use substreams_entity_change::pb::entity::{Array, Value};
 
 use crate::tables::ToValue;
 use crate::pb;

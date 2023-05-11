@@ -2,7 +2,7 @@ use substreams::prelude::*;
 use substreams::store::StoreAddBigDecimal;
 use substreams::scalar::BigDecimal;
 
-use crate::pb::dex_amm::v3_0_3::{MappedDataSources, store_instruction, AddBigDecimal, AddManyBigDecimal};
+use crate::pb::dex_amm::v3_0_3::{MappedDataSources, store_instruction};
 
 #[substreams::handlers::store]
 pub fn store_add_bigdecimal(
