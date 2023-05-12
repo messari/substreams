@@ -1,3 +1,4 @@
+use substreams::Hex;
 use substreams_ethereum::{pb::eth::v2::{self as eth}};
 
 use crate::{pb::dex_amm::v3_0_3::{
@@ -17,20 +18,28 @@ pub fn handle_burn(
     call: &eth::Call, 
     log: &eth::Log
 ) {
-    pruned_transaction.updates.push(
-        Update {
-            r#type: Some(WithdrawType(Withdraw {
-                pool: call.address.clone(),
-                protocol: UNISWAP_V3_FACTORY_SLICE.to_vec(),
-                account: pruned_transaction.from.clone(),
-                position: None,
-                liquidity: Some(burn_event.amount.clone().into()),
-                input_token_amounts: vec![burn_event.amount0.clone().into(), burn_event.amount1.clone().into()],
-                tick_lower: Some(burn_event.tick_lower.clone().into()),
-                tick_upper:Some(burn_event.tick_upper.clone().into()),
-                log_index: Some(log.index.into()),
-                log_ordinal: Some(log.ordinal.into()),
-            }))
-        }
+    let pool_address_string: String = Hex(&call.address).to_string();
+    pruned_transaction.create_withdraw(
+        &call.address,
+        &UNISWAP_V3_FACTORY_SLICE.to_vec(),
+        &pruned_transaction.from.clone(),
+        &burn_event.amount,
+        &vec![burn_event.amount0.clone(), burn_event.amount1.clone()],
+        None,
+        Some(&burn_event.tick_lower),
+        Some(&burn_event.tick_upper),
+        log.index,
+        log.ordinal,
+    );
+
+    mapped_data_sources.add_liquidity_pool_input_token_balances(
+        &pool_address_string, 
+        0, 
+        &vec![burn_event.amount0.clone().neg(), burn_event.amount1.clone().neg()]
+    );
+    mapped_data_sources.add_liquidity_pool_total_liquidity(
+        &pool_address_string, 
+        0, 
+        &burn_event.amount.neg()
     );
 }

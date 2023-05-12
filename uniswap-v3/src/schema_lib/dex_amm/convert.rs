@@ -5,7 +5,7 @@ use crate::tables::ToValue;
 use crate::pb;
 
 
-impl ToValue for &pb::dex_amm::v3_0_3::BigDecimal {
+impl ToValue for &pb::common::v1::BigDecimal {
     fn to_value(&self) -> Value {
         Value {
             typed: Some(Typed::Bigdecimal(self.value.to_string())),
@@ -13,7 +13,7 @@ impl ToValue for &pb::dex_amm::v3_0_3::BigDecimal {
     }
 }
 
-impl ToValue for &Vec<pb::dex_amm::v3_0_3::BigDecimal> {
+impl ToValue for &Vec<pb::common::v1::BigDecimal> {
     fn to_value(&self) -> Value {
         let mut list: Vec<Value> = vec![];
         for item in self.iter() {
@@ -29,7 +29,7 @@ impl ToValue for &Vec<pb::dex_amm::v3_0_3::BigDecimal> {
 }
 
 
-impl ToValue for &pb::dex_amm::v3_0_3::BigInt {
+impl ToValue for &pb::common::v1::BigInt {
     fn to_value(&self) -> Value {
         Value {
             typed: Some(Typed::Bigint(self.value.to_string())),
@@ -38,7 +38,7 @@ impl ToValue for &pb::dex_amm::v3_0_3::BigInt {
 }
 
 
-impl ToValue for &Vec<pb::dex_amm::v3_0_3::BigInt> {
+impl ToValue for &Vec<pb::common::v1::BigInt> {
     fn to_value(&self) -> Value {
         let mut list: Vec<Value> = vec![];
         for item in self.iter() {

@@ -4,9 +4,11 @@ use substreams_ethereum::{pb::eth::v2::{self as eth}, Event};
 use substreams::store::{StoreGetProto};
 
 use crate::{pb::dex_amm::v3_0_3::{
-    DataSource, MappedDataSources, PrunedTransaction, StoreInstruction, 
+    DataSource, MappedDataSources, PrunedTransaction, 
     Update}
 };
+use crate::pb::store::v1::StoreInstruction;
+
 use crate::abi::pool as PoolContract;
 use crate::abi::factory as FactoryContract;
 

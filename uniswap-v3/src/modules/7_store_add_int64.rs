@@ -1,6 +1,8 @@
 use substreams::prelude::*;
 use substreams::store::{StoreAddInt64};
-use crate::pb::dex_amm::v3_0_3::{MappedDataSources, store_instruction};
+
+use crate::pb::dex_amm::v3_0_3::MappedDataSources;
+use crate::pb::store::v1::store_instruction;
 
 #[substreams::handlers::store]
 pub fn store_add_int64(

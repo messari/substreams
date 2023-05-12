@@ -12,6 +12,7 @@ protobuf:
   files:
     - dex_amm.proto
     - common.proto
+    - store.proto
     - erc20.proto
   importPaths:
     - ./src/schema_lib/dex_amm/v_3_0_3

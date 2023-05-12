@@ -9,8 +9,11 @@ mod tables;
 mod constants;
 mod convert;
 mod contract;
+mod store;
 
 pub use modules::*;
 pub use schema_lib::*;
 pub use interactions::*;
 pub use contract::*;
+pub use store::*;
+

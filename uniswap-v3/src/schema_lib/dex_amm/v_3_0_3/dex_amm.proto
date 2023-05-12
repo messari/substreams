@@ -1,15 +1,10 @@
 syntax = "proto3";
 
 import "erc20.proto";
+import "common.proto";
+import "store.proto";
+
 package messari.dex_amm.v3_0_3;
-
-message BigInt {
-  string value = 1;
-}
-
-message BigDecimal {
-  string value = 1;
-}
 
 message DataSources {
   repeated DataSource data_sources = 1;
@@ -27,17 +22,17 @@ enum DataSourceType {
 
 message MappedDataSources {
   repeated PrunedTransaction pruned_transactions = 1;
-  repeated StoreInstruction store_instructions = 2;
+  repeated messari.store.v1.StoreInstruction store_instructions = 2;
 }
 
 message PrunedTransaction {
   bytes to = 1;
   bytes from = 2;
   bytes hash = 3;
-  BigInt nonce = 4;
-  BigInt gas_limit = 5;
-  BigInt gas_used = 6;
-  BigInt gas_price = 7;
+  messari.common.v1.BigInt nonce = 4;
+  messari.common.v1.BigInt gas_limit = 5;
+  messari.common.v1.BigInt gas_used = 6;
+  messari.common.v1.BigInt gas_price = 7;
 
   repeated Update updates = 8;
 }
@@ -71,7 +66,7 @@ message CreateLiquidityPool {
   repeated bytes reward_tokens = 4;
   repeated bytes fees = 5;
   bool is_single_sided = 6;
-  optional BigInt tick = 7;
+  optional messari.common.v1.BigInt tick = 7;
   optional bytes liquidity_token = 8;
   optional string liquidity_token_type = 9;
 }
@@ -88,12 +83,12 @@ message Deposit {
   bytes pool = 2;
   bytes account = 3;
   optional bytes position = 4;  
-  BigInt liquidity = 5;
-  repeated BigInt input_token_amounts = 6;
-  optional BigInt tick_lower = 7;
-  optional BigInt tick_upper = 8;
-  BigInt log_index = 9;
-  BigInt log_ordinal = 10;
+  messari.common.v1.BigInt liquidity = 5;
+  repeated messari.common.v1.BigInt input_token_amounts = 6;
+  optional messari.common.v1.BigInt tick_lower = 7;
+  optional messari.common.v1.BigInt tick_upper = 8;
+  messari.common.v1.BigInt log_index = 9;
+  messari.common.v1.BigInt log_ordinal = 10;
 }
 
 message Withdraw {
@@ -101,148 +96,21 @@ message Withdraw {
   bytes pool = 2;
   bytes account = 3;
   optional bytes position = 4;
-  BigInt liquidity = 5;
-  repeated BigInt input_token_amounts = 6;
-  optional BigInt tick_lower = 7;
-  optional BigInt tick_upper = 8;
-  BigInt log_index = 9;
-  BigInt log_ordinal = 10;
+  messari.common.v1.BigInt liquidity = 5;
+  repeated messari.common.v1.BigInt input_token_amounts = 6;
+  optional messari.common.v1.BigInt tick_lower = 7;
+  optional messari.common.v1.BigInt tick_upper = 8;
+  messari.common.v1.BigInt log_index = 9;
+  messari.common.v1.BigInt log_ordinal = 10;
 }
 
 message Swap {
   bytes protocol = 1;
   bytes pool = 2;
   bytes account = 3;
-  repeated BigInt amounts =  4;
-  BigInt liquidity = 5;
-  BigInt tick = 6;
-  BigInt log_index = 7;
-  BigInt log_ordinal = 8;
-}
-
-message StoreInstruction {
-  oneof type {
-    AddInt64 add_int64 = 1;
-    AddManyInt64 add_many_int64 = 2;
-    AddBigDecimal add_big_decimal = 3;
-    AddManyBigDecimal add_many_big_decimal = 4;
-    AddBigInt add_big_int = 5;
-    AddManyBigInt add_many_big_int = 6;
-
-    SetBytes set_bytes = 7;
-    SetInt64 set_int64 = 8;
-    SetString set_string = 9;
-    SetBigDecimal set_big_decimal = 10;
-    SetBigInt set_big_int = 11;
-    SetManyBigInt set_many_big_int = 12;
-
-    AppendBytes append_bytes = 13;
-    AppendInt64 append_int64 = 14;
-    AppendString append_string = 15;
-    AppendBigDecimal append_big_decimal = 16;
-    AppendBigInt append_big_int = 17;
-  }
-}
-
-message AddInt64 {
-  uint64 ordinal = 1;
-  string key = 2;
-  int64 value = 3;
-}
-
-message AddManyInt64 {
-  uint64 ordinal = 1;
-  repeated string key = 2;
-  int64 value = 3;
-}
-
-message AddBigDecimal {
-  uint64 ordinal = 1;
-  string key = 2;
-  BigDecimal value = 3;
-}
-
-message AddManyBigDecimal {
-  uint64 ordinal = 1;
-  repeated string key = 2;
-  BigDecimal value = 3;
-}
-
-message AddBigInt {
-  uint64 ordinal = 1;
-  string key = 2;
-  BigInt value = 3;
-}
-
-message AddManyBigInt {
-  uint64 ordinal = 1;
-  repeated string key = 2;
-  BigInt value = 3;
-}
-
-message SetBytes {
-  uint64 ordinal = 1;
-  string key = 2;
-  bytes value = 3;
-}
-
-message SetInt64 {
-  uint64 ordinal = 1;
-  string key = 2;
-  int64 value = 3;
-}
-
-message SetString {
-  uint64 ordinal = 1;
-  string key = 2;
-  string value = 3;
-}
-
-message SetBigDecimal {
-  uint64 ordinal = 1;
-  string key = 2;
-  BigDecimal value = 3;
-}
-
-message SetBigInt {
-  uint64 ordinal = 1;
-  string key = 2;
-  BigInt value = 3;
-}
-
-message SetManyBigInt {
-  uint64 ordinal = 1;
-  repeated string key = 2;
-  BigInt value = 3;
-}
-
-
-message AppendBytes {
-  uint64 ordinal = 1;
-  string key = 2;
-  bytes value = 3;
-}
-
-message AppendInt64 {
-  uint64 ordinal = 1;
-  string key = 2;
-  int64 value = 3;
-}
-
-message AppendString {
-  uint64 ordinal = 1;
-  string key = 2;
-  string value = 3;
-}
-
-message AppendBigDecimal {
-  uint64 ordinal = 1;
-  string key = 2;
-  BigDecimal value = 3;
-}
-
-message AppendBigInt {
-  uint64 ordinal = 1;
-  string key = 2;
-  BigInt value = 3;
+  repeated messari.common.v1.BigInt amounts =  4;
+  messari.common.v1.BigInt liquidity = 5;
+  optional messari.common.v1.BigInt tick = 6;
+  messari.common.v1.BigInt log_index = 7;
+  messari.common.v1.BigInt log_ordinal = 8;
 }

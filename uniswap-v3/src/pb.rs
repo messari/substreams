@@ -29,6 +29,16 @@ pub mod erc20 {
 }
 
 #[rustfmt::skip]
+#[path = "../target/pb/messari.store.v1.rs"]
+pub(in crate::pb) mod store_v1;
+
+pub mod store {
+    pub mod v1 {
+        pub use super::super::store_v1::*;
+    }
+}
+
+#[rustfmt::skip]
 #[path = "../target/pb/substreams.entity.v1.rs"]
 pub(in crate::pb) mod entity_v1;
 

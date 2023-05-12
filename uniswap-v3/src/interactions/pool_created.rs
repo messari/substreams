@@ -3,7 +3,7 @@ use substreams_ethereum::{pb::eth::v2::{self as eth}};
 use crate::{pb::dex_amm::v3_0_3::{
     MappedDataSources, PrunedTransaction, 
     Update, CreateLiquidityPool, CreateToken}, 
-    utils::UNISWAP_V3_FACTORY_SLICE, dex_amm::v_3_0_3::entity_changes::create_token
+    utils::UNISWAP_V3_FACTORY_SLICE
 
 };
 use crate::pb::dex_amm::v3_0_3::update::Type::{CreateLiquidityPool as CreateLiquidityPoolType, CreateToken as CreateTokenType};
@@ -34,25 +34,17 @@ pub fn handle_pool_created(
     );
     let token0 = erc20::Erc20::new(pool_created_event.token0.clone()).as_struct();
     let token1 = erc20::Erc20::new(pool_created_event.token1.clone()).as_struct();
-    pruned_transaction.updates.push(
-        Update {
-            r#type: Some(CreateTokenType(CreateToken {
-                token_address: pool_created_event.token0.clone(),
-                name: token0.name,
-                symbol: token0.symbol,
-                decimals: token0.decimals,
-            }))
-        }
+    pruned_transaction.create_token(
+        &pool_created_event.token0,
+        &token0.name,
+        &token0.symbol,
+        token0.decimals,
     );
-    pruned_transaction.updates.push(
-        Update {
-            r#type: Some(CreateTokenType(CreateToken {
-                token_address: pool_created_event.token1.clone(),
-                name: token1.name,
-                symbol: token1.symbol,
-                decimals: token1.decimals,
-            }))
-        }
+    pruned_transaction.create_token(
+        &pool_created_event.token1,
+        &token1.name,
+        &token1.symbol,
+        token1.decimals,
     );
     // if let Some(create_token) = create_token(&pool_created_event.token0) {
     //     pruned_transaction.updates.push(

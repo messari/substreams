@@ -49,10 +49,10 @@ struct SwapTokens {
 
 struct SwapToken {
     token: String,
-    amount: pb::dex_amm::v3_0_3::BigInt,
+    amount: pb::common::v1::BigInt,
 }
 
-fn get_swap_tokens(tokens: Vec<String>, amounts: Vec<pb::dex_amm::v3_0_3::BigInt>) -> SwapTokens {
+fn get_swap_tokens(tokens: Vec<String>, amounts: Vec<pb::common::v1::BigInt>) -> SwapTokens {
     if tokens.len() != 2 && amounts.len() != 2 {
         panic!("Tokens and amounts must be equal to 2");
     }

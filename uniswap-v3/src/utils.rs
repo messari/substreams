@@ -23,3 +23,10 @@ pub fn delta_value(delta: &DeltaBigDecimal) -> BigDecimal {
 
     return new_value.clone().sub(old_value);
 }
+
+pub fn abs_bigint(value: &BigInt) -> BigInt {
+    if value.lt(&BigInt::from(0)) {
+        return value.neg().clone();
+    }
+    value.clone()
+}

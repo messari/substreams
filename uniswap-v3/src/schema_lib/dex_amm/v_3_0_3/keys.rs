@@ -1,7 +1,7 @@
 use substreams::{Hex};
-use crate::pb::dex_amm::v3_0_3::{BigInt};
+use crate::pb;
 
-pub fn get_event_key(hash: &Vec<u8>, log_index: &BigInt) -> String {
+pub fn get_event_key(hash: &Vec<u8>, log_index: &pb::common::v1::BigInt) -> String {
     format!("{}:{}", Hex(hash).to_string(), log_index.value)
 }
 

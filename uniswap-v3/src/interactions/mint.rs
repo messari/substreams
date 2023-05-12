@@ -1,3 +1,4 @@
+use substreams::Hex;
 use substreams_ethereum::{pb::eth::v2::{self as eth}};
 
 use crate::{pb::dex_amm::v3_0_3::{
@@ -16,20 +17,28 @@ pub fn handle_mint(
     call: &eth::Call, 
     log: &eth::Log
 ) {
-    pruned_transaction.updates.push(
-        Update {
-            r#type: Some(DepositType(Deposit {
-                pool: call.address.clone(),
-                protocol: UNISWAP_V3_FACTORY_SLICE.to_vec(),
-                account: pruned_transaction.from.clone(),
-                position: None,
-                liquidity: Some(mint_event.amount.clone().into()),
-                input_token_amounts: vec![mint_event.amount0.clone().into(), mint_event.amount1.clone().into()],
-                tick_lower: Some(mint_event.tick_lower.clone().into()),
-                tick_upper:Some(mint_event.tick_upper.clone().into()),
-                log_index: Some(log.index.into()),
-                log_ordinal: Some(log.ordinal.into()),
-            }))
-        }
+    let pool_address_string: String = Hex(&call.address).to_string();
+    pruned_transaction.create_deposit(
+        &call.address,
+        &UNISWAP_V3_FACTORY_SLICE.to_vec(),
+        &pruned_transaction.from.clone(),
+        &mint_event.amount,
+        &vec![mint_event.amount0.clone(), mint_event.amount1.clone()],
+        None,
+        Some(&mint_event.tick_lower),
+        Some(&mint_event.tick_upper),
+        log.index,
+        log.ordinal,
+    );
+
+    mapped_data_sources.add_liquidity_pool_input_token_balances(
+        &pool_address_string, 
+        0, 
+        &vec![mint_event.amount0.clone(), mint_event.amount1.clone()]
+    );
+    mapped_data_sources.add_liquidity_pool_total_liquidity(
+        &pool_address_string, 
+        0, 
+        &mint_event.amount
     );
 }
