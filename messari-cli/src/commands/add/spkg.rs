@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::mem;
+use std::path::PathBuf;
 use clap::Parser;
 use ethabi::{Contract, ParamType};
 use serde_json::to_string;
@@ -81,12 +82,31 @@ impl Spkg {
 
         let (proto_file, module_file, module_names) = get_proto_and_module_code_and_module_names(events, &spkg_name, contract_address);
 
+        println!("Module file:\n{}", module_file);
+
         // Add modules to substreams.yaml
          
         // and module file to mod.rs in modules folder
 
         // Write changes to file system
     }
+}
+
+fn get_new_module_number(project_dir: &PathBuf) -> u8 {
+    let modules_folder = project_dir.join("src").join("modules");
+
+    let mut new_module_number = 1;
+    for result in modules_folder.read_dir().unwrap().into_iter() {
+        let filename = result.unwrap().file_name().to_str().unwrap().to_string();
+        if filename.contains("_") {
+            if let Ok(module_number) = filename.split("_").next().unwrap().parse::<u8>() {
+                if new_module_number < module_number {
+                    new_module_number = module_number;
+                }
+            }
+        }
+    }
+    new_module_number
 }
 
 fn assert_spkg_name_allowed(spkg_name: &String) {
@@ -101,7 +121,7 @@ fn assert_spkg_name_allowed(spkg_name: &String) {
     }
 }
 
-fn to_pascal_case(string: String) -> String {
+fn to_pascal_case(string: &String) -> String {
     let mut chars_iter = string.chars().into_iter();
     let mut pascal_string = String::new();
     if let Some(first_char) = chars_iter.next() {
@@ -126,7 +146,7 @@ fn to_pascal_case(string: String) -> String {
     pascal_string
 }
 
-fn to_snake_case(string: String) -> String {
+fn to_snake_case(string: &String) -> String {
     let mut chars_iter = string.chars().into_iter();
     let mut snake_string = String::new();
     if let Some(first_char) = chars_iter.next() {
@@ -209,8 +229,8 @@ impl DependencyManager {
 
     fn add_dependency(&mut self, dependency_type: String, content: String) {
         if self.dependencies.contains_key(&dependency_type) {
-            if self.dependencies.get(&dependency_type).unwrap() != content {
-                self.panic_fn(&dependency_type, &content, self.dependencies.get(&dependency_type).unwrap());
+            if self.dependencies.get(&dependency_type).unwrap() != content.as_str() {
+                (self.panic_fn)(&dependency_type, &content, self.dependencies.get(&dependency_type).unwrap());
             }
         } else {
             self.dependencies.insert(dependency_type, content);
@@ -274,16 +294,17 @@ fn get_proto_and_module_code_and_module_names(events: Vec<Event>, package_name: 
                     }
                     ParamType::Array(param_type) | ParamType::FixedArray(param_type, _) => {
                         let inner_proto_type = get_proto_type(param_type, true);
-                        let outer_proto_type = format!("Vec{}", to_pascal_case(proto_type.clone()));
-                        let outer_proto_type_snake = to_snake_case(outer_proto_type);
+                        let outer_proto_type = format!("Vec{}", to_pascal_case(&inner_proto_type));
+                        let outer_proto_type_snake = to_snake_case(&outer_proto_type);
                         let raw_type = get_type_display(param_type);
 
                         proto_dependencies.add_dependency(outer_proto_type.clone(), format!("message {} {{\n    repeated {} inner = 1;\n}}\n", outer_proto_type, inner_proto_type));
+                        let mapping_code = get_proto_field_type_and_mapping_code(inner_type, proto_dependencies, impl_dependencies, package_name, outer_proto_type_snake.clone()).1;
                         impl_dependencies.add_dependency(outer_proto_type.clone(), format!("impl From<{0}> for {1}::{2} {{\n    \
                                                                                                                     fn from({3}: {0}) -> Self {{        \
                                                                                                                         {1}::{2} {{ inner: {4} }}\n    \
                                                                                                                     }}\n\
-                                                                                                                }}\n", raw_type, package_name, outer_proto_type, outer_proto_type_snake, get_proto_field_type_and_mapping_code(inner_type, proto_dependencies, impl_dependencies, package_name, outer_proto_type_snake).1));
+                                                                                                                }}\n", raw_type, package_name, outer_proto_type, outer_proto_type_snake, mapping_code));
 
                         (format!("repeated {}", outer_proto_type ), format!("{}.into_iter().map(|x| x.into()).collect::<Vec<_>>()", variable_path))
                     }
@@ -308,16 +329,17 @@ fn get_proto_and_module_code_and_module_names(events: Vec<Event>, package_name: 
                     }
                     ParamType::Array(param_type) | ParamType::FixedArray(param_type, _) => {
                         let inner_proto_type = get_proto_type(param_type, true);
-                        let outer_proto_type = format!("Vec{}", to_pascal_case(proto_type.clone()));
-                        let outer_proto_type_snake = to_snake_case(outer_proto_type);
+                        let outer_proto_type = format!("Vec{}", to_pascal_case(&inner_proto_type));
+                        let outer_proto_type_snake = to_snake_case(&outer_proto_type);
                         let raw_type = get_type_display(param_type);
 
                         proto_dependencies.add_dependency(outer_proto_type.clone(), format!("message {} {{\n    repeated {} inner = 1;\n}}\n", outer_proto_type, inner_proto_type));
+                        let mapping_code = get_proto_field_type_and_mapping_code(inner_type, proto_dependencies, impl_dependencies, package_name, outer_proto_type_snake.clone()).1;
                         impl_dependencies.add_dependency(outer_proto_type.clone(), format!("impl From<{0}> for {1}::{2} {{\n    \
                                                                                                                     fn from({3}: {0}) -> Self {{        \
                                                                                                                         {1}::{2} {{ inner: {4} }}\n    \
                                                                                                                     }}\n\
-                                                                                                                }}\n", raw_type, package_name, outer_proto_type, outer_proto_type_snake, get_proto_field_type_and_mapping_code(inner_type, proto_dependencies, impl_dependencies, package_name, outer_proto_type_snake).1));
+                                                                                                                }}\n", raw_type, package_name, outer_proto_type, outer_proto_type_snake, mapping_code));
 
                         (format!("repeated {}", outer_proto_type ), format!("{}.into_iter().map(|x| x.into()).collect::<Vec<_>>()", variable_path))
                     }
@@ -337,7 +359,7 @@ fn get_proto_and_module_code_and_module_names(events: Vec<Event>, package_name: 
     let mut modules = Vec::new();
     let mut module_names = Vec::new();
     for event in events.into_iter() {
-        events_protos.push_str(&format!("message {0}s {{\n  \
+        events_protos.push(format!("message {0}s {{\n  \
                                              repeated {0} items = 1;\n\
                                          }}\n", event.event_name));
 
@@ -365,9 +387,8 @@ fn get_proto_and_module_code_and_module_names(events: Vec<Event>, package_name: 
         event_protos.push(event_proto);
 
         proto_initialization.push_str("            }");
-        let event_name_snake = to_snake_case(event.event_name);
+        let event_name_snake = to_snake_case(&event.event_name);
         let module_name = format!("map_{}s", event_name_snake);
-        module_names.push(module_name);
 
         modules.push(format!("#[substreams::handlers::map]\n\
                                    fn {0}(block: eth::Block) -> Result<{1}::{2}s, substreams::errors::Error> {{\n    \
@@ -386,19 +407,12 @@ fn get_proto_and_module_code_and_module_names(events: Vec<Event>, package_name: 
                                        Ok({}s)\n\
                                    }}\n", module_name, package_name, event.event_name, event_name_snake, contract_address_ident, proto_initialization));
 
+        module_names.push(module_name);
     }
 
     // Create proto file
     events_protos.sort();
     event_protos.sort();
-    let proto_file = format!("syntax = \"proto3\";\n\
-                                        package {};\
-                                        \n\
-                                        {}\
-                                        \n\
-                                        {}\
-                                        \n\
-                                        {}", package_name, events_protos.join("\n"), event_protos.join("\n"), proto_dependencies.get_dependencies().join("\n"));
 
     // Create module file
     let mut module_file = format!("use substreams_ethereum::pb::eth::v2::{{self as eth}};\n");
@@ -415,6 +429,15 @@ fn get_proto_and_module_code_and_module_names(events: Vec<Event>, package_name: 
     module_file.push_str(&modules.join("\n"));
     module_file.push('\n');
     module_file.push_str(&impl_dependencies.get_dependencies().join("\n"));
+
+    let proto_file = format!("syntax = \"proto3\";\n\
+                                        package {};\
+                                        \n\
+                                        {}\
+                                        \n\
+                                        {}\
+                                        \n\
+                                        {}", package_name, events_protos.join("\n"), event_protos.join("\n"), proto_dependencies.get_dependencies().join("\n"));
 
     // Return
     (proto_file, module_file, module_names)
