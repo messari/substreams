@@ -2,6 +2,14 @@ syntax = "proto3";
 
 package messari.common.v1;
 
+message BigInt {
+  string value = 1;
+}
+
+message BigDecimal {
+  string value = 1;
+}
+
 message Transaction {
   string hash = 1; // bytes: Hash
   uint64 nonce = 2;

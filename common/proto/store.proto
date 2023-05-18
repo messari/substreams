@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+import "common.proto";
+
+package messari.store.v1;
+
+message StoreInstruction {
+    oneof type {
+      AddInt64 add_int64 = 1;
+      AddManyInt64 add_many_int64 = 2;
+      AddBigDecimal add_big_decimal = 3;
+      AddManyBigDecimal add_many_big_decimal = 4;
+      AddBigInt add_big_int = 5;
+      AddManyBigInt add_many_big_int = 6;
+  
+      SetBytes set_bytes = 7;
+      SetInt64 set_int64 = 8;
+      SetString set_string = 9;
+      SetBigDecimal set_big_decimal = 10;
+      SetBigInt set_big_int = 11;
+      SetManyBigInt set_many_big_int = 12;
+  
+      AppendBytes append_bytes = 13;
+      AppendInt64 append_int64 = 14;
+      AppendString append_string = 15;
+      AppendBigDecimal append_big_decimal = 16;
+      AppendBigInt append_big_int = 17;
+    }
+}
+
+message AddInt64 {
+    uint64 ordinal = 1;
+    string key = 2;
+    int64 value = 3;
+}
+
+message AddManyInt64 {
+    uint64 ordinal = 1;
+    repeated string key = 2;
+    int64 value = 3;
+}
+
+message AddBigDecimal {
+    uint64 ordinal = 1;
+    string key = 2;
+    messari.common.v1.BigDecimal value = 3;
+}
+
+message AddManyBigDecimal {
+    uint64 ordinal = 1;
+    repeated string key = 2;
+    messari.common.v1.BigDecimal value = 3;
+}
+
+message AddBigInt {
+    uint64 ordinal = 1;
+    string key = 2;
+    messari.common.v1.BigInt value = 3;
+}
+
+message AddManyBigInt {
+    uint64 ordinal = 1;
+    repeated string key = 2;
+    messari.common.v1.BigInt value = 3;
+}
+
+message SetBytes {
+    uint64 ordinal = 1;
+    string key = 2;
+    bytes value = 3;
+}
+
+message SetInt64 {
+    uint64 ordinal = 1;
+    string key = 2;
+    int64 value = 3;
+}
+
+message SetString {
+    uint64 ordinal = 1;
+    string key = 2;
+    string value = 3;
+}
+
+message SetBigDecimal {
+    uint64 ordinal = 1;
+    string key = 2;
+    messari.common.v1.BigDecimal value = 3;
+}
+
+message SetBigInt {
+    uint64 ordinal = 1;
+    string key = 2;
+    messari.common.v1.BigInt value = 3;
+}
+
+message SetManyBigInt {
+    uint64 ordinal = 1;
+    repeated string key = 2;
+    messari.common.v1.BigInt value = 3;
+}
+
+
+message AppendBytes {
+    uint64 ordinal = 1;
+    string key = 2;
+    bytes value = 3;
+}
+
+message AppendInt64 {
+    uint64 ordinal = 1;
+    string key = 2;
+    int64 value = 3;
+}
+
+message AppendString {
+    uint64 ordinal = 1;
+    string key = 2;
+    string value = 3;
+}
+
+message AppendBigDecimal {
+    uint64 ordinal = 1;
+    string key = 2;
+    messari.common.v1.BigDecimal value = 3;
+}
+
+message AppendBigInt {
+    uint64 ordinal = 1;
+    string key = 2;
+    messari.common.v1.BigInt value = 3;
+}
