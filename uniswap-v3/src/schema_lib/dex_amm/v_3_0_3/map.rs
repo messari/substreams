@@ -23,7 +23,7 @@ use crate::schema_lib::dex_amm::v_3_0_3::entity_changes::{
     },
 };
 
-pub fn map_dex_amm_v_3_0_3_entity_changes(
+pub fn map_dex_amm_v_3_0_3_updates(
     tables: &mut Tables,
     block_number: &u64,
     timestamp: &i64,
@@ -35,7 +35,7 @@ pub fn map_dex_amm_v_3_0_3_entity_changes(
     store_append_string: &StoreGetArray<String>,
 ) {
     match update.r#type.clone().unwrap() {
-        Type::Swap(swap) => {
+        Type::CreateSwap(swap) => {
             create_swap_entity_change(
                 tables,
                 block_number,
@@ -45,7 +45,7 @@ pub fn map_dex_amm_v_3_0_3_entity_changes(
                 store_append_string
             );
         },
-        Type::Deposit(deposit) => {
+        Type::CreateDeposit(deposit) => {
             create_deposit_entity_change(
                 tables,
                 block_number,
@@ -55,7 +55,7 @@ pub fn map_dex_amm_v_3_0_3_entity_changes(
                 store_append_string
             );
         },
-        Type::Withdraw(withdraw) => {
+        Type::CreateWithdraw(withdraw) => {
             create_withdraw_entity_change(
                 tables,
                 block_number,
@@ -91,6 +91,9 @@ pub fn map_dex_amm_v_3_0_3_entity_changes(
                 pruned_transaction,
                 &create_token,
             );
-        }
+        },
+        Type::CreateLiquidityPoolFee(create_liquidity_pool_fee) => {
+            // TODO
+        },
     };
 }

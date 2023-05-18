@@ -2,8 +2,7 @@ use substreams::Hex;
 use substreams_ethereum::{pb::eth::v2::{self as eth}};
 
 use crate::{pb::dex_amm::v3_0_3::{
-    MappedDataSources, PrunedTransaction, 
-    Update, Swap}, 
+    MappedDataSources, PrunedTransaction}, 
     utils::UNISWAP_V3_FACTORY_SLICE
 };
 

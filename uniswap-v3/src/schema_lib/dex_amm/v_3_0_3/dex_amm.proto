@@ -41,10 +41,11 @@ message Update {
   oneof type {
     CreateDexAmmProtocol create_dex_amm_protocol = 1;
     CreateLiquidityPool create_liquidity_pool = 2;
-    CreateToken create_token = 3;
-    Swap swap = 4;
-    Deposit deposit = 5;
-    Withdraw withdraw = 6;
+    CreateLiquidityPoolFee create_liquidity_pool_fee = 3;
+    CreateToken create_token = 4;
+    CreateSwap create_swap = 5;
+    CreateDeposit create_deposit = 6;
+    CreateWithdraw create_withdraw = 7;
   }
 }
 
@@ -64,21 +65,27 @@ message CreateLiquidityPool {
   bytes pool_address = 2;
   repeated bytes input_tokens = 3;
   repeated bytes reward_tokens = 4;
-  repeated bytes fees = 5;
+  repeated string fees = 5;
   bool is_single_sided = 6;
   optional messari.common.v1.BigInt tick = 7;
   optional bytes liquidity_token = 8;
   optional string liquidity_token_type = 9;
 }
 
+message CreateLiquidityPoolFee {
+  bytes pool_address = 1;
+  string fee_type = 2;
+  messari.common.v1.BigDecimal fee_percentage = 3;
+}
+
 message CreateToken {
   bytes token_address = 1;
   string name = 2;
   string symbol = 3;
-  uint64 decimals = 4;
+  int32 decimals = 4;
 } 
 
-message Deposit {
+message CreateDeposit {
   bytes protocol = 1;
   bytes pool = 2;
   bytes account = 3;
@@ -91,7 +98,7 @@ message Deposit {
   messari.common.v1.BigInt log_ordinal = 10;
 }
 
-message Withdraw {
+message CreateWithdraw {
   bytes protocol = 1;
   bytes pool = 2;
   bytes account = 3;
@@ -104,7 +111,7 @@ message Withdraw {
   messari.common.v1.BigInt log_ordinal = 10;
 }
 
-message Swap {
+message CreateSwap {
   bytes protocol = 1;
   bytes pool = 2;
   bytes account = 3;

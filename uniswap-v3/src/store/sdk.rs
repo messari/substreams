@@ -4,10 +4,11 @@ use substreams_ethereum::pb::eth::v2::{self as eth};
 use crate::constants;
 use crate::pb::common;
 use crate::store::store_update;
-use crate::pb::store::v1 as store;
 
-use crate::pb::dex_amm::v3_0_3::{MappedDataSources, PrunedTransaction, Update, Swap, Deposit, Withdraw, CreateToken};
+use crate::pb::store::v1 as store;
+use crate::pb::dex_amm::v3_0_3::{MappedDataSources, PrunedTransaction, Update, CreateSwap, CreateDeposit, CreateWithdraw, CreateToken, CreateLiquidityPoolFee};
 use crate::pb::dex_amm::v3_0_3::update::Type;
+use crate::schema_lib::dex_amm::v_3_0_3::enums;
 
 impl MappedDataSources {
     pub fn new() -> Self {
@@ -26,7 +27,7 @@ impl MappedDataSources {
         self.store_instructions.push(
             store_update::add_int_64(
                 ordinal,
-                ["LiquidityPoolCumulativeSwapCount", entity_id].join(":"),
+                ["entity-change", "LiquidityPool", entity_id, "cumulativeSwapCount"].join(":"),
                 value,
             )
         );
@@ -42,7 +43,7 @@ impl MappedDataSources {
             self.store_instructions.push(
                 store_update::add_bigint(
                     ordinal,
-                    ["LiquidityPoolInputTokenBalance", i.to_string().as_str(), entity_id].join(":"),
+                    ["entity-change", "LiquidityPool", entity_id, "inputTokenBalance", i.to_string().as_str(), value.len().to_string().as_str()].join(":"),
                     v.clone(),
                 )
             );
@@ -59,7 +60,7 @@ impl MappedDataSources {
             self.store_instructions.push(
                 store_update::add_bigint(
                     ordinal,
-                    ["LiquidityPoolCumulativeVolumeTokenAmounts", i.to_string().as_str(), entity_id].join(":"),
+                    ["entity-change", "LiquidityPool", entity_id, "cumulativeVolumeTokenAmounts", i.to_string().as_str(), value.len().to_string().as_str()].join(":"),
                     v.clone(),
                 )
             );
@@ -75,7 +76,7 @@ impl MappedDataSources {
         self.store_instructions.push(
             store_update::add_bigint(
                 ordinal,
-                ["LiquidityPoolTotalLiquidity", entity_id].join(":"),
+                ["entity-change", "LiquidityPool", entity_id, "totalLiquidity"].join(":"),
                 value.clone(),
             )
         );
@@ -90,10 +91,27 @@ impl MappedDataSources {
         self.store_instructions.push(
             store_update::set_bigint(
                 ordinal,
-                ["LiquidityPoolActiveLiquidity", entity_id].join(":"),
+                ["entity-change", "LiquidityPool", entity_id, "activeLiquidity"].join(":"),
                 value.clone(),
             )
         );
+    }
+
+    pub fn append_liquidity_pool_input_tokens(
+        &mut self,
+        entity_id: &str,
+        ordinal: u64, 
+        value: &Vec<Vec<u8>>,
+    ) {
+        for address in value.into_iter() {
+            self.store_instructions.push(
+                store_update::append_bytes(
+                    ordinal,
+                    ["entity-change", "LiquidityPool", entity_id, "inputTokens"].join(":"),
+                    address.clone(),
+                )
+            );
+        }
     }
 }
 
@@ -118,7 +136,7 @@ impl PrunedTransaction {
         input_tokens: &Vec<Vec<u8>>,
         is_single_sided: bool,
         reward_tokens: Option<&Vec<Vec<u8>>>,
-        fees: Option<&Vec<Vec<u8>>>,
+        fees: Option<&Vec<enums::LiquidityPoolFeeType>>,
         tick: Option<&scalar::BigInt>,
         liquidity_token: Option<&Vec<u8>>, 
         liquidity_token_type: Option<&str>
@@ -137,7 +155,7 @@ impl PrunedTransaction {
                             None => vec![],
                         },
                         fees: match fees {
-                            Some(fees) => fees.clone(),
+                            Some(fees) => fees.iter().map(|fee| fee.to_string()).collect(),
                             None => vec![],
                         },
                         tick: match tick {
@@ -158,12 +176,31 @@ impl PrunedTransaction {
         );
     }
 
+    pub fn create_liquidity_pool_fee(
+        &mut self,
+        pool_address: &Vec<u8>,
+        fee_type: &enums::LiquidityPoolFeeType,
+        fee_percentage: &BigDecimal,
+    ) {
+        self.updates.push(
+            Update {
+                r#type: Some(Type::CreateLiquidityPoolFee(
+                    CreateLiquidityPoolFee {
+                        pool_address: pool_address.clone(),
+                        fee_type: fee_type.to_string(),
+                        fee_percentage: Some(fee_percentage.clone().into()),
+                    }
+                ))
+            }
+        );
+    }
+
     pub fn create_token(
         &mut self,
         token_address: &Vec<u8>,
         name: &str,
         symbol: &str,
-        decimals: u64,
+        decimals: i32,
     ) {
         self.updates.push(
             Update {
@@ -196,8 +233,8 @@ impl PrunedTransaction {
         }   
         self.updates.push(
             Update {
-                r#type: Some(Type::Swap(
-                    Swap {
+                r#type: Some(Type::CreateSwap(
+                    CreateSwap {
                         pool: pool.clone(),
                         protocol: protocol.clone(),
                         account: account.clone(),
@@ -234,8 +271,8 @@ impl PrunedTransaction {
         }   
         self.updates.push(
             Update {
-                r#type: Some(Type::Deposit(
-                    Deposit {
+                r#type: Some(Type::CreateDeposit(
+                    CreateDeposit {
                         pool: pool.clone(),
                         protocol: protocol.clone(),
                         account: account.clone(),
@@ -280,8 +317,8 @@ impl PrunedTransaction {
         }   
         self.updates.push(
             Update {
-                r#type: Some(Type::Withdraw(
-                    Withdraw {
+                r#type: Some(Type::CreateWithdraw(
+                    CreateWithdraw {
                         pool: pool.clone(),
                         protocol: protocol.clone(),
                         account: account.clone(),

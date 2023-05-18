@@ -36,7 +36,7 @@ pub fn create_liquidity_pool_entity_change(
         .set("cumulativeTotalRevenueUSD", constants::BIGDECIMAL_ZERO.clone())
         .set("cumulativeVolumeTokenAmounts", &vec![constants::BIGINT_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
         .set("cumulativeVolumesUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
-        .set("cumulativeVolumeUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
+        .set("cumulativeVolumeUSD", &constants::BIGDECIMAL_ZERO.clone())
         .set("inputTokenBalances", &vec![constants::BIGINT_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
         .set("inputTokenBalancesUSD", &vec![constants::BIGDECIMAL_ZERO.clone(); create_liquidity_pool.input_tokens.len()])
         .set("inputTokenWeights", &vec![constants::BIGDECIMAL_ZERO.clone(); create_liquidity_pool.input_tokens.len()])

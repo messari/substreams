@@ -65,16 +65,6 @@ type Token @entity {
 
   " Optional field to track the block number of the last token price "
   lastPriceBlockNumber: BigInt
-
-  " amount of tokens in the protocol "
-  _totalSupply: BigInt!
-
-  " Total value locked in the protocol "
-  _totalValueLockedUSD: BigDecimal!
-
-  _largePriceChangeBuffer: Int!
-
-  _largeTVLImpactBuffer: Int!
 }
 
 enum RewardTokenType {
@@ -191,19 +181,6 @@ interface Protocol {
 
   " Total number of pools "
   totalPoolCount: Int!
-
-  ##### Snapshots #####
-
-  " Daily usage metrics for this protocol "
-  dailyUsageMetrics: [UsageMetricsDailySnapshot!]!
-    @derivedFrom(field: "protocol")
-
-  " Hourly usage metrics for this protocol "
-  hourlyUsageMetrics: [UsageMetricsHourlySnapshot!]!
-    @derivedFrom(field: "protocol")
-
-  " Daily financial metrics for this protocol "
-  financialMetrics: [FinancialsDailySnapshot!]! @derivedFrom(field: "protocol")
 }
 
 type DexAmmProtocol implements Protocol @entity {
@@ -289,27 +266,6 @@ type DexAmmProtocol implements Protocol @entity {
 
   " Block number of the last time this entity was updated "
   lastUpdateBlockNumber: BigInt!
-
-  ##### Snapshots #####
-
-  " Daily usage metrics for this protocol "
-  dailyUsageMetrics: [UsageMetricsDailySnapshot!]!
-    @derivedFrom(field: "protocol")
-
-  " Hourly usage metrics for this protocol "
-  hourlyUsageMetrics: [UsageMetricsHourlySnapshot!]!
-    @derivedFrom(field: "protocol")
-
-  " Daily financial metrics for this protocol "
-  financialMetrics: [FinancialsDailySnapshot!]! @derivedFrom(field: "protocol")
-
-  ##### Pools #####
-
-  " All pools that belong to this protocol "
-  pools: [LiquidityPool!]! @derivedFrom(field: "protocol")
-
-  " This is a boolean to indicate whether or not the pools have been instantiated the were initialized before Optimism regenesis "
-  _regenesis: Boolean!
 }
 
 ###############################
@@ -457,7 +413,7 @@ type LiquidityPool @entity {
   id: Bytes!
 
   " The protocol this pool belongs to "
-  protocol: DexAmmProtocol!
+  protocol: Bytes!
 
   " Name of liquidity pool (e.g. Curve.fi DAI/USDC/USDT) "
   name: String
@@ -466,19 +422,19 @@ type LiquidityPool @entity {
   symbol: String
 
   " Token that is to represent ownership of liquidity "
-  liquidityToken: Token
+  liquidityToken: Bytes
 
   " Type of token used to track liquidity "
   liquidityTokenType: TokenType
 
   " Tokens that need to be deposited to take a position in protocol. e.g. WETH and USDC to deposit into the WETH-USDC pool. Array to account for multi-asset pools like Curve and Balancer "
-  inputTokens: [Token!]!
+  inputTokens: [Bytes!]!
 
   " Additional tokens that are given as reward for position in a protocol, usually in liquidity mining programs. e.g. SUSHI in the Onsen program, MATIC for Aave Polygon, usually in liquidity mining programs. e.g. SUSHI in the Onsen program, MATIC for Aave Polygon "
-  rewardTokens: [RewardToken!]
+  rewardTokens: [Bytes!]
 
   " Fees per trade incurred to the user. Should include all fees that apply to a pool (e.g. Curve has a trading fee AND an admin fee, which is a portion of the trading fee. Uniswap only has a trading fee and no protocol fee. ) "
-  fees: [LiquidityPoolFee!]!
+  fees: [Bytes!]!
 
   " Whether this pool is single-sided (e.g. Bancor, Platypus's Alternative Pool). The specifics of the implementation depends on the protocol. "
   isSingleSided: Boolean!
@@ -568,9 +524,6 @@ type LiquidityPool @entity {
 
   ##### Account/Position Data #####
 
-  " All positions in this market "
-  positions: [Position!]! @derivedFrom(field: "pool")
-
   " Number of positions in this market "
   positionCount: Int!
 
@@ -579,37 +532,6 @@ type LiquidityPool @entity {
 
   " Number of closed positions in this market "
   closedPositionCount: Int!
-
-  " Day ID of the most recent daily snapshot "
-  lastSnapshotDayID: Int!
-
-  " Hour ID of the most recent hourly snapshot "
-  lastSnapshotHourID: Int!
-
-  " Timestamp of the last time this entity was updated "
-  lastUpdateTimestamp: BigInt!
-
-  " Block number of the last time this entity was updated "
-  lastUpdateBlockNumber: BigInt!
-
-  ##### Snapshots #####
-
-  " Liquidity pool daily snapshots "
-  dailySnapshots: [LiquidityPoolDailySnapshot!]! @derivedFrom(field: "pool")
-
-  " Liquidity pool hourly snapshots "
-  hourlySnapshots: [LiquidityPoolHourlySnapshot!]! @derivedFrom(field: "pool")
-
-  ##### Events #####
-
-  " All deposit (add liquidity) events occurred in this pool "
-  deposits: [Deposit!]! @derivedFrom(field: "pool")
-
-  " All withdraw (remove liquidity) events occurred in this pool "
-  withdraws: [Withdraw!]! @derivedFrom(field: "pool")
-
-  " All trade (swap) events occurred in this pool "
-  swaps: [Swap!]! @derivedFrom(field: "pool")
 }
 
 #################################
@@ -1013,9 +935,6 @@ type Account @entity {
   " Number of positions this account has "
   positionCount: Int!
 
-  " All positions that belong to this account "
-  positions: [Position!]! @derivedFrom(field: "account")
-
   " Number of open positions this account has "
   openPositionCount: Int!
 
@@ -1025,20 +944,11 @@ type Account @entity {
   " Number of deposits this account made "
   depositCount: Int!
 
-  " All deposit events of this account "
-  deposits: [Deposit!]! @derivedFrom(field: "account")
-
   " Number of withdrawals this account made "
   withdrawCount: Int!
 
-  " All withdraw events of this account "
-  withdraws: [Withdraw!]! @derivedFrom(field: "account")
-
   " Number of times this account has traded/swapped"
   swapCount: Int!
-
-  " All swap events of this account "
-  swaps: [Swap!]! @derivedFrom(field: "account")
 }
 
 type Position @entity {
@@ -1105,17 +1015,8 @@ type Position @entity {
   " Number of deposits related to this position "
   depositCount: Int!
 
-  " All deposit events of this position "
-  deposits: [Deposit!]! @derivedFrom(field: "position")
-
   " Number of withdrawals related to this position "
   withdrawCount: Int!
-
-  " All withdraw events of this position "
-  withdraws: [Withdraw!]! @derivedFrom(field: "position")
-
-  " Position daily snapshots for open positions "
-  snapshots: [PositionSnapshot!]! @derivedFrom(field: "position")
 }
 
 # Unlike other snapshots that are taken at a fixed time interval. Position
@@ -1215,16 +1116,16 @@ type Deposit @entity(immutable: true) {
   gasPrice: BigInt
 
   " The protocol this transaction belongs to "
-  protocol: String!
+  protocol: Bytes!
 
   " Account that emitted this event "
-  account: Account!
+  account: Bytes!
 
   " The user position changed by this event "
-  position: Position
+  position: Bytes
 
   " The pool involving this event "
-  pool: LiquidityPool!
+  pool: Bytes!
 
   " lower tick of position "
   tickLower: BigInt
@@ -1274,13 +1175,13 @@ type Withdraw @entity(immutable: true) {
   gasPrice: BigInt
 
   " The protocol this transaction belongs to "
-  protocol: String!
+  protocol: Bytes!
 
   " Account that emitted this event "
-  account: Account!
+  account: Bytes!
 
   " The user position changed by this event "
-  position: Position
+  position: Bytes
 
   " lower tick of position "
   tickLower: BigInt
@@ -1289,7 +1190,7 @@ type Withdraw @entity(immutable: true) {
   tickUpper: BigInt
 
   " The pool involving this event "
-  pool: LiquidityPool!
+  pool: Bytes!
 
   " Block number of this event "
   blockNumber: BigInt!
@@ -1297,11 +1198,11 @@ type Withdraw @entity(immutable: true) {
   " Timestamp of this event "
   timestamp: BigInt!
 
-  " Amount of liquidity burned "
+  " Amount of liquidity burned " 
   liquidity: BigInt!
 
   " Input tokens of the pool (not input tokens of the event/transaction). E.g. WETH and USDC from a WETH-USDC pool "
-  inputTokens: [Token!]!
+  inputTokens: [Bytes!]!
 
   " Amount of input tokens in the token's native unit "
   inputTokenAmounts: [BigInt!]!
@@ -1333,13 +1234,13 @@ type Swap @entity(immutable: true) {
   gasPrice: BigInt
 
   " The protocol this transaction belongs to "
-  protocol: String!
+  protocol: Bytes!
 
   " Account that emitted this event "
-  account: Account!
+  account: Bytes!
 
   " The pool involving this event "
-  pool: LiquidityPool!
+  pool: Bytes!
 
   " Block number of this event "
   blockNumber: BigInt!
@@ -1351,7 +1252,7 @@ type Swap @entity(immutable: true) {
   tick: BigInt
 
   " Token deposited into pool "
-  tokenIn: Token!
+  tokenIn: Bytes!
 
   " Amount of token deposited into pool in native units "
   amountIn: BigInt!
@@ -1360,7 +1261,7 @@ type Swap @entity(immutable: true) {
   amountInUSD: BigDecimal!
 
   " Token withdrawn from pool "
-  tokenOut: Token!
+  tokenOut: Bytes!
 
   " Amount of token withdrawn from pool in native units "
   amountOut: BigInt!
