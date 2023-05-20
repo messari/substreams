@@ -1,23 +1,23 @@
 use crate::tables::Tables;
 
-use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, CreateDexAmmProtocol};
+use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, DexAmmProtocolEntityCreation};
 use crate::constants;
 
-pub fn create_dex_amm_protocol_entity_change(
+pub fn create_dex_amm_protocol_entity(
     tables: &mut Tables,
     block_number: &u64,
     timestamp: &i64,
     pruned_transaction: &PrunedTransaction,
-    create_dex_amm_protocol: &CreateDexAmmProtocol,
+    dex_amm_protocol_entity_creation: &DexAmmProtocolEntityCreation,
 ) {
-    tables.create_row("DexAmmProtocol", &format!("0x{}", hex::encode(&create_dex_amm_protocol.protocol_address)))
-        .set("name", &create_dex_amm_protocol.name)
-        .set("slug", &create_dex_amm_protocol.slug)
-        .set("schemaVersion", &create_dex_amm_protocol.schema_version)
-        .set("subgraphVersion", &create_dex_amm_protocol.subgraph_version)
-        .set("methodologyVersion", &create_dex_amm_protocol.methodology_version)
-        .set("network", &create_dex_amm_protocol.network)
-        .set("type", &create_dex_amm_protocol.r#type)
+    tables.create_row("DexAmmProtocol", &format!("0x{}", hex::encode(&dex_amm_protocol_entity_creation.protocol_address)))
+        .set("name", &dex_amm_protocol_entity_creation.name)
+        .set("slug", &dex_amm_protocol_entity_creation.slug)
+        .set("schemaVersion", &dex_amm_protocol_entity_creation.schema_version)
+        .set("subgraphVersion", &dex_amm_protocol_entity_creation.subgraph_version)
+        .set("methodologyVersion", &dex_amm_protocol_entity_creation.methodology_version)
+        .set("network", &dex_amm_protocol_entity_creation.network)
+        .set("type", &dex_amm_protocol_entity_creation.r#type)
         .set("totalValueLockedUSD", constants::BIGDECIMAL_ZERO.clone())
         .set("totalLiquidityUSD", constants::BIGDECIMAL_ZERO.clone())
         .set("activeLiquidityUSD", constants::BIGDECIMAL_ZERO.clone())

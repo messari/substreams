@@ -30,64 +30,112 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:messari.uniswap.v3.DataSources
+      type: proto:messari.dex_amm.v3_0_3.DataSources
 
   - name: store_data_sources
     kind: store
     updatePolicy: set
-    valueType: proto:messari.uniswap.v3.DataSources
+    valueType: proto:messari.dex_amm.v3_0_3..DataSources
     inputs:
       - map: map_data_sources
 
-  - name: map_extract_data_types
+  - name: create_store_instructions_l1
     kind: map
     initialBlock: 12369620
     inputs:
       - source: sf.ethereum.type.v2.Block
       - store: store_data_sources
     output:
-      type: proto:messari.uniswap.v3.PrunedBlock
+      type: proto:messari.store.v1.StoreInstructions
 
-  - name: store_add_bigint
-    kind: store
-    updatePolicy: add
-    valueType: bigint
-    inputs:
-      - map: map_extract_data_types
 
-  - name: store_add_bigdecimal
+  - name: set_bigdecimal_l1
     kind: store
-    updatePolicy: add
+    updatePolicy: set
     valueType: bigdecimal
     inputs:
-      - map: map_extract_data_types
+      - map: create_store_instructions_l1
 
-  - name: store_add_int64
-    kind: store
-    updatePolicy: add
-    valueType: int64
-    inputs:
-      - map: map_extract_data_types
   
-  - name: store_append_string
+  - name: append_string_l1
     kind: store
     updatePolicy: append
     valueType: string
     inputs:
-      - map: map_extract_data_types
+      - map: create_store_instructions_l1
+  
+  - name: prepare_entity_changes
+    kind: map
+    initialBlock: 12369620
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_data_sources
+      - store: set_bigdecimal_l1
+      - store: append_string_l1
+    output:
+      type: proto:messari.dex_amm.v3_0_3.MappedDataSources
+  
+  - name: add_bigint_entity_changes
+    kind: store
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: prepare_entity_changes
+  
+  - name: set_bigint_entity_changes
+    kind: store
+    updatePolicy: set
+    valueType: bigint
+    inputs:
+      - map: prepare_entity_changes
+
+  - name: add_bigdecimal_entity_changes
+    kind: store
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - map: prepare_entity_changes
+
+  - name: add_int64_entity_changes
+    kind: store
+    updatePolicy: add
+    valueType: int64
+    inputs:
+      - map: prepare_entity_changes
+  
+  - name: append_string_entity_changes
+    kind: store
+    updatePolicy: append
+    valueType: string
+    inputs:
+      - map: prepare_entity_changes
 
   - name: map_graph_out
     kind: map
     initialBlock: 12369620
     inputs:
       - source: sf.substreams.v1.Clock
-      - map: map_extract_data_types
-      - store: store_add_bigdecimal
+      - map: prepare_entity_changes
+      - store: add_bigdecimal_entity_changes
+        mode: get
+      - store: add_bigdecimal_entity_changes
         mode: deltas
-      - store: store_add_bigint
+      - store: add_bigint_entity_changes
+        mode: get
+      - store: add_bigint_entity_changes
         mode: deltas
-      - store: store_add_int64
+      - store: set_bigint_entity_changes
+        mode: get
+      - store: set_bigint_entity_changes
         mode: deltas
-      - store: store_append_string
+      - store: add_int64_entity_changes
+        mode: get
+      - store: add_int64_entity_changes
+        mode: deltas
+      - store: append_string_entity_changes
+        mode: get
+      - store: append_string_entity_changes
+        mode: deltas
+
     output:
       type: proto:substreams.entity.v1.EntityChanges

@@ -34,22 +34,22 @@ message PrunedTransaction {
   messari.common.v1.BigInt gas_used = 6;
   messari.common.v1.BigInt gas_price = 7;
 
-  repeated Update updates = 8;
+  repeated EntityCreation entity_creations = 8;
 }
 
-message Update {
+message EntityCreation {
   oneof type {
-    CreateDexAmmProtocol create_dex_amm_protocol = 1;
-    CreateLiquidityPool create_liquidity_pool = 2;
-    CreateLiquidityPoolFee create_liquidity_pool_fee = 3;
-    CreateToken create_token = 4;
-    CreateSwap create_swap = 5;
-    CreateDeposit create_deposit = 6;
-    CreateWithdraw create_withdraw = 7;
+    DexAmmProtocolEntityCreation dex_amm_protocol_entity_creation = 1;
+    LiquidityPoolEntityCreation liquidity_pool_entity_creation = 2;
+    LiquidityPoolFeeEntityCreation liquidity_pool_fee_entity_creation = 3;
+    TokenEntityCreation token_entity_creation = 4;
+    SwapEntityCreation swap_entity_creation = 5;
+    DepositEntityCreation deposit_entity_creation = 6;
+    WithdrawEntityCreation withdraw_entity_creation = 7;
   }
 }
 
-message CreateDexAmmProtocol {
+message DexAmmProtocolEntityCreation {
   string protocol_address = 1;
   string name = 2;
   string slug = 3;
@@ -60,64 +60,69 @@ message CreateDexAmmProtocol {
   string type = 8;
 }
 
-message CreateLiquidityPool {
+message LiquidityPoolEntityCreation {
   bytes protocol = 1;
   bytes pool_address = 2;
   repeated bytes input_tokens = 3;
-  repeated bytes reward_tokens = 4;
-  repeated string fees = 5;
-  bool is_single_sided = 6;
-  optional messari.common.v1.BigInt tick = 7;
-  optional bytes liquidity_token = 8;
-  optional string liquidity_token_type = 9;
+  repeated string input_token_symbols = 4;
+  repeated messari.common.v1.BigDecimal input_token_weights = 5;
+  repeated bytes reward_tokens = 6;
+  repeated bytes fees = 7;
+  bool is_single_sided = 8;
+  optional messari.common.v1.BigInt tick = 9;
+  optional bytes liquidity_token = 10;
+  optional string liquidity_token_type = 11;
 }
 
-message CreateLiquidityPoolFee {
+message LiquidityPoolFeeEntityCreation {
   bytes pool_address = 1;
   string fee_type = 2;
   messari.common.v1.BigDecimal fee_percentage = 3;
 }
 
-message CreateToken {
+message TokenEntityCreation {
   bytes token_address = 1;
   string name = 2;
   string symbol = 3;
   int32 decimals = 4;
 } 
 
-message CreateDeposit {
+message DepositEntityCreation {
   bytes protocol = 1;
   bytes pool = 2;
   bytes account = 3;
   optional bytes position = 4;  
   messari.common.v1.BigInt liquidity = 5;
-  repeated messari.common.v1.BigInt input_token_amounts = 6;
-  optional messari.common.v1.BigInt tick_lower = 7;
-  optional messari.common.v1.BigInt tick_upper = 8;
-  messari.common.v1.BigInt log_index = 9;
-  messari.common.v1.BigInt log_ordinal = 10;
+  repeated bytes input_tokens = 6;
+  repeated messari.common.v1.BigInt input_token_amounts = 7;
+  optional messari.common.v1.BigInt tick_lower = 8;
+  optional messari.common.v1.BigInt tick_upper = 9;
+  messari.common.v1.BigInt log_index = 10;
+  messari.common.v1.BigInt log_ordinal = 11;
 }
 
-message CreateWithdraw {
+message WithdrawEntityCreation {
   bytes protocol = 1;
   bytes pool = 2;
   bytes account = 3;
-  optional bytes position = 4;
+  optional bytes position = 4;  
   messari.common.v1.BigInt liquidity = 5;
-  repeated messari.common.v1.BigInt input_token_amounts = 6;
-  optional messari.common.v1.BigInt tick_lower = 7;
-  optional messari.common.v1.BigInt tick_upper = 8;
-  messari.common.v1.BigInt log_index = 9;
-  messari.common.v1.BigInt log_ordinal = 10;
+  repeated bytes input_tokens = 6;
+  repeated messari.common.v1.BigInt input_token_amounts = 7;
+  optional messari.common.v1.BigInt tick_lower = 8;
+  optional messari.common.v1.BigInt tick_upper = 9;
+  messari.common.v1.BigInt log_index = 10;
+  messari.common.v1.BigInt log_ordinal = 11;
 }
 
-message CreateSwap {
+message SwapEntityCreation {
   bytes protocol = 1;
   bytes pool = 2;
   bytes account = 3;
-  repeated messari.common.v1.BigInt amounts =  4;
-  messari.common.v1.BigInt liquidity = 5;
-  optional messari.common.v1.BigInt tick = 6;
-  messari.common.v1.BigInt log_index = 7;
-  messari.common.v1.BigInt log_ordinal = 8;
+  repeated bytes input_tokens = 4;
+  repeated messari.common.v1.BigInt amounts =  5;
+  messari.common.v1.BigInt liquidity = 6;
+  optional messari.common.v1.BigInt tick = 7;
+  messari.common.v1.BigInt log_index = 8;
+  messari.common.v1.BigInt log_ordinal = 9;
 }

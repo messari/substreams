@@ -4,6 +4,10 @@ import "common.proto";
 
 package messari.store.v1;
 
+message StoreInstructions {
+    repeated StoreInstruction instructions = 1;
+}
+
 message StoreInstruction {
     oneof type {
       AddInt64 add_int64 = 1;

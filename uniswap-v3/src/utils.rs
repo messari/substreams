@@ -30,3 +30,13 @@ pub fn abs_bigint(value: &BigInt) -> BigInt {
     }
     value.clone()
 }
+
+pub fn bigint_to_bigdecimal(value: &BigInt) -> BigDecimal {
+    BigDecimal::from(value.to_u64())
+}
+
+pub fn bigdecimal_to_bigint(value: &BigDecimal) -> BigInt {
+    let str_value = value.to_string();
+    let vec_string: Vec<&str> = str_value.split('.').collect();
+    BigInt::try_from(vec_string[0].to_string()).unwrap()
+}

@@ -1,13 +1,14 @@
 use substreams::scalar::{BigDecimal, BigInt, self};
 use substreams_ethereum::pb::eth::v2::{self as eth};
 
+use crate::abi::pool;
 use crate::constants;
 use crate::pb::common;
 use crate::store::store_update;
 
 use crate::pb::store::v1 as store;
-use crate::pb::dex_amm::v3_0_3::{MappedDataSources, PrunedTransaction, Update, CreateSwap, CreateDeposit, CreateWithdraw, CreateToken, CreateLiquidityPoolFee};
-use crate::pb::dex_amm::v3_0_3::update::Type;
+use crate::pb::dex_amm::v3_0_3::{MappedDataSources, PrunedTransaction, EntityCreation, SwapEntityCreation, DepositEntityCreation, WithdrawEntityCreation, TokenEntityCreation, LiquidityPoolFeeEntityCreation};
+use crate::pb::dex_amm::v3_0_3::entity_creation::Type;
 use crate::schema_lib::dex_amm::v_3_0_3::enums;
 
 impl MappedDataSources {
@@ -32,6 +33,36 @@ impl MappedDataSources {
             )
         );
     }
+
+    pub fn add_liquidity_pool_cumulative_deposit_count(
+        &mut self,
+        entity_id: &str,
+        ordinal: u64, 
+        value: i64,
+    ) {
+        self.store_instructions.push(
+            store_update::add_int_64(
+                ordinal,
+                ["entity-change", "LiquidityPool", entity_id, "cumulativeDepositCount"].join(":"),
+                value,
+            )
+        );
+    }
+
+    pub fn add_liquidity_pool_cumulative_withdraw_count(
+        &mut self,
+        entity_id: &str,
+        ordinal: u64, 
+        value: i64,
+    ) {
+        self.store_instructions.push(
+            store_update::add_int_64(
+                ordinal,
+                ["entity-change", "LiquidityPool", entity_id, "cumulativeWithdrawCount"].join(":"),
+                value,
+            )
+        );
+    }
     
     pub fn add_liquidity_pool_input_token_balances(
         &mut self,
@@ -43,7 +74,7 @@ impl MappedDataSources {
             self.store_instructions.push(
                 store_update::add_bigint(
                     ordinal,
-                    ["entity-change", "LiquidityPool", entity_id, "inputTokenBalance", i.to_string().as_str(), value.len().to_string().as_str()].join(":"),
+                    ["entity-change", "LiquidityPool", entity_id, "inputTokenBalances", i.to_string().as_str(), value.len().to_string().as_str()].join(":"),
                     v.clone(),
                 )
             );
@@ -61,6 +92,57 @@ impl MappedDataSources {
                 store_update::add_bigint(
                     ordinal,
                     ["entity-change", "LiquidityPool", entity_id, "cumulativeVolumeTokenAmounts", i.to_string().as_str(), value.len().to_string().as_str()].join(":"),
+                    v.clone(),
+                )
+            );
+        }
+    }
+
+    pub fn add_liquidity_pool_cumulative_supply_side_revenue_token_amounts(
+        &mut self,
+        entity_id: &str,
+        ordinal: u64, 
+        value: &Vec<BigInt>,
+    ) {
+        for (i, v) in value.into_iter().enumerate() {
+            self.store_instructions.push(
+                store_update::add_bigint(
+                    ordinal,
+                    ["entity-change", "LiquidityPool", entity_id, "cumulativeSupplySideRevenueTokenAmounts", i.to_string().as_str(), value.len().to_string().as_str()].join(":"),
+                    v.clone(),
+                )
+            );
+        }
+    }
+
+    pub fn add_liquidity_pool_cumulative_protocol_side_revenue_token_amounts(
+        &mut self,
+        entity_id: &str,
+        ordinal: u64, 
+        value: &Vec<BigInt>,
+    ) {
+        for (i, v) in value.into_iter().enumerate() {
+            self.store_instructions.push(
+                store_update::add_bigint(
+                    ordinal,
+                    ["entity-change", "LiquidityPool", entity_id, "cumulativeProtocolSideRevenueTokenAmounts", i.to_string().as_str(), value.len().to_string().as_str()].join(":"),
+                    v.clone(),
+                )
+            );
+        }
+    }
+
+    pub fn add_liquidity_pool_cumulative_total_revenue_token_amounts(
+        &mut self,
+        entity_id: &str,
+        ordinal: u64, 
+        value: &Vec<BigInt>,
+    ) {
+        for (i, v) in value.into_iter().enumerate() {
+            self.store_instructions.push(
+                store_update::add_bigint(
+                    ordinal,
+                    ["entity-change", "LiquidityPool", entity_id, "cumulativeTotalRevenueTokenAmounts", i.to_string().as_str(), value.len().to_string().as_str()].join(":"),
                     v.clone(),
                 )
             );
@@ -97,6 +179,21 @@ impl MappedDataSources {
         );
     }
 
+    pub fn set_liquidity_pool_tick(
+        &mut self,
+        entity_id: &str,
+        ordinal: u64, 
+        value: &BigInt,
+    ) {
+        self.store_instructions.push(
+            store_update::set_bigint(
+                ordinal,
+                ["entity-change", "LiquidityPool", entity_id, "tick"].join(":"),
+                value.clone(),
+            )
+        );
+    }
+
     pub fn append_liquidity_pool_input_tokens(
         &mut self,
         entity_id: &str,
@@ -125,15 +222,17 @@ impl PrunedTransaction {
             gas_limit: Some(transaction_trace.gas_limit.into()),
             gas_used: Some(transaction_trace.gas_used.into()),
             gas_price: Some(constants::BIGINT_ZERO.clone().into()),
-            updates: Vec::<Update>::new(),
+            entity_creations: Vec::<EntityCreation>::new(),
         }
     }
 
-    pub fn create_liquidity_pool(
+    pub fn create_liquidity_pool_entity(
         &mut self,
         protocol: &Vec<u8>,
         pool_address: &Vec<u8>,
         input_tokens: &Vec<Vec<u8>>,
+        input_token_symbols: &Vec<String>,
+        input_token_weights: &Vec<scalar::BigDecimal>,
         is_single_sided: bool,
         reward_tokens: Option<&Vec<Vec<u8>>>,
         fees: Option<&Vec<enums::LiquidityPoolFeeType>>,
@@ -142,20 +241,32 @@ impl PrunedTransaction {
         liquidity_token_type: Option<&str>
 
     ) {
-        self.updates.push(
-            Update {
-                r#type: Some(Type::CreateLiquidityPool(
-                    crate::pb::dex_amm::v3_0_3::CreateLiquidityPool {
+        let mut input_token_weights_list = Vec::<common::v1::BigDecimal>::new();
+        for input_token_weight in input_token_weights {
+            input_token_weights_list.push(input_token_weight.clone().into());
+        }   
+        self.entity_creations.push(
+            EntityCreation {
+                r#type: Some(Type::LiquidityPoolEntityCreation(
+                    crate::pb::dex_amm::v3_0_3::LiquidityPoolEntityCreation {
                         protocol: protocol.clone(),
                         pool_address: pool_address.clone(),
                         input_tokens: input_tokens.clone(),
+                        input_token_symbols: input_token_symbols.clone(),
+                        input_token_weights: input_token_weights_list,
                         is_single_sided: is_single_sided,
                         reward_tokens: match reward_tokens {
                             Some(reward_tokens) => reward_tokens.clone(),
                             None => vec![],
                         },
                         fees: match fees {
-                            Some(fees) => fees.iter().map(|fee| fee.to_string()).collect(),
+                            Some(fees) => fees.iter()
+                                .map(|fee| {
+                                    let mut pool_fee = pool_address.clone(); // Clone the pool_address for each fee
+                                    pool_fee.extend(&fee.to_string().into_bytes()); // Extend it with the fee bytes
+                                    pool_fee // Return it
+                                })
+                                .collect(),
                             None => vec![],
                         },
                         tick: match tick {
@@ -176,16 +287,16 @@ impl PrunedTransaction {
         );
     }
 
-    pub fn create_liquidity_pool_fee(
+    pub fn create_liquidity_pool_fee_entity(
         &mut self,
         pool_address: &Vec<u8>,
         fee_type: &enums::LiquidityPoolFeeType,
         fee_percentage: &BigDecimal,
     ) {
-        self.updates.push(
-            Update {
-                r#type: Some(Type::CreateLiquidityPoolFee(
-                    CreateLiquidityPoolFee {
+        self.entity_creations.push(
+            EntityCreation {
+                r#type: Some(Type::LiquidityPoolFeeEntityCreation(
+                    LiquidityPoolFeeEntityCreation {
                         pool_address: pool_address.clone(),
                         fee_type: fee_type.to_string(),
                         fee_percentage: Some(fee_percentage.clone().into()),
@@ -195,17 +306,17 @@ impl PrunedTransaction {
         );
     }
 
-    pub fn create_token(
+    pub fn create_token_entity(
         &mut self,
         token_address: &Vec<u8>,
         name: &str,
         symbol: &str,
         decimals: i32,
     ) {
-        self.updates.push(
-            Update {
-                r#type: Some(Type::CreateToken(
-                    CreateToken {
+        self.entity_creations.push(
+            EntityCreation {
+                r#type: Some(Type::TokenEntityCreation(
+                    TokenEntityCreation {
                         token_address: token_address.clone(),
                         name: name.to_string(),
                         symbol: symbol.to_string(),
@@ -216,11 +327,12 @@ impl PrunedTransaction {
         );
     }
 
-    pub fn create_swap(
+    pub fn create_swap_entity(
         &mut self,
         pool: &Vec<u8>,
         protocol: &Vec<u8>,
         account: &Vec<u8>,
+        input_tokens: &Vec<Vec<u8>>,
         amounts: &Vec<scalar::BigInt>,
         liquidity: &scalar::BigInt,
         tick: Option<&scalar::BigInt>,
@@ -231,13 +343,14 @@ impl PrunedTransaction {
         for amount in amounts {
             amounts_list.push(amount.clone().into());
         }   
-        self.updates.push(
-            Update {
-                r#type: Some(Type::CreateSwap(
-                    CreateSwap {
+        self.entity_creations.push(
+            EntityCreation {
+                r#type: Some(Type::SwapEntityCreation(
+                    SwapEntityCreation {
                         pool: pool.clone(),
                         protocol: protocol.clone(),
                         account: account.clone(),
+                        input_tokens: input_tokens.clone(),
                         amounts: amounts_list,
                         liquidity: Some(liquidity.clone().into()),
                         tick: match tick {
@@ -252,12 +365,13 @@ impl PrunedTransaction {
         );
     }
 
-    pub fn create_deposit(
+    pub fn create_deposit_entity(
         &mut self,
         pool: &Vec<u8>,
         protocol: &Vec<u8>,
         account: &Vec<u8>,
         liquidity: &scalar::BigInt,
+        input_tokens: &Vec<Vec<u8>>,
         input_token_amounts: &Vec<scalar::BigInt>,
         position: Option<&Vec<u8>>,
         tick_lower: Option<&scalar::BigInt>,
@@ -269,14 +383,15 @@ impl PrunedTransaction {
         for input_token_amount in input_token_amounts {
             input_token_amounts_list.push(input_token_amount.clone().into());
         }   
-        self.updates.push(
-            Update {
-                r#type: Some(Type::CreateDeposit(
-                    CreateDeposit {
+        self.entity_creations.push(
+            EntityCreation {
+                r#type: Some(Type::DepositEntityCreation(
+                    DepositEntityCreation {
                         pool: pool.clone(),
                         protocol: protocol.clone(),
                         account: account.clone(),
                         liquidity: Some(liquidity.clone().into()),
+                        input_tokens: input_tokens.clone(),
                         input_token_amounts: input_token_amounts_list,
                         position: match position {
                             Some(position) => Some(position.clone()),
@@ -298,12 +413,13 @@ impl PrunedTransaction {
         );
     }
 
-    pub fn create_withdraw(
+    pub fn create_withdraw_entity(
         &mut self,
         pool: &Vec<u8>,
         protocol: &Vec<u8>,
         account: &Vec<u8>,
         liquidity: &scalar::BigInt,
+        input_tokens: &Vec<Vec<u8>>,
         input_token_amounts: &Vec<scalar::BigInt>,
         position: Option<&Vec<u8>>,
         tick_lower: Option<&scalar::BigInt>,
@@ -315,14 +431,15 @@ impl PrunedTransaction {
         for input_token_amount in input_token_amounts {
             input_token_amounts_list.push(input_token_amount.clone().into());
         }   
-        self.updates.push(
-            Update {
-                r#type: Some(Type::CreateWithdraw(
-                    CreateWithdraw {
+        self.entity_creations.push(
+            EntityCreation {
+                r#type: Some(Type::WithdrawEntityCreation(
+                    WithdrawEntityCreation {
                         pool: pool.clone(),
                         protocol: protocol.clone(),
                         account: account.clone(),
                         liquidity: Some(liquidity.clone().into()),
+                        input_tokens: input_tokens.clone(),
                         input_token_amounts: input_token_amounts_list,
                         position: match position {
                             Some(position) => Some(position.clone()),
