@@ -61,3 +61,9 @@ impl HasAddresser for StoreGetInt64 {
         self.get_last(key.to_hex()).is_some()
     }
 }
+
+impl HasAddresser for Address {
+    fn has_address(&self, key: Address) -> bool {
+        key == self.to_owned()
+    }
+}

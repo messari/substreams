@@ -1,36 +1,418 @@
+use downcast_rs::{impl_downcast, Downcast};
 use ethabi::ethereum_types::Address;
-
 use substreams::scalar::BigInt;
 use substreams_ethereum::pb::eth as pbeth;
 use tiny_keccak::{Hasher, Keccak};
 
 use crate::common::HasAddresser;
+use crate::errors::StorageDecodingError;
+use crate::math::NumberModulo;
 
-/// Retrieves all storage changes in a block for all contracts under HasAddresser.
-pub fn get_storage_changes_for_addresses(
+pub const SLOT_SIZE: usize = 32;
+
+/// A convenience struct that puts together each storage change with its keccak preimage.
+/// Only applies to storage changes in hashed keys (like mappings, arrays, etc).
+/// Otherwise, preimage will be `None`.
+#[derive(Debug, Clone)]
+pub struct StorageChange {
+    pub change: pbeth::v2::StorageChange,
+    pub preimage: Option<Vec<u8>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct KeccakPreimage {
+    pub preimage: Vec<u8>,
+    pub slot: BigInt,
+}
+
+/// StorageLayout is trait to normalize the decoding of raw storage slots into their own
+/// respective types.
+pub trait StorageLayout: Downcast {
+    /// Returns the size in bytes of this type. In the case of structs, this is the sum of all the slots
+    /// the struct takes, not only the raw addition of its underlying types.
+    fn size(&self) -> usize;
+    /// Will attempt to decode a set of slots into the given type. For types that can be offseted inside a slot,
+    /// there is an optional offset parameter. This will be ignored by arrays, mappings and structs.
+    fn decode(
+        &mut self,
+        slots: Vec<Vec<u8>>,
+        offset: Option<usize>,
+    ) -> Result<(), StorageDecodingError>;
+
+    /// Sets the slot for this type. This is necessary for when nesting different StorageLayout's, so that the parent can
+    /// calculate the slot for the child automatically (from its own slow).
+    fn set_slot(&mut self, slot: BigInt);
+}
+impl_downcast!(StorageLayout);
+
+pub trait ABIEncodeable {
+    fn abi_token(&self) -> ethabi::Token;
+    fn abi_decode(abi_encoded: Vec<u8>) -> Result<Self, ethabi::Error>
+    where
+        Self: Sized;
+}
+
+pub fn get_keccak_preimages_for_addresses(
     store: &impl HasAddresser,
     block: &pbeth::v2::Block,
-) -> Vec<pbeth::v2::StorageChange> {
-    let mut changes: Vec<pbeth::v2::StorageChange> = vec![];
+) -> Vec<Vec<u8>> {
+    let mut preimages: Vec<Vec<u8>> = vec![];
     for call in block.calls() {
         for change in &call.call.storage_changes {
             if !store.has_address(Address::from_slice(change.address.as_slice())) {
                 continue;
             }
-            changes.push(change.to_owned());
+
+            preimages.extend(
+                call.call
+                    .keccak_preimages
+                    .values()
+                    .map(|preimage| -> Vec<u8> { substreams::Hex::decode(preimage).unwrap() }),
+            );
+            break;
+        }
+    }
+    preimages
+}
+
+/// Retrieves all storage changes in a block for all contracts under HasAddresser.
+pub fn get_storage_changes_for_addresses(
+    store: &impl HasAddresser,
+    block: &pbeth::v2::Block,
+) -> Vec<StorageChange> {
+    let mut changes: Vec<StorageChange> = vec![];
+    for call in block.calls() {
+        for change in &call.call.storage_changes {
+            if !store.has_address(Address::from_slice(change.address.as_slice())) {
+                continue;
+            }
+
+            let mut preimage = None;
+            let preimage_bytes = call
+                .call
+                .keccak_preimages
+                .get(&substreams::Hex::encode(change.key.clone()));
+            if preimage_bytes.is_some() {
+                preimage = Some(substreams::Hex::decode(preimage_bytes.unwrap()).unwrap());
+            }
+            changes.push(StorageChange {
+                change: change.to_owned(),
+                preimage: preimage,
+            });
         }
     }
     changes
 }
 
+pub fn keccak256(data: Vec<u8>) -> Vec<u8> {
+    let mut keccak = Keccak::v256();
+    let mut output = [0u8; 32];
+    keccak.update(data.as_slice());
+    keccak.finalize(&mut output);
+    return output.to_vec();
+}
+
 /// Utility class to play around with Uint256 storage values.
 pub struct Uint256 {
     pub slot: BigInt,
+    pub value: BigInt,
 }
 
 impl Uint256 {
     pub fn storage_key(&self) -> Vec<u8> {
         ethabi::encode(&[self.slot.abi_token()])
+    }
+}
+
+impl Default for Uint256 {
+    fn default() -> Self {
+        Uint256 {
+            slot: BigInt::from(0),
+            value: BigInt::from(0),
+        }
+    }
+}
+
+impl StorageLayout for Uint256 {
+    fn size(&self) -> usize {
+        SLOT_SIZE
+    }
+
+    fn decode(
+        &mut self,
+        slots: Vec<Vec<u8>>,
+        _offset: Option<usize>,
+    ) -> Result<(), StorageDecodingError> {
+        if slots.len() != 1 {
+            return Err(StorageDecodingError::new(format!(
+                "Invalid number of slots for Uint256, expected 1, got {}",
+                slots.len()
+            )));
+        }
+
+        let decoded = BigInt::abi_decode(slots[0].clone());
+        if decoded.is_err() {
+            return Err(StorageDecodingError::new(format!(
+                "Error decoding Uint256: {:?}",
+                decoded.err()
+            )));
+        }
+        self.value = decoded.unwrap();
+        Ok(())
+    }
+
+    fn set_slot(&mut self, slot: BigInt) {
+        self.slot = slot;
+    }
+}
+
+/// Utility class to play around with Uint128 storage values.
+pub struct Uint128 {
+    pub slot: BigInt,
+    pub value: BigInt,
+    pub offset: usize,
+}
+
+impl Uint128 {
+    pub fn storage_key(&self) -> Vec<u8> {
+        ethabi::encode(&[self.slot.abi_token()])
+    }
+}
+
+impl Default for Uint128 {
+    fn default() -> Self {
+        Uint128 {
+            slot: BigInt::from(0),
+            value: BigInt::from(0),
+            offset: 0,
+        }
+    }
+}
+
+impl StorageLayout for Uint128 {
+    fn size(&self) -> usize {
+        16
+    }
+
+    fn decode(
+        &mut self,
+        slots: Vec<Vec<u8>>,
+        offset: Option<usize>,
+    ) -> Result<(), StorageDecodingError> {
+        if slots.len() != 1 {
+            return Err(StorageDecodingError::new(format!(
+                "Invalid number of slots for Uint256, expected 1, got {}",
+                slots.len()
+            )));
+        }
+
+        if let Some(offset_override) = offset {
+            self.offset = offset_override;
+        }
+
+        let raw = subslot(slots[0].clone(), self.size(), self.offset);
+        let decoded = BigInt::abi_decode(raw);
+        if decoded.is_err() {
+            return Err(StorageDecodingError::new(format!(
+                "Error decoding Uint128: {:?}",
+                decoded.err()
+            )));
+        }
+        self.value = decoded.unwrap();
+        Ok(())
+    }
+
+    fn set_slot(&mut self, slot: BigInt) {
+        self.slot = slot;
+    }
+}
+
+pub struct StructField {
+    pub name: String,
+    value: Box<dyn StorageLayout>,
+    offset: usize,
+    start_slot: usize,
+    end_slot: usize,
+}
+
+pub struct Struct {
+    pub slot: BigInt,
+    fields: Vec<StructField>,
+    cumulative_size: usize,
+    current_slot: usize,
+}
+
+impl Struct {
+    pub fn new(slot: BigInt) -> Self {
+        Struct {
+            slot: slot,
+            fields: vec![],
+            cumulative_size: 0,
+            current_slot: 0,
+        }
+    }
+
+    pub fn add_field<T>(&mut self, name: &str, field: T)
+    where
+        T: StorageLayout + 'static,
+    {
+        let mut start_slot = self.cumulative_size / SLOT_SIZE;
+        let mut field_offset = self.cumulative_size % SLOT_SIZE;
+        if field_offset + field.size() > SLOT_SIZE {
+            field_offset = 0;
+            start_slot += 1;
+            self.cumulative_size = start_slot * SLOT_SIZE;
+        }
+
+        let end_slot = start_slot + size_to_slots(field.size());
+        self.current_slot = end_slot;
+        self.cumulative_size += field.size();
+
+        self.fields.push(StructField {
+            name: name.to_string(),
+            value: Box::new(field),
+            offset: field_offset,
+            start_slot: start_slot,
+            end_slot: end_slot,
+        });
+    }
+
+    pub fn get<T: StorageLayout>(&self, name: &str) -> &T {
+        for field in &self.fields {
+            if field.name == name {
+                return field.value.downcast_ref::<T>().unwrap();
+            }
+        }
+        panic!("Field {} not found", name);
+    }
+}
+
+impl StorageLayout for Struct {
+    fn size(&self) -> usize {
+        size_to_slots(self.cumulative_size) * SLOT_SIZE
+    }
+
+    fn decode(
+        &mut self,
+        slots: Vec<Vec<u8>>,
+        _offset: Option<usize>,
+    ) -> Result<(), StorageDecodingError> {
+        if slots.len() < self.current_slot {
+            return Err(StorageDecodingError::new(format!(
+                "Invalid number of slots for Struct, expected {}, got {}",
+                size_to_slots(self.size()),
+                slots.len()
+            )));
+        }
+
+        let field_count = self.fields.len();
+        for i in 0..field_count {
+            let field = &mut self.fields[i];
+            field.value.decode(
+                slots[field.start_slot as usize..field.end_slot as usize].to_vec(),
+                Some(field.offset),
+            )?;
+        }
+        Ok(())
+    }
+
+    fn set_slot(&mut self, slot: BigInt) {
+        self.slot = slot;
+    }
+}
+
+pub struct Array<T: StorageLayout> {
+    pub slot: BigInt,
+    pub item: T,
+}
+
+impl<T: StorageLayout> Array<T> {
+    pub fn new(slot: BigInt, item: T) -> Self {
+        let mut arr = Array {
+            slot: slot,
+            item: item,
+        };
+
+        let item_slot = keccak256(arr.encoded_slot());
+        arr.item.set_slot(BigInt::abi_decode(item_slot).unwrap());
+        arr
+    }
+
+    /// Will return a list of all storage changes involving this array, from a given list of changes.
+    pub fn filter_array_changes(
+        &self,
+        changes: Vec<StorageChange>,
+        expected_array_len: BigInt,
+    ) -> Vec<StorageChange> {
+        let mut filtered_changes = vec![];
+        for change in changes {
+            let index = self.infer_array_index_from_storage_key(change.change.key.clone());
+            if index.is_none() {
+                continue;
+            }
+
+            if index.unwrap() <= expected_array_len {
+                filtered_changes.push(change);
+            }
+        }
+        filtered_changes
+    }
+
+    pub fn infer_array_index_from_storage_key(&self, key: Vec<u8>) -> Option<BigInt> {
+        let first_elem = self.storage_key_at_index(BigInt::zero());
+        let target_val = BigInt::abi_decode(key).unwrap();
+        let first_val = BigInt::abi_decode(first_elem).unwrap();
+
+        if target_val < first_val {
+            return None;
+        }
+
+        let slot_diff = target_val - first_val;
+        let slots_per_item = BigInt::from(size_to_slots(self.item.size()));
+        if slot_diff.modulo(slots_per_item.as_ref()) != BigInt::zero() {
+            return None;
+        }
+
+        Some(slot_diff / slots_per_item)
+    }
+
+    /// Returns the EVM storage key where the value of a given array index is stored.
+    pub fn storage_key_at_index(&self, index: BigInt) -> Vec<u8> {
+        let slots_per_item = BigInt::from(size_to_slots(self.item.size()));
+        let output = keccak256(self.encoded_slot());
+        let pos0 = BigInt::abi_decode(output).unwrap();
+        let pos_n = pos0 + index * slots_per_item;
+        ethabi::encode(&[pos_n.abi_token()])
+    }
+
+    fn encoded_slot(&self) -> Vec<u8> {
+        ethabi::encode(&[self.slot.abi_token()])
+    }
+}
+
+impl<T: StorageLayout> StorageLayout for Array<T> {
+    fn size(&self) -> usize {
+        SLOT_SIZE
+    }
+
+    fn decode(
+        &mut self,
+        slots: Vec<Vec<u8>>,
+        _offset: Option<usize>,
+    ) -> Result<(), StorageDecodingError> {
+        if slots.len() != size_to_slots(self.item.size()) {
+            return Err(StorageDecodingError::new(format!(
+                "Invalid number of slots for Array, expected {}, got {}",
+                size_to_slots(self.item.size()),
+                slots.len()
+            )));
+        }
+
+        self.item.decode(slots, None)
+    }
+
+    fn set_slot(&mut self, slot: BigInt) {
+        self.slot = slot;
     }
 }
 
@@ -40,6 +422,19 @@ pub struct Mapping {
 }
 
 impl Mapping {
+    pub fn filter_keccak_preimages(&self, preimages: Vec<Vec<u8>>) -> Vec<KeccakPreimage> {
+        let mut out = vec![];
+        for preimage in preimages {
+            if self.preimage_in_slot(preimage.clone()) {
+                out.push(KeccakPreimage {
+                    preimage: preimage.clone(),
+                    slot: BigInt::abi_decode(keccak256(preimage)).unwrap(),
+                });
+            }
+        }
+        out
+    }
+
     /// For a given key, will calculate the abi encoded keccak preimage.
     /// Hashing the preimage will return the storage key where a given value from the mapping is.
     pub fn preimage(&self, key: &impl ABIEncodeable) -> Vec<u8> {
@@ -49,35 +444,33 @@ impl Mapping {
     /// Returns the EVM storage key where the given mapping key is stored.
     pub fn storage_key(&self, key: &impl ABIEncodeable) -> Vec<u8> {
         let preimage = self.preimage(key);
-        let mut keccak = Keccak::v256();
-        let mut output = [0u8; 32];
-        keccak.update(preimage.as_slice());
-        keccak.finalize(&mut output);
-        return output.to_vec();
+        return keccak256(preimage);
     }
 
     /// Given a keccak256 preimage, determines what is the key of the mapping associated to it.
     /// Returns None if the format is wrong or there isn't a match.
     pub fn key_from_preimage<T: ABIEncodeable>(&self, preimage: Vec<u8>) -> Option<T> {
-        let slot = ethabi::encode(&[self.slot.abi_token()]);
-        if !preimage.ends_with(slot.as_slice()) {
+        if !self.preimage_in_slot(preimage.clone()) {
             return None;
         }
 
-        let key = preimage.split_at(preimage.len() - slot.len()).0;
+        let key = preimage
+            .split_at(preimage.len() - &self.encoded_slot().len())
+            .0;
         let t = T::abi_decode(key.to_vec());
         if t.is_err() {
             return None;
         }
         Some(t.unwrap())
     }
-}
 
-pub trait ABIEncodeable {
-    fn abi_token(&self) -> ethabi::Token;
-    fn abi_decode(abi_encoded: Vec<u8>) -> Result<Self, ethabi::Error>
-    where
-        Self: Sized;
+    pub fn preimage_in_slot(&self, preimage: Vec<u8>) -> bool {
+        preimage.ends_with(&self.encoded_slot().as_slice())
+    }
+
+    fn encoded_slot(&self) -> Vec<u8> {
+        ethabi::encode(&[self.slot.abi_token()])
+    }
 }
 
 impl ABIEncodeable for BigInt {
@@ -88,7 +481,7 @@ impl ABIEncodeable for BigInt {
     }
 
     fn abi_decode(abi_encoded: Vec<u8>) -> Result<Self, ethabi::Error> {
-        let mut bytes: [u8; 32] = [0; 32];
+        let mut bytes: [u8; SLOT_SIZE] = [0; SLOT_SIZE];
         let first = ethabi::Uint::from_big_endian(abi_encoded.as_slice());
         first.to_big_endian(&mut bytes);
         Ok(BigInt::from_unsigned_bytes_be(&bytes))
@@ -106,123 +499,19 @@ impl ABIEncodeable for Address {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    mod abi_encodeable {
-        use std::str::FromStr;
-        use substreams::scalar::BigInt;
-
-        use super::super::*;
-        use crate::hex::Hexable;
-
-        #[test]
-        fn test_abi_token() {
-            struct TT<'a> {
-                name: &'static str,
-                abi_encodeable: Box<dyn ABIEncodeable + 'a>,
-                encoded: &'static str,
-            }
-
-            let tests: Vec<TT> = vec![
-                TT {
-                    name: "Address impl",
-                    abi_encodeable: Box::new(
-                        Address::from_str("0xca0e8f557ea98f950029a41d74f16dd76648b1f1").unwrap(),
-                    ),
-                    encoded: "0x000000000000000000000000ca0e8f557ea98f950029a41d74f16dd76648b1f1",
-                },
-                TT {
-                    name: "BigInt impl",
-                    abi_encodeable: Box::new(BigInt::from(54)),
-                    encoded: "0x0000000000000000000000000000000000000000000000000000000000000036",
-                },
-            ];
-
-            for tt in tests {
-                assert_eq!(
-                    ethabi::encode(&[tt.abi_encodeable.abi_token()]).to_hex(),
-                    tt.encoded,
-                    "Failed at test with name: {}",
-                    tt.name,
-                );
-            }
-        }
-
-        #[test]
-        fn test_abi_decode_big_int() {
-            {
-                let encoded =
-                    hex::decode("0000000000000000000000000000000000000000000000000000000000000036")
-                        .unwrap();
-                assert_eq!(
-                    BigInt::abi_decode(encoded).unwrap(),
-                    BigInt::from(54),
-                    "Decode Normal Number"
-                );
-            }
-
-            {
-                let encoded =
-                    hex::decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
-                        .unwrap();
-                assert_eq!(
-                    BigInt::abi_decode(encoded).unwrap(),
-                    BigInt::from_str("115792089237316195423570985008687907853269984665640564039457584007913129639935").unwrap(),
-                    "Decode Max Uint256"
-                );
-            }
-        }
-
-        #[test]
-        fn test_abi_decode_address() {
-            let encoded =
-                hex::decode("000000000000000000000000ca0e8f557ea98f950029a41d74f16dd76648b1f1")
-                    .unwrap();
-            assert_eq!(
-                Address::abi_decode(encoded).unwrap(),
-                Address::from_str("0xca0e8f557ea98f950029a41d74f16dd76648b1f1").unwrap(),
-                "Decode Padded Address",
-            )
-        }
+pub fn size_to_slots(size: usize) -> usize {
+    if size % SLOT_SIZE == 0 {
+        size / SLOT_SIZE
+    } else {
+        size / SLOT_SIZE + 1
     }
+}
 
-    mod storage {
-        use std::str::FromStr;
+fn subslot(mut slot: Vec<u8>, size: usize, offset: usize) -> Vec<u8> {
+    slot.reverse();
 
-        use substreams::{scalar::BigInt, Hex};
-
-        use super::super::*;
-        use crate::{hex::Hexable, storage::Mapping};
-
-        #[test]
-        fn test_mapping_address_key() {
-            let m = Mapping {
-                slot: BigInt::from(12),
-            };
-            let preimage = Hex::decode("0000000000000000000000001a13f4ca1d028320a707d99520abfefca3998b7f000000000000000000000000000000000000000000000000000000000000000c").unwrap();
-            let encoded = "0x9e3150b55a3c0fe6929063dde4bd380cd1b3bd4bd4fca20b85691cb17e2880da";
-            let key = Address::from_str("0x1a13f4ca1d028320a707d99520abfefca3998b7f").unwrap();
-
-            assert_eq!(m.preimage(&key).to_hex(), preimage.to_hex());
-            assert_eq!(m.storage_key(&key).to_hex(), encoded);
-            assert_eq!(
-                m.key_from_preimage::<Address>(preimage).unwrap().to_hex(),
-                key.to_hex()
-            );
-        }
-
-        #[test]
-        fn test_mapping_big_int_key() {
-            let m = Mapping {
-                slot: BigInt::from(12),
-            };
-            let preimage = Hex::decode("000000000000000000000000000000000000000000000000000000000000007f000000000000000000000000000000000000000000000000000000000000000c").unwrap();
-            let encoded = "0x20e322d575d78a86a3761da49565fbbf1fcb4f0a86011c98ac148d9ee6b9c682";
-            let key = BigInt::from(127);
-
-            assert_eq!(m.preimage(&key).to_hex(), preimage.to_hex());
-            assert_eq!(m.storage_key(&key).to_hex(), encoded);
-            assert_eq!(m.key_from_preimage::<BigInt>(preimage).unwrap(), key);
-        }
-    }
+    let mut output = vec![0; size];
+    output.copy_from_slice(&slot[offset..offset + size]);
+    output.reverse();
+    output
 }
