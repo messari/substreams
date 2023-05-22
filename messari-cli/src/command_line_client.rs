@@ -1,9 +1,11 @@
 use crate::commands::add::Add;
 use clap::Parser;
 use crate::commands::block_range_info::BlockRangeInfo;
+use crate::commands::build_and_upload_new_or_modified_substreams::BuildAndUploadNewOrModifiedSubstreams;
 
 use crate::commands::init::Init;
 use crate::commands::process::Process;
+use crate::commands::update_versions::UpdateVersions;
 use crate::commands::upload_cli_to_aws::UploadCliToAws;
 use crate::commands::upload_config_and_spkg_to_bucket::UploadConfigAndSpkgToAws;
 
@@ -15,7 +17,9 @@ pub(crate) enum CommandLineClient {
     Process(Process),
     BlockRangeInfo(BlockRangeInfo),
     UploadConfigAndSpkgToAws(UploadConfigAndSpkgToAws),
-    UploadCliToAws(UploadCliToAws)
+    UploadCliToAws(UploadCliToAws),
+    UpdateVersions(UpdateVersions),
+    BuildAndUploadNewOrModifiedSubstreams(BuildAndUploadNewOrModifiedSubstreams)
 }
 
 impl CommandLineClient {
@@ -26,7 +30,9 @@ impl CommandLineClient {
             CommandLineClient::Process(cmd) => cmd.execute().await,
             CommandLineClient::BlockRangeInfo(cmd) => cmd.execute().await,
             CommandLineClient::UploadConfigAndSpkgToAws(cmd) => cmd.execute().await,
-            CommandLineClient::UploadCliToAws(cmd) => cmd.execute().await
+            CommandLineClient::UploadCliToAws(cmd) => cmd.execute().await,
+            CommandLineClient::UpdateVersions(cmd) => cmd.execute(),
+            CommandLineClient::BuildAndUploadNewOrModifiedSubstreams(cmd) => cmd.execute().await
         }
     }
 }
