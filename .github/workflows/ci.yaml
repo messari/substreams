@@ -47,12 +47,8 @@ jobs:
         run: make install-cli
       - name: upload-cli-for-dagster
         run: make upload-cli-for-dagster
-      - name: build all
+      - name: build and upload all new or modified spkgs
         run: |
           chmod a+x /opt/hostedtoolcache/streamingfast/substreams/v0.0.21/linux-x64/substreams_0.0.21_linux_x86_64/substreams
           export PATH="/opt/hostedtoolcache/streamingfast/substreams/v0.0.21/linux-x64/substreams_0.0.21_linux_x86_64/:$PATH"
-          make build-all
-      - name: pack-all
-        run: make pack-all
-      - name: upload-all
-        run: make upload-all
+          messari build-and-upload-new-or-modified-spkgs

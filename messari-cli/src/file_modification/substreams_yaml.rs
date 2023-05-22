@@ -3,8 +3,46 @@ use linked_hash_map::LinkedHashMap;
 use std::fmt::{Display, Formatter};
 use std::fs;
 use std::path::PathBuf;
+use regex::Regex;
 use yaml_rust::yaml::Hash;
 use yaml_rust::{Yaml, YamlEmitter, YamlLoader};
+use clap::{Parser, ValueEnum};
+
+#[derive(Clone, ValueEnum, PartialEq)]
+pub(crate) enum VersionType {
+    Major,
+    Minor,
+    Patch
+}
+
+impl VersionType {
+    pub(crate) fn get_version_char(&self) -> char {
+        match self {
+            VersionType::Major => 'M',
+            VersionType::Minor => 'K',
+            VersionType::Patch => 'P'
+        }
+    }
+
+    pub(crate) fn from_char(character: char) -> Self {
+        match character {
+            'M' => VersionType::Major,
+            'K' => VersionType::Minor,
+            'P' => VersionType::Patch,
+            _ => panic!("Can only use M, K or P characters to declare version increment type!! Letter given: {}", character)
+        }
+    }
+}
+
+impl Display for VersionType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            VersionType::Major => write!(f, "Major"),
+            VersionType::Minor => write!(f, "Minor"),
+            VersionType::Patch => write!(f, "Patch")
+        }
+    }
+}
 
 pub(crate) struct SubstreamsYaml {
     substreams_yaml_dir: PathBuf, // This is parent directory for the substreams.yaml file
@@ -63,6 +101,236 @@ impl SubstreamsYaml {
         }
     }
 
+    pub(crate) fn get_substream_name(&self) -> String {
+        let contents_hashmap = self.get_contents_hashmap();
+
+        let package = if let Some(package) = contents_hashmap.get(&Yaml::from_str("package")) {
+            package
+        } else {
+            panic!("Error with yaml file - package section does not exist! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+        };
+        if let Yaml::Hash(package_hashmap) = package {
+            let version = if let Some(version) = package_hashmap.get(&Yaml::from_str("name")) {
+                version
+            } else {
+                panic!("Error with yaml file - name section is not found in package section! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+            };
+            if let Yaml::String(version_string) = version {
+                version_string.clone()
+            } else {
+                panic!("Error with yaml file - name section is not a string! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+            }
+        } else {
+            panic!("Error with yaml file - package section is not a hashmap! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+        }
+    }
+
+    /// Returns spkg version in form X.Y.Z
+    pub(crate) fn get_version(&self) -> String {
+        let contents_hashmap = self.get_contents_hashmap();
+
+        let package = if let Some(package) = contents_hashmap.get(&Yaml::from_str("package")) {
+            package
+        } else {
+            panic!("Error with yaml file - package section does not exist! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+        };
+        let version = if let Yaml::Hash(package_hashmap) = package {
+            let version = if let Some(version) = package_hashmap.get(&Yaml::from_str("version")) {
+                version
+            } else {
+                panic!("Error with yaml file - version section is not found in package section! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+            };
+            if let Yaml::String(version_string) = version {
+                version_string
+            } else {
+                panic!("Error with yaml file - version section is not a string! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+            }
+        } else {
+            panic!("Error with yaml file - package section is not a hashmap! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+        };
+
+        // We will make sure to represent the version in form: X.Y.Z
+        let v_semver = Regex::new(r"^v\d+.\d+.\d+$").unwrap();
+        let semver = Regex::new(r"^\d+.\d+.\d+$").unwrap();
+        if v_semver.is_match(version) {
+            version[1..].to_string()
+        } else if semver.is_match(version) {
+            version.clone()
+        } else {
+            panic!("Couldn't extract proper versioning from spkg! Expecting version to be either in form: vX.Y.Z or X.Y.Z - actual version given: {}", version);
+        }
+    }
+
+    pub(crate) fn modify_version(&mut self, increment_version: VersionType, decrement_version: Option<VersionType>) {
+        let contents_hashmap = self.get_contents_hashmap_mut();
+
+        let package = if let Some(package) = contents_hashmap.get_mut(&Yaml::from_str("package")) {
+            package
+        } else {
+            panic!("Error with yaml file - package section does not exist! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+        };
+        let version = if let Yaml::Hash(package_hashmap) = package {
+            let version = if let Some(version) = package_hashmap.get_mut(&Yaml::from_str("version")) {
+                version
+            } else {
+                panic!("Error with yaml file - version section is not found in package section! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+            };
+            if let Yaml::String(version_string) = version {
+                version_string
+            } else {
+                panic!("Error with yaml file - version section is not a string! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+            }
+        } else {
+            panic!("Error with yaml file - package section is not a hashmap! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+        };
+
+        // Only expecting spkg_version to be in forms: either vX.Y.Z or X.Y.Z
+        let v_semver = Regex::new(r"^v\d+.\d+.\d+$").unwrap();
+        let semver = Regex::new(r"^\d+.\d+.\d+$").unwrap();
+        let (semver_str, starts_with_v) = if v_semver.is_match(version) {
+            (version[1..].to_string(), true)
+        } else if semver.is_match(version) {
+            (version.clone(), false)
+        } else {
+            panic!("Couldn't extract proper versioning from spkg! Expecting version to be either in form: vX.Y.Z or X.Y.Z - actual version given: {}", version);
+        };
+
+        let mut semver_iter = semver_str.split(".").into_iter();
+
+        let new_version = if let Some(existing_version_increment) = decrement_version {
+            if existing_version_increment == increment_version {
+                return;
+            }
+
+            match (increment_version, existing_version_increment) {
+                (VersionType::Major, VersionType::Minor) => {
+                    let major_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    let mut new_version = (major_version + 1).to_string();
+                    new_version.push('.');
+                    let minor_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    new_version.push_str(&(minor_version - 1).to_string());
+                    new_version.push('.');
+                    new_version.push_str(semver_iter.next().unwrap());
+                    new_version
+                },
+                (VersionType::Major, VersionType::Patch) => {
+                    let major_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    let mut new_version = (major_version + 1).to_string();
+                    new_version.push('.');
+                    new_version.push_str(semver_iter.next().unwrap());
+                    new_version.push('.');
+                    let patch_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    new_version.push_str(&(patch_version - 1).to_string());
+                    new_version
+                },
+                (VersionType::Minor, VersionType::Major) => {
+                    let major_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    let mut new_version = (major_version - 1).to_string();
+                    new_version.push('.');
+                    let minor_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    new_version.push_str(&(minor_version + 1).to_string());
+                    new_version.push('.');
+                    new_version.push_str(semver_iter.next().unwrap());
+                    new_version
+                },
+                (VersionType::Minor, VersionType::Patch) => {
+                    let mut new_version = semver_iter.next().unwrap().to_string();
+                    new_version.push('.');
+                    let minor_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    new_version.push_str(&(minor_version + 1).to_string());
+                    new_version.push('.');
+                    let patch_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    new_version.push_str(&(patch_version - 1).to_string());
+                    new_version
+                },
+                (VersionType::Patch, VersionType::Major) => {
+                    let major_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    let mut new_version = (major_version - 1).to_string();
+                    new_version.push('.');
+                    new_version.push_str(semver_iter.next().unwrap());
+                    new_version.push('.');
+                    let patch_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    new_version.push_str(&(patch_version + 1).to_string());
+                    new_version
+                },
+                (VersionType::Patch, VersionType::Minor) => {
+                    let mut new_version = semver_iter.next().unwrap().to_string();
+                    new_version.push('.');
+                    let minor_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    new_version.push_str(&(minor_version - 1).to_string());
+                    new_version.push('.');
+                    let patch_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    new_version.push_str(&(patch_version + 1).to_string());
+                    new_version
+                },
+                _ => unreachable!()
+            }
+        } else {
+            match increment_version {
+                VersionType::Major => {
+                    let major_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    let mut new_version = (major_version + 1).to_string();
+                    new_version.push('.');
+                    new_version.push_str(semver_iter.next().unwrap());
+                    new_version.push('.');
+                    new_version.push_str(semver_iter.next().unwrap());
+                    new_version
+                }
+                VersionType::Minor => {
+                    let mut new_version = semver_iter.next().unwrap().to_string();
+                    new_version.push('.');
+                    let minor_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    new_version.push_str(&(minor_version + 1).to_string());
+                    new_version.push('.');
+                    new_version.push_str(semver_iter.next().unwrap());
+                    new_version
+                }
+                VersionType::Patch => {
+                    let mut new_version = semver_iter.next().unwrap().to_string();
+                    new_version.push('.');
+                    new_version.push_str(semver_iter.next().unwrap());
+                    new_version.push('.');
+                    let patch_version = semver_iter.next().unwrap().parse::<u8>().unwrap();
+                    new_version.push_str(&(patch_version + 1).to_string());
+                    new_version
+                }
+            }
+        };
+
+        if starts_with_v {
+            *version = format!("v{}", new_version);
+        } else {
+            *version = new_version;
+        }
+    }
+
+    /// Returns the project path of an local spkg dependency
+    pub(crate) fn get_local_spkg_dependencies(&self) -> Vec<PathBuf> {
+        let contents_hashmap = self.get_contents_hashmap();
+
+        if let Some(imports) = contents_hashmap.get(&Yaml::from_str("imports")) {
+            if let Yaml::Hash(imports_hashmap) = imports {
+                return imports_hashmap.values().into_iter().filter_map(|x| {
+                    let spkg_dependency = x.as_str().unwrap();
+                    if spkg_dependency.starts_with("https://") {
+                        None
+                    } else {
+                        let full_path = self.substreams_yaml_dir.join(spkg_dependency);
+                        if full_path.exists() {
+                            Some(full_path.canonicalize().unwrap())
+                        } else {
+                            panic!("Path for spkg dependency: {}, could not be found!", spkg_dependency)
+                        }
+                    }
+                }).collect();
+            } else {
+                panic!("Error with yaml file - imports section is not a hashmap! Filepath: {}", self.substreams_yaml_dir.join("substreams.yaml").to_string_lossy());
+            }
+        }
+
+        Vec::new()
+    }
+
     /// Returns true if an edit to the substreams.yaml was made. (false if no changes made)
     pub(crate) fn add_protobuf_files(&mut self, protobuf_file_paths: Vec<PathBuf>) -> bool {
         if protobuf_file_paths.is_empty() {
@@ -70,7 +338,7 @@ impl SubstreamsYaml {
         }
 
         let substreams_yaml_dir = self.substreams_yaml_dir.clone();
-        let contents_hashmap = self.get_contents_hashmap();
+        let contents_hashmap = self.get_contents_hashmap_mut();
 
         let protobuf_hashmap = if let Some(protobuf) =
             contents_hashmap.get_mut(&Yaml::from_str("protobuf"))
@@ -186,7 +454,7 @@ impl SubstreamsYaml {
 
     /// Returns true if an edit to the substreams.yaml was made. (false if no changes made)
     pub(crate) fn add_module(&mut self, module: Module) -> bool {
-        let contents_hashmap = self.get_contents_hashmap();
+        let contents_hashmap = self.get_contents_hashmap_mut();
 
         if let Some(modules) = contents_hashmap.get_mut(&Yaml::from_str("modules")) {
             let modules_array = if let Yaml::Array(modules_array) = modules {
@@ -225,7 +493,20 @@ impl SubstreamsYaml {
         true
     }
 
-    fn get_contents_hashmap(&mut self) -> &mut Hash {
+    fn get_contents_hashmap(&self) -> &Hash {
+        if let Yaml::Hash(contents_hashmap) = &self.yaml {
+            contents_hashmap
+        } else {
+            panic!(
+                "Error getting contents hashmap for yaml file: {}",
+                self.substreams_yaml_dir
+                    .join("substreams.yaml")
+                    .to_string_lossy()
+            )
+        }
+    }
+
+    fn get_contents_hashmap_mut(&mut self) -> &mut Hash {
         if let Yaml::Hash(contents_hashmap) = &mut self.yaml {
             contents_hashmap
         } else {
@@ -253,6 +534,21 @@ impl SubstreamsYaml {
         file_contents = file_contents.replace("\nmodules:\n", "\n\nmodules:\n");
 
         file_contents
+    }
+}
+
+impl From<&str> for SubstreamsYaml {
+    fn from(yaml_contents: &str) -> Self {
+        let yaml = YamlLoader::load_from_str(yaml_contents).expect(&format!(
+            "Unable to read substreams_yaml contents! File contents: {}",
+            yaml_contents
+        ))[0]
+            .clone();
+
+        SubstreamsYaml {
+            substreams_yaml_dir: PathBuf::new(),
+            yaml,
+        }
     }
 }
 
