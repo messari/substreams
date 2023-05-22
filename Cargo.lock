@@ -1228,6 +1228,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "synthetix"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ethabi",
+ "hex",
+ "hex-literal",
+ "num-bigint",
+ "prost 0.11.9",
+ "substreams 0.5.6",
+ "substreams-common",
+ "substreams-entity-change",
+ "substreams-ethereum",
+ "substreams-helper",
+]
+
+[[package]]
 name = "tap"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,0 +1,52 @@
+specVersion: v0.1.0
+package:
+  name: synthetix_balances
+  version: v0.1.0
+
+imports:
+  eth: "https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg"
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/synthetix.wasm"
+
+modules:
+  - name: map_snx_balances
+    kind: map
+    initialBlock: 10042599
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: "proto:messari.synthetix.v1.TokenBalances"
+
+  - name: map_escrow_rewards
+    kind: map
+    initialBlock: 7680399
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: "proto:messari.synthetix.v1.EscrowRewards"
+
+  # - name: store_snx_balances
+  #   kind: store
+  #   initialBlock: 10042599
+  #   updatePolicy: set
+  #   valueType: BigInt
+  #   inputs:
+  #     - map: map_snx_balances
+
+  - name: parquet_out
+    kind: map
+    initialBlock: 7680399
+    inputs:
+      - map: map_snx_balances
+      - map: map_escrow_rewards
+    output:
+      type: "proto:messari.synthetix.v1.ParquetOuts"
+
+protobuf:
+  files:
+    - synthetix.proto
+  importPaths:
+    - "./proto/v1"
