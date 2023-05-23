@@ -16,8 +16,8 @@ pub struct MessageInfo {
 }
 
 impl MessageInfo {
-    pub fn new(proto_descriptors: &Vec<FileDescriptorProto>, proto_type_name: &str, field_specification: FieldSpecification) -> Self {
-        let message = get_proto_type(proto_descriptors, proto_type_name);
+    pub fn new(proto_descriptors: &Vec<FileDescriptorProto>, proto_type_name: &str, field_specification: FieldSpecification, parent_message_descriptor: Option<&DescriptorProto>) -> Self {
+        let message = get_proto_type(proto_descriptors, proto_type_name, parent_message_descriptor);
 
         let mut oneof_group_mappings: HashMap<u64, HashSet<u64>> = HashMap::new();
         let mut fields = Vec::new();
@@ -35,7 +35,7 @@ impl MessageInfo {
             }
             fields.push(FieldInfo {
                 field_name: field.name().to_string(),
-                field_type: field.get_field_type(proto_descriptors, &field_specification),
+                field_type: field.get_field_type(proto_descriptors, &field_specification, message),
                 field_specification,
                 field_number,
             });
@@ -105,8 +105,8 @@ pub struct EnumInfo {
 }
 
 impl EnumInfo {
-    pub fn new(proto_descriptors: &Vec<FileDescriptorProto>, proto_type_name: &str) -> Self {
-        let enum_type = get_enum_type(proto_descriptors, proto_type_name);
+    pub fn new(proto_descriptors: &Vec<FileDescriptorProto>, proto_type_name: &str, parent_message_descriptor: &DescriptorProto) -> Self {
+        let enum_type = get_enum_type(proto_descriptors, proto_type_name, parent_message_descriptor);
 
         EnumInfo {
             enum_mappings: enum_type.value.iter().map(|enum_value| (enum_value.number.unwrap() as u64, enum_value.name().to_string())).collect(),
@@ -197,11 +197,21 @@ pub enum FieldType {
     Sint64
 }
 
-pub fn get_proto_type<'a>(proto_files: &'a Vec<FileDescriptorProto>, proto_type: &str) -> &'a DescriptorProto {
-    // TODO: Might need to flesh this out to deal with inner declared types
+pub fn get_proto_type<'a>(proto_files: &'a Vec<FileDescriptorProto>, proto_type: &str, parent_message_descriptor: Option<&'a DescriptorProto>) -> &'a DescriptorProto {
+    let message_type = proto_type.split('.').last().unwrap().to_string();
+
+    // First check to see if type is internally declared before checking all proto file descriptors
+    if let Some(parent_message_descriptor) = parent_message_descriptor {
+        for proto_message in parent_message_descriptor.nested_type.iter() {
+            if proto_message.name.as_ref().unwrap() == &message_type {
+                return proto_message;
+            }
+        }
+    }
+
+    // If not internally declared it should be declared in the root of one of the attached file descriptors
     for proto in proto_files.iter() {
         if proto_type.contains(proto.package.as_ref().unwrap()) {
-            let message_type = proto_type.split('.').last().unwrap().to_string();
             for proto_message in proto.message_type.iter() {
                 if proto_message.name.as_ref().unwrap() == &message_type {
                     return proto_message;
@@ -213,11 +223,19 @@ pub fn get_proto_type<'a>(proto_files: &'a Vec<FileDescriptorProto>, proto_type:
     panic!("TODO: Something like: Unable to find proto type!!");
 }
 
-pub fn get_enum_type<'a>(proto_files: &'a Vec<FileDescriptorProto>, proto_type: &str) -> &'a EnumDescriptorProto {
-    // TODO: Might need to flesh this out to deal with inner declared types
+pub fn get_enum_type<'a>(proto_files: &'a Vec<FileDescriptorProto>, proto_type: &str, parent_message_descriptor: &'a DescriptorProto) -> &'a EnumDescriptorProto {
+    let message_type = proto_type.split('.').last().unwrap().to_string();
+
+    // First check to see if enum is internally declared before checking all proto file descriptors
+    for proto_enum in parent_message_descriptor.enum_type.iter() {
+        if proto_enum.name.as_ref().unwrap() == &message_type {
+            return proto_enum;
+        }
+    }
+
+    // If not internally declared it should be declared in the root of one of the attached file descriptors
     for proto in proto_files.iter() {
         if proto_type.contains(proto.package.as_ref().unwrap()) {
-            let message_type = proto_type.split('.').last().unwrap().to_string();
             for proto_enum in proto.enum_type.iter() {
                 if proto_enum.name.as_ref().unwrap() == &message_type {
                     return proto_enum;
@@ -226,12 +244,12 @@ pub fn get_enum_type<'a>(proto_files: &'a Vec<FileDescriptorProto>, proto_type: 
         }
     }
 
-    panic!("TODO: Something like: Unable to find proto type!!");
+    panic!("TODO: Something like: Unable to find proto enum!!");
 }
 
 trait ProtoFieldExt {
     fn get_field_specification(&self) -> FieldSpecification;
-    fn get_field_type(&self, proto_descriptors: &Vec<FileDescriptorProto>, field_specification: &FieldSpecification) -> FieldType;
+    fn get_field_type(&self, proto_descriptors: &Vec<FileDescriptorProto>, field_specification: &FieldSpecification, parent_message_descriptor: &DescriptorProto) -> FieldType;
     fn get_field_number(&self) -> u64;
     fn get_oneof_index(&self) -> Option<u64>;
 }
@@ -268,7 +286,7 @@ impl ProtoFieldExt for FieldDescriptorProto {
         }
     }
 
-    fn get_field_type(&self, proto_descriptors: &Vec<FileDescriptorProto>, field_specification: &FieldSpecification) -> FieldType {
+    fn get_field_type(&self, proto_descriptors: &Vec<FileDescriptorProto>, field_specification: &FieldSpecification, parent_message_descriptor: &DescriptorProto) -> FieldType {
         match self.r#type.unwrap() {
             x if x == (Type::Double as i32) => FieldType::Double,
             x if x == (Type::Float as i32) => FieldType::Float,
@@ -280,12 +298,12 @@ impl ProtoFieldExt for FieldDescriptorProto {
             x if x == (Type::Bool as i32) => FieldType::Bool,
             x if x == (Type::String as i32) => FieldType::String,
             x if x == (Type::Message as i32) => {
-                FieldType::Message(MessageInfo::new(proto_descriptors, self.type_name(), field_specification.clone()))
+                FieldType::Message(MessageInfo::new(proto_descriptors, self.type_name(), field_specification.clone(), Some(parent_message_descriptor)))
             },
             x if x == (Type::Bytes as i32) => FieldType::Bytes,
             x if x == (Type::Uint32 as i32) => FieldType::Uint32,
             x if x == (Type::Enum as i32) => {
-                FieldType::Enum(EnumInfo::new(proto_descriptors, self.type_name()))
+                FieldType::Enum(EnumInfo::new(proto_descriptors, self.type_name(), parent_message_descriptor))
             },
             x if x == (Type::Sfixed32 as i32) => FieldType::Sfixed32,
             x if x == (Type::Sfixed64 as i32) => FieldType::Sfixed64,

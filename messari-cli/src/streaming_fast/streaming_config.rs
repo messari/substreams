@@ -72,8 +72,8 @@ impl Chain {
 
     pub(crate) fn get_endpoint(&self) -> Uri {
         match self {
-            Chain::EthereumMainnet => Uri::from_static("mainnet.eth.streamingfast.io:443"),
-            Chain::Polygon => Uri::from_static("polygon.streamingfast.io:443")
+            Chain::EthereumMainnet => Uri::from_static("https://mainnet.eth.streamingfast.io:443"),
+            Chain::Polygon => Uri::from_static("https://polygon.streamingfast.io:443")
         }
     }
 
