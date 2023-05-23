@@ -13,9 +13,9 @@ use crate::constants::{
     ESCROW_REWARDS_CONTRACT_V1, ESCROW_REWARDS_CONTRACT_V2, ESCROW_REWARDS_ESCROWED_BALANCE_SLOT,
     ESCROW_REWARDS_VESTED_BALANCE_SLOT,
 };
-use crate::pb::synthetix::v1::escrow_reward::EscrowContractVersion;
+use crate::pb::synthetix::v1::EscrowContractVersion;
 use crate::pb::synthetix::v1::Timestamp;
-use crate::pb::synthetix::v1::{escrow_reward::BalanceType, EscrowReward, EscrowRewards};
+use crate::pb::synthetix::v1::{BalanceType, EscrowReward, EscrowRewards};
 
 #[substreams::handlers::map]
 fn map_escrow_rewards(block: pbeth::v2::Block) -> Result<EscrowRewards, substreams::errors::Error> {
