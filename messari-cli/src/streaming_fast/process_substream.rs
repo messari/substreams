@@ -94,9 +94,7 @@ pub(crate) async fn process_substream(spkg: Vec<u8>, config: StreamingConfig, en
     // TODO: Change the logic below into buffered streams in a select to prevent
     // TODO: downloading data and writing files blocking one another
     while let Some(block) = block_stream.next().await {
-        println!("Result: {:?}", block);
         if let Some((output_data, block_number)) = get_output_data(block).unwrap() {
-            println!("Processing block: {}", block_number);
             match sink.process(output_data, block_number) {
                 Ok(files) => {
                     futures::future::join_all(files.into_iter().map(|file| file.save())).await;

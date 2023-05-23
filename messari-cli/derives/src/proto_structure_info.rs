@@ -66,12 +66,15 @@ impl MessageInfo {
         }
     }
 
+    pub(crate) fn assert_block_number_field_not_manually_specified(&self) {
+        todo!()
+    }
+
     pub fn is_collection_of_items(&self) -> bool {
         if self.fields.len()==1 {
             let inner_field = self.fields[0].borrow();
             if inner_field.field_specification == FieldSpecification::Repeated &&
-                inner_field.is_struct_field() &&
-                inner_field.field_name == "items".to_string() {
+                inner_field.is_struct_field() {
                 return true;
             }
         }
