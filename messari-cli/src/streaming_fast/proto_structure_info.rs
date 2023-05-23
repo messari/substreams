@@ -18,7 +18,7 @@ pub(crate) fn get_output_type_info(package: &Package, module_name: &str) -> (Mes
                 panic!("TODO!");
             }
 
-            let message_info = MessageInfo::new(&package.proto_files, &output_type, FieldSpecification::Required);
+            let message_info = MessageInfo::new(&package.proto_files, &output_type, FieldSpecification::Required, None);
 
             return (message_info, output_type);
         }
