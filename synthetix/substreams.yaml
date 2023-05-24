@@ -5,6 +5,7 @@ package:
 
 imports:
   eth: "https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg"
+  entity: "https://github.com/streamingfast/substreams-entity-change/releases/download/v1.1.0/substreams-entity-change-v1.1.0.spkg"
 
 binaries:
   default:
@@ -28,14 +29,6 @@ modules:
     output:
       type: "proto:messari.synthetix.v1.EscrowRewards"
 
-  # - name: store_snx_balances
-  #   kind: store
-  #   initialBlock: 10042599
-  #   updatePolicy: set
-  #   valueType: BigInt
-  #   inputs:
-  #     - map: map_snx_balances
-
   - name: parquet_out
     kind: map
     initialBlock: 7680399
@@ -44,6 +37,15 @@ modules:
       - map: map_escrow_rewards
     output:
       type: "proto:messari.synthetix.v1.ParquetOuts"
+
+  - name: graph_out
+    kind: map
+    initialBlock: 7680399
+    inputs:
+      - map: map_snx_balances
+      - map: map_escrow_rewards
+    output:
+      type: "proto:sf.substreams.entity.v1.EntityChanges"
 
 protobuf:
   files:

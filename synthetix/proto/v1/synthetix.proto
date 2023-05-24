@@ -32,7 +32,7 @@ enum ESCROW_CONTRACT_VERSION {
     V1 = 0;
     V2 = 1;
 }
-
+ 
 message EscrowReward {
   BALANCE_TYPE balance_type = 1;
   ESCROW_CONTRACT_VERSION escrow_contract_version = 2;
