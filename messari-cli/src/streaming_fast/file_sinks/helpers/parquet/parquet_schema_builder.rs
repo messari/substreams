@@ -26,11 +26,11 @@ impl ParquetSchemaBuilder {
         self.subgroup_fields.push(Vec::new());
     }
 
-    pub(in crate::streaming_fast::file_sinks) fn finish_building_sub_group(&mut self) {
+    pub(in crate::streaming_fast::file_sinks) fn finish_building_sub_group(&mut self, repetition: Repetition) {
         let field_name = self.hierarchy_trace.pop().unwrap();
         let group_builder = GroupTypeBuilder::new(&field_name);
         let mut group_fields = self.subgroup_fields.pop().unwrap();
-        let new_field = group_builder.with_fields(&mut group_fields).build().unwrap();
+        let new_field = group_builder.with_fields(&mut group_fields).with_repetition(repetition).build().unwrap();
 
         self.subgroup_fields.last_mut().unwrap().push(Arc::new(new_field));
     }
