@@ -9,18 +9,15 @@ use substreams_helper::storage::{
     get_storage_changes_for_addresses, ABIEncodeable, Mapping, StorageChange,
 };
 
-use crate::constants::{
-    ESCROW_REWARDS_CONTRACT_V1, ESCROW_REWARDS_CONTRACT_V2, ESCROW_REWARDS_ESCROWED_BALANCE_SLOT,
-    ESCROW_REWARDS_VESTED_BALANCE_SLOT,
-};
+use crate::constants::EscrowContractStorageData;
 use crate::pb::synthetix::v1::EscrowContractVersion;
 use crate::pb::synthetix::v1::Timestamp;
 use crate::pb::synthetix::v1::{BalanceType, EscrowReward, EscrowRewards};
 
 #[substreams::handlers::map]
 fn map_escrow_rewards(block: pbeth::v2::Block) -> Result<EscrowRewards, substreams::errors::Error> {
-    let mut v2_rewards = get_v2_escrow_rewards(&block);
-    let mut v1_rewards = get_v1_escrow_rewards(&block);
+    let mut v1_rewards = get_escrow_rewards(&block, EscrowContractStorageData::V1);
+    let mut v2_rewards = get_escrow_rewards(&block, EscrowContractStorageData::V2);
 
     let mut rewards = vec![];
     rewards.append(&mut v2_rewards);
@@ -28,33 +25,23 @@ fn map_escrow_rewards(block: pbeth::v2::Block) -> Result<EscrowRewards, substrea
     Ok(EscrowRewards { rewards })
 }
 
-fn get_v1_escrow_rewards(block: &pbeth::v2::Block) -> Vec<EscrowReward> {
-    let v1_contract = Address::from_str(ESCROW_REWARDS_CONTRACT_V1).unwrap();
-    return get_escrow_rewards(block, v1_contract, EscrowContractVersion::V1);
-}
-
-fn get_v2_escrow_rewards(block: &pbeth::v2::Block) -> Vec<EscrowReward> {
-    let v2_contract = Address::from_str(ESCROW_REWARDS_CONTRACT_V2).unwrap();
-    return get_escrow_rewards(block, v2_contract, EscrowContractVersion::V2);
-}
-
 fn get_escrow_rewards(
     block: &pbeth::v2::Block,
-    contract: Address,
-    version: EscrowContractVersion,
+    escrow: EscrowContractStorageData,
 ) -> Vec<EscrowReward> {
-    let changes = get_storage_changes_for_addresses(&contract, &block);
+    let contract = &Address::from_str(escrow.address).unwrap();
+    let changes = get_storage_changes_for_addresses(contract, &block);
 
     let timestamp: Timestamp = block.into();
     let mut rewards = vec![];
     for change in changes.as_slice() {
-        let vested_balance = get_vested_balance_from_change(change, &version);
+        let vested_balance = get_vested_balance_from_change(change, &escrow);
         if let Some(mut balance) = vested_balance {
             balance.timestamp = Some(timestamp.clone());
             rewards.push(balance);
         }
 
-        let escrowed_balance = get_escrowed_balance_from_change(change, &version);
+        let escrowed_balance = get_escrowed_balance_from_change(change, &escrow);
         if let Some(mut balance) = escrowed_balance {
             balance.timestamp = Some(timestamp.clone());
             rewards.push(balance);
@@ -65,29 +52,29 @@ fn get_escrow_rewards(
 
 fn get_escrowed_balance_from_change(
     change: &StorageChange,
-    version: &EscrowContractVersion,
+    storage: &EscrowContractStorageData,
 ) -> Option<EscrowReward> {
     return get_balance_from_mapping_change(
         change,
         &Mapping {
-            slot: BigInt::from(ESCROW_REWARDS_ESCROWED_BALANCE_SLOT),
+            slot: BigInt::from(storage.escrowed_balance_slot),
         },
         BalanceType::Escrowed,
-        version,
+        &storage.version,
     );
 }
 
 fn get_vested_balance_from_change(
     change: &StorageChange,
-    version: &EscrowContractVersion,
+    storage: &EscrowContractStorageData,
 ) -> Option<EscrowReward> {
     return get_balance_from_mapping_change(
         change,
         &Mapping {
-            slot: BigInt::from(ESCROW_REWARDS_VESTED_BALANCE_SLOT),
+            slot: BigInt::from(storage.vested_balance_slot),
         },
         BalanceType::Vested,
-        version,
+        &storage.version,
     );
 }
 
