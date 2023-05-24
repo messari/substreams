@@ -2,6 +2,7 @@ use ethabi::Bytes;
 use substreams::store::{StoreGetArray};
 use substreams::scalar::{BigInt};
 use substreams_ethereum::NULL_ADDRESS;
+use substreams::Hex;
 
 use crate::pb;
 use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, SwapEntityCreation, DepositEntityCreation, WithdrawEntityCreation};
@@ -12,13 +13,14 @@ use crate::constants;
 
 pub fn create_swap_entity(
     tables: &mut Tables,
+    entity_id: &Vec<u8>,    
     block_number: &u64,
     timestamp: &i64,    
     pruned_transaction: &PrunedTransaction,
     swap_entity_creation: &SwapEntityCreation,
 ) {
     let swap_tokens: SwapTokens = get_swap_tokens(&swap_entity_creation.input_tokens, &swap_entity_creation.amounts);
-    tables.create_row("Swap", &keys::get_event_key(&pruned_transaction.hash, &swap_entity_creation.log_index.clone().unwrap()))
+    tables.create_row("Swap", Hex(entity_id).to_string())
         .set("hash", &pruned_transaction.hash)
         .set("nonce", &pruned_transaction.nonce.clone().unwrap())
         .set("gasLimit", &pruned_transaction.gas_limit.clone().unwrap())
@@ -81,12 +83,13 @@ fn get_swap_tokens(tokens: &Vec<Bytes>, amounts: &Vec<pb::common::v1::BigInt>) -
 
 pub fn create_deposit_entity(
     tables: &mut Tables,
+    entity_id: &Vec<u8>,
     block_number: &u64,
     timestamp: &i64,
     pruned_transaction: &PrunedTransaction,
     deposit_entity_creation: &DepositEntityCreation,
 ) {
-    let row: &mut Row = tables.create_row("Deposit", &keys::get_event_key(&pruned_transaction.hash, &deposit_entity_creation.log_index.clone().unwrap()));
+    let row: &mut Row = tables.create_row("Deposit", Hex(entity_id).to_string());
     row
         .set("hash", &pruned_transaction.hash)
         .set("nonce", &pruned_transaction.nonce.clone().unwrap())
@@ -117,12 +120,13 @@ pub fn create_deposit_entity(
 
 pub fn create_withdraw_entity(
     tables: &mut Tables,
+    entity_id: &Vec<u8>,
     block_number: &u64,
     timestamp: &i64,
     pruned_transaction: &PrunedTransaction,
     withdraw_entity_creation: &WithdrawEntityCreation,
 ) {
-    let row: &mut Row = tables.create_row("Withdraw", &keys::get_event_key(&pruned_transaction.hash, &withdraw_entity_creation.log_index.clone().unwrap()));
+    let row: &mut Row = tables.create_row("Withdraw", Hex(entity_id).to_string());
     row
         .set("hash", &pruned_transaction.hash)
         .set("nonce", &pruned_transaction.nonce.clone().unwrap())

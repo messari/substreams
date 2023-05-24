@@ -18,11 +18,12 @@ message DataSource {
 enum DataSourceType {
   UniswapV3Pool = 0;
   UniswapV3Factory = 1;
+  NFTPositionManager = 2;
 }
 
-message MappedDataSources {
+message EntityUpdates {
   repeated PrunedTransaction pruned_transactions = 1;
-  repeated messari.store.v1.StoreInstruction store_instructions = 2;
+  repeated messari.store.v1.StoreOperation store_operations = 2;
 }
 
 message PrunedTransaction {
@@ -38,23 +39,26 @@ message PrunedTransaction {
 }
 
 message EntityCreation {
+  bytes entity_id = 1;
   oneof type {
-    DexAmmProtocolEntityCreation dex_amm_protocol_entity_creation = 1;
-    LiquidityPoolEntityCreation liquidity_pool_entity_creation = 2;
-    LiquidityPoolFeeEntityCreation liquidity_pool_fee_entity_creation = 3;
-    TokenEntityCreation token_entity_creation = 4;
-    SwapEntityCreation swap_entity_creation = 5;
-    DepositEntityCreation deposit_entity_creation = 6;
-    WithdrawEntityCreation withdraw_entity_creation = 7;
+    DexAmmProtocolEntityCreation dex_amm_protocol_entity_creation = 11;
+    LiquidityPoolEntityCreation liquidity_pool_entity_creation = 12;
+    LiquidityPoolFeeEntityCreation liquidity_pool_fee_entity_creation = 13;
+    TokenEntityCreation token_entity_creation = 14;
+    SwapEntityCreation swap_entity_creation = 15;
+    DepositEntityCreation deposit_entity_creation = 16;
+    WithdrawEntityCreation withdraw_entity_creation = 17;
+    TickEntityCreation tick_entity_creation = 18;
+    PositionEntityCreation position_entity_creation = 19;
   }
 }
 
 message DexAmmProtocolEntityCreation {
-  string protocol_address = 1;
+  bytes protocol_address = 1;
   string name = 2;
   string slug = 3;
   string schema_version = 4;
-  string subgraph_version = 5; 
+  string substream_version = 5; 
   string methodology_version = 6;
   string network = 7;
   string type = 8;
@@ -125,4 +129,20 @@ message SwapEntityCreation {
   optional messari.common.v1.BigInt tick = 7;
   messari.common.v1.BigInt log_index = 8;
   messari.common.v1.BigInt log_ordinal = 9;
+}
+
+message TickEntityCreation {
+  messari.common.v1.BigInt index =  1;
+  bytes pool = 2;
+}
+
+message PositionEntityCreation {
+  bytes account = 1;
+  bytes pool = 2;
+  int32 n_tokens = 3;
+  optional messari.common.v1.BigInt tick_lower = 7;
+  optional messari.common.v1.BigInt tick_upper = 8;
+  optional bytes liquidityToken = 9;
+  optional string liquidityTokenType = 10;
+  optional int32 n_reward_tokens = 11;
 }

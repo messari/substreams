@@ -39,14 +39,14 @@ modules:
     inputs:
       - map: map_data_sources
 
-  - name: create_store_instructions_l1
+  - name: create_store_operations_l1
     kind: map
     initialBlock: 12369620
     inputs:
       - source: sf.ethereum.type.v2.Block
       - store: store_data_sources
     output:
-      type: proto:messari.store.v1.StoreInstructions
+      type: proto:messari.store.v1.StoreOperations
 
 
   - name: set_bigdecimal_l1
@@ -54,15 +54,21 @@ modules:
     updatePolicy: set
     valueType: bigdecimal
     inputs:
-      - map: create_store_instructions_l1
-
+      - map: create_store_operations_l1
   
+  - name: add_int64_l1
+    kind: store
+    updatePolicy: add
+    valueType: int64
+    inputs:
+      - map: create_store_operations_l1
+
   - name: append_string_l1
     kind: store
     updatePolicy: append
     valueType: string
     inputs:
-      - map: create_store_instructions_l1
+      - map: create_store_operations_l1
   
   - name: prepare_entity_changes
     kind: map
@@ -70,10 +76,12 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
       - store: store_data_sources
+      - store: add_int64_l1
+        mode: deltas
       - store: set_bigdecimal_l1
       - store: append_string_l1
     output:
-      type: proto:messari.dex_amm.v3_0_3.MappedDataSources
+      type: proto:messari.dex_amm.v3_0_3.EntityUpdates
   
   - name: add_bigint_entity_changes
     kind: store
@@ -86,6 +94,13 @@ modules:
     kind: store
     updatePolicy: set
     valueType: bigint
+    inputs:
+      - map: prepare_entity_changes
+    
+  - name: set_bytes_entity_changes
+    kind: store
+    updatePolicy: set
+    valueType: bytes
     inputs:
       - map: prepare_entity_changes
 
@@ -127,6 +142,10 @@ modules:
       - store: set_bigint_entity_changes
         mode: get
       - store: set_bigint_entity_changes
+        mode: deltas
+      - store: set_bytes_entity_changes
+        mode: get
+      - store: set_bytes_entity_changes
         mode: deltas
       - store: add_int64_entity_changes
         mode: get

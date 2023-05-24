@@ -1,4 +1,4 @@
-# Subgraph Schema: DEX AMM (Extended)
+# Substream Schema: DEX AMM (Extended)
 # Version: 3.0.3
 # See https://github.com/messari/subgraphs/blob/master/docs/Schema.md for details
 
@@ -121,7 +121,7 @@ enum LiquidityPoolFeeType {
 
 type LiquidityPoolFee @entity {
   " { Fee type }-{ Pool address } "
-  id: Bytes!
+  id: ID!
 
   " Fee as a percentage of the trade (swap) amount. Does not always apply "
   feePercentage: BigDecimal
@@ -147,8 +147,8 @@ interface Protocol {
   " Version of the subgraph schema, in SemVer format (e.g. 1.0.0) "
   schemaVersion: String!
 
-  " Version of the subgraph implementation, in SemVer format (e.g. 1.0.0) "
-  subgraphVersion: String!
+  " Version of the substream implementation, in SemVer format (e.g. 1.0.0) "
+  substreamVersion: String!
 
   " Version of the methodology used to compute metrics, loosely based on SemVer format (e.g. 1.0.0) "
   methodologyVersion: String!
@@ -197,7 +197,7 @@ type DexAmmProtocol implements Protocol @entity {
   schemaVersion: String!
 
   " Version of the subgraph implementation, in SemVer format (e.g. 1.0.0) "
-  subgraphVersion: String!
+  substreamVersion: String!
 
   " Version of the methodology used to compute metrics, loosely based on SemVer format (e.g. 1.0.0) "
   methodologyVersion: String!
@@ -410,7 +410,7 @@ type FinancialsDailySnapshot @entity(immutable: true) {
 
 type LiquidityPool @entity {
   " Smart contract address of the pool "
-  id: Bytes!
+  id: ID!
 
   " The protocol this pool belongs to "
   protocol: Bytes!
@@ -851,18 +851,6 @@ type Tick @entity {
 
   " how much liquidity in USD changes when tick crossed "
   liquidityNetUSD: BigDecimal!
-
-  " Day ID of the most recent daily snapshot "
-  lastSnapshotDayID: Int!
-
-  " Hour ID of the most recent hourly snapshot "
-  lastSnapshotHourID: Int!
-
-  " Timestamp of the last time this entity was updated "
-  lastUpdateTimestamp: BigInt!
-
-  " Block number of the last time this entity was updated "
-  lastUpdateBlockNumber: BigInt!
 }
 
 #######################################

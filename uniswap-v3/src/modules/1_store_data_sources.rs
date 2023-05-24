@@ -6,7 +6,7 @@ use substreams::store::{StoreSetProto};
 
 use crate::abi::factory as FactoryContract;
 use crate::pb::dex_amm::v3_0_3::{DataSource, DataSources, DataSourceType};
-use crate::utils::UNISWAP_V3_FACTORY_SLICE;
+use crate::utils::{UNISWAP_V3_FACTORY_SLICE, NFT_POSITION_MANAGER_SLICE};
 
 use crate::keyer::{get_data_source_key};
 
@@ -19,6 +19,13 @@ pub fn map_data_sources(block: eth::Block) -> Result<DataSources, Error> {
         DataSource {
             data_source_type: DataSourceType::UniswapV3Factory as i32,
             address: UNISWAP_V3_FACTORY_SLICE.to_vec(),
+        }
+    );
+
+    data_sources.push(
+        DataSource {
+            data_source_type: DataSourceType::NftPositionManager as i32,
+            address: NFT_POSITION_MANAGER_SLICE.to_vec(),
         }
     );
 

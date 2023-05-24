@@ -1,2 +1,2 @@
-pub mod store_update;
+pub mod store_operations;
 pub mod sdk;

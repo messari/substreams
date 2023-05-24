@@ -10,20 +10,22 @@ use std::fmt::Debug;
 
 
 use crate::tables::{Tables, Row};
-use crate::pb::dex_amm::v3_0_3::{MappedDataSources};
+use crate::pb::dex_amm::v3_0_3::{EntityUpdates};
 use crate::schema_lib::dex_amm::v_3_0_3::map::map_dex_amm_v_3_0_3_entity_creation;
 use crate::constants; 
 
 #[substreams::handlers::map]
 pub fn map_graph_out(
     clock: Clock,
-    mapped_data_sources: MappedDataSources,
+    entity_updates: EntityUpdates,
     add_bigdecimal_store: StoreGetBigDecimal,
     add_bigdecimal_store_deltas: Deltas<DeltaBigDecimal>,
     add_bigint_store: StoreGetBigInt,
     add_bigint_store_deltas: Deltas<DeltaBigInt>,
     set_bigint_store: StoreGetBigInt,
     set_bigint_store_deltas: Deltas<DeltaBigInt>,
+    set_bytes_store: StoreGetRaw,
+    set_bytes_store_deltas: Deltas<DeltaBytes>,
     add_int64_store: StoreGetInt64,
     add_int64_store_deltas: Deltas<DeltaInt64>,
     append_string_store: StoreGetArray<String>,
@@ -33,8 +35,8 @@ pub fn map_graph_out(
 
     let block_number = clock.number;
     let timestamp = clock.timestamp.unwrap().seconds;
-
-    for pruned_transaction in mapped_data_sources.pruned_transactions {
+    
+    for pruned_transaction in entity_updates.pruned_transactions {
         for entity_creation in &pruned_transaction.entity_creations {
             map_dex_amm_v_3_0_3_entity_creation(
                 &mut tables,

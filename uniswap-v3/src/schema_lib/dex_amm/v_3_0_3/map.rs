@@ -6,7 +6,7 @@ use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, EntityCreation};
 use crate::pb::dex_amm::v3_0_3::entity_creation::Type;
 
 use crate::tables::Tables;
-use crate::schema_lib::dex_amm::v_3_0_3::entity_creation::{
+use crate::schema_lib::dex_amm::v_3_0_3::entity_creations::{
     liquidity_pool::{
         create_liquidity_pool_entity
     },
@@ -24,6 +24,12 @@ use crate::schema_lib::dex_amm::v_3_0_3::entity_creation::{
     dex_amm_protocol::{
         create_dex_amm_protocol_entity
     },
+    tick::{
+        create_tick_entity
+    },
+    position::{
+        create_position_entity
+    }
 };
 
 pub fn map_dex_amm_v_3_0_3_entity_creation(
@@ -37,6 +43,7 @@ pub fn map_dex_amm_v_3_0_3_entity_creation(
         Type::SwapEntityCreation(swap_entity_creation) => {
             create_swap_entity(
                 tables,
+                &entity_creation.entity_id,
                 block_number,
                 timestamp,
                 pruned_transaction,
@@ -46,6 +53,7 @@ pub fn map_dex_amm_v_3_0_3_entity_creation(
         Type::DepositEntityCreation(deposit_entity_creation) => {
             create_deposit_entity(
                 tables,
+                &entity_creation.entity_id,
                 block_number,
                 timestamp,
                 pruned_transaction,
@@ -55,6 +63,7 @@ pub fn map_dex_amm_v_3_0_3_entity_creation(
         Type::WithdrawEntityCreation(withdraw_entity_creation) => {
             create_withdraw_entity(
                 tables,
+                &entity_creation.entity_id,
                 block_number,
                 timestamp,
                 pruned_transaction,
@@ -64,6 +73,7 @@ pub fn map_dex_amm_v_3_0_3_entity_creation(
         Type::DexAmmProtocolEntityCreation(dex_amm_protocol_entity_creation) => {
             create_dex_amm_protocol_entity(
                 tables,
+                &entity_creation.entity_id,
                 block_number,
                 timestamp,
                 pruned_transaction,
@@ -73,6 +83,7 @@ pub fn map_dex_amm_v_3_0_3_entity_creation(
         Type::LiquidityPoolEntityCreation(liquidity_pool_entity_creation) => {
             create_liquidity_pool_entity(
                 tables,
+                &entity_creation.entity_id,
                 block_number,
                 timestamp,
                 pruned_transaction,
@@ -82,6 +93,7 @@ pub fn map_dex_amm_v_3_0_3_entity_creation(
         Type::TokenEntityCreation(token_entity_creation) => {
             create_token_entity(
                 tables,
+                &entity_creation.entity_id,
                 block_number,
                 timestamp,
                 pruned_transaction,
@@ -91,10 +103,30 @@ pub fn map_dex_amm_v_3_0_3_entity_creation(
         Type::LiquidityPoolFeeEntityCreation(liquidity_pool_fee_entity_creation) => {
             create_liquidity_pool_fee_entity(
                 tables,
+                &entity_creation.entity_id,
                 block_number,
                 timestamp,
                 pruned_transaction,
                 &liquidity_pool_fee_entity_creation,
+            );
+        },
+        Type::TickEntityCreation(tick_entity_creation) => {
+            create_tick_entity(
+                tables,
+                &entity_creation.entity_id,
+                block_number,
+                timestamp,
+                &tick_entity_creation,
+            );
+        },
+        Type::PositionEntityCreation(position_entity_creation) => {
+            create_position_entity(
+                tables,
+                &entity_creation.entity_id,
+                block_number,
+                timestamp,
+                pruned_transaction,
+                &position_entity_creation,
             );
         },
     };

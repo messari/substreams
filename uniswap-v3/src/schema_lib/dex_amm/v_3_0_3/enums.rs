@@ -10,3 +10,49 @@ pub enum LiquidityPoolFeeType {
     CUSTOM_LP_FEE,
     CUSTOM_PROTOCOL_FEE,
 }
+
+#[derive(EnumString, ToString)]
+pub enum TokenType {
+    MULTIPLE,
+    UNKNOWN,
+    ERC20,
+    ERC721,
+    ERC1155,
+    BEP20,
+    BEP721,
+    BEP1155,
+}
+
+#[derive(EnumString, ToString)]
+pub enum ProtocolType {
+    EXCHANGE,
+    LENDING,
+    YIELD,
+    BRIDGE,
+    GENERIC,
+}
+
+#[derive(EnumString, ToString)]
+pub enum Network {
+    ARBITRUM_ONE,
+    ARWEAVE_MAINNET,
+    AURORA,
+    AVALANCHE,
+    BOBA,
+    BSC,
+    CELO,
+    COSMOS,
+    CRONOS,
+    MAINNET,
+    FANTOM,
+    FUSE,
+    HARMONY,
+    JUNO,
+    MOONBEAM,
+    MOONRIVER,
+    NEAR_MAINNET,
+    OPTIMISM,
+    OSMOSIS,
+    MATIC,
+    XDAI,
+}

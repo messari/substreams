@@ -1,18 +1,21 @@
 use substreams::scalar::{BigInt};
+use substreams::Hex;
 
 use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, LiquidityPoolEntityCreation};
+use crate::pb::entity;
 use crate::schema_lib::dex_amm::v_3_0_3::keys;
 use crate::tables::{Tables, Row};
 use crate::constants;
 
 pub fn create_liquidity_pool_entity(
     tables: &mut Tables,
+    entity_id: &Vec<u8>,
     block_number: &u64,
     timestamp: &i64,
     pruned_transaction: &PrunedTransaction,
     liquidity_pool_entity_creation: &LiquidityPoolEntityCreation,
 ) {
-    let row: &mut Row = tables.create_row("LiquidityPool", hex::encode(&liquidity_pool_entity_creation.pool_address));
+    let row: &mut Row = tables.create_row("LiquidityPool", Hex(entity_id).to_string());
     row
         .set("protocol", &liquidity_pool_entity_creation.protocol)
         .set("name", keys::get_pool_name("Uniswap V3", &liquidity_pool_entity_creation.input_token_symbols))

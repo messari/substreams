@@ -1,3 +1,5 @@
+use substreams::Hex;
+
 use crate::tables::Tables;
 
 use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, DexAmmProtocolEntityCreation};
@@ -5,16 +7,17 @@ use crate::constants;
 
 pub fn create_dex_amm_protocol_entity(
     tables: &mut Tables,
+    entity_id: &Vec<u8>,
     block_number: &u64,
     timestamp: &i64,
     pruned_transaction: &PrunedTransaction,
     dex_amm_protocol_entity_creation: &DexAmmProtocolEntityCreation,
 ) {
-    tables.create_row("DexAmmProtocol", &format!("0x{}", hex::encode(&dex_amm_protocol_entity_creation.protocol_address)))
+    tables.create_row("DexAmmProtocol", Hex(entity_id).to_string())
         .set("name", &dex_amm_protocol_entity_creation.name)
         .set("slug", &dex_amm_protocol_entity_creation.slug)
         .set("schemaVersion", &dex_amm_protocol_entity_creation.schema_version)
-        .set("subgraphVersion", &dex_amm_protocol_entity_creation.subgraph_version)
+        .set("substreamVersion", &dex_amm_protocol_entity_creation.substream_version)
         .set("methodologyVersion", &dex_amm_protocol_entity_creation.methodology_version)
         .set("network", &dex_amm_protocol_entity_creation.network)
         .set("type", &dex_amm_protocol_entity_creation.r#type)
@@ -33,8 +36,5 @@ pub fn create_dex_amm_protocol_entity(
         .set("cumulativeUniqueTraders", 0)
         .set("totalPoolCount", 0)
         .set("openPositionCount", 0)
-        .set("cumulativePositionCount", 0)
-        .set("lastSnapshotDayID", 0)
-        .set("lastUpdateTimestamp", constants::BIGINT_ZERO.clone())
-        .set("lastUpdateBlockNumber", constants::BIGINT_ZERO.clone());
+        .set("cumulativePositionCount", 0);
 }
