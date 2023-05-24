@@ -18,6 +18,7 @@ pub(in crate::streaming_fast::file_sinks) enum Decoder {
 impl Decoder {
     pub(in crate::streaming_fast::file_sinks) fn new(field_info: FieldInfo, parquet_schema_builder: &mut ParquetSchemaBuilder, track_definition_lvls: bool, track_repetition_lvls: bool) -> Decoder {
         if field_info.is_struct_field() {
+            let repetition = field_info.field_specification.get_repetition();
             let message_info = field_info.get_struct_info();
             parquet_schema_builder.start_building_sub_group(message_info.type_name.clone());
 
@@ -26,7 +27,7 @@ impl Decoder {
                                                       track_definition_lvls,
                                                       track_repetition_lvls));
 
-            parquet_schema_builder.finish_building_sub_group();
+            parquet_schema_builder.finish_building_sub_group(repetition);
 
             decoder
         } else if field_info.is_enum_field() {
