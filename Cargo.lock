@@ -278,7 +278,7 @@ dependencies = [
  "prost 0.11.9",
  "substreams 0.5.6",
  "substreams-common",
- "substreams-entity-change",
+ "substreams-entity-change 0.3.0",
  "substreams-ethereum",
  "substreams-helper",
 ]
@@ -1043,6 +1043,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "substreams-entity-change"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5fae0dac9eaf0a2d5b626a8afe039f87eb3a353bd91a419aa56f6bcf8a05302"
+dependencies = [
+ "base64",
+ "prost 0.11.9",
+ "prost-types 0.11.1",
+ "substreams 0.5.6",
+]
+
+[[package]]
 name = "substreams-erc20-holdings"
 version = "0.1.0"
 dependencies = [
@@ -1136,6 +1148,7 @@ name = "substreams-helper"
 version = "0.0.2"
 dependencies = [
  "anyhow",
+ "base64",
  "bigdecimal",
  "downcast-rs",
  "ethabi",
@@ -1147,6 +1160,7 @@ dependencies = [
  "prost-types 0.10.1",
  "substreams 0.5.6",
  "substreams-common",
+ "substreams-entity-change 1.1.0",
  "substreams-ethereum",
  "thiserror",
  "tiny-keccak",
@@ -1239,7 +1253,7 @@ dependencies = [
  "prost 0.11.9",
  "substreams 0.5.6",
  "substreams-common",
- "substreams-entity-change",
+ "substreams-entity-change 1.1.0",
  "substreams-ethereum",
  "substreams-helper",
 ]

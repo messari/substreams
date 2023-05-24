@@ -6,3 +6,6 @@ mod escrow_rewards;
 
 #[path = "3_parquet_out.rs"]
 mod parquet_out;
+
+#[path = "4_graph_out.rs"]
+mod graph_out;

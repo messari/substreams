@@ -1,0 +1,71 @@
+type TokenBalance @entity {
+  " ID will be the token address + holder address "
+  id: ID!
+
+  " Token address for which the balance is being tracked (SNX or SDS)"
+  token: String!
+
+  " Address of the account this balance is for "
+  holder: String!
+
+  " Balance in raw units "
+  balance: BigInt!
+
+  " Unix timestamp of the last time the balance was updated "
+  timestamp: BigInt!
+
+  " Block number of the last time the balance was updated "
+  block: BigInt!
+
+  " Snapshots taken every time the balance of this token for this holder changed "
+  snapshots: [TokenBalanceSnapshot!]! @derivedFrom(field: "tokenBalance")
+}
+
+type TokenBalanceSnapshot @entity(immutable: true) {
+  " ID will be the token address + holder address + timestamp "
+  id: ID!
+
+  " Reference to the current balance from which this snapshot was taken "
+  tokenBalance: TokenBalance!
+
+  " Balance at the time of the snapshot "
+  balance: BigInt!
+
+  " Unix timestamp of the snapshot "
+  timestamp: BigInt!
+
+  " Block number of the snapshot "
+  block: BigInt!
+}
+
+" Synthetix EscrowRewards contract exposes 2 balance types: ESCROWED and VESTED "
+enum EscrowBalanceType {
+  ESCROWED
+  VESTED
+}
+
+" Throughout history, there's been 2 versions of the EscrowRewards contract "
+enum EscrowContractVersion {
+  V1
+  V2
+}
+
+type EscrowReward @entity {
+  id: ID!
+  balance_type: EscrowBalanceType!
+  contract_version: EscrowContractVersion!
+  holder: String!
+  balance: BigInt!
+  timestamp: BigInt!
+  block: BigInt!
+
+  snapshots: [EscrowRewardSnapshot!]! @derivedFrom(field: "escrowReward")
+}
+
+type EscrowRewardSnapshot @entity(immutable: true) {
+  id: ID!
+  escrowReward: EscrowReward!
+  balance: BigInt!
+  timestamp: BigInt!
+  block: BigInt!
+}
