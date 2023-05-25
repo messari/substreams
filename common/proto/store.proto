@@ -5,7 +5,7 @@ import "common.proto";
 package messari.store.v1;
 
 message StoreOperations {
-    repeated StoreOperation instructions = 1;
+    repeated StoreOperation operations = 1;
 }
 
 message StoreOperation {
