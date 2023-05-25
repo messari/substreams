@@ -30,96 +30,43 @@ pub fn create_store_operations_l1_pool_created(
     let token0_id_string = Hex(&pool_created_event.token0).to_string();
     let token1_id_string = Hex(&pool_created_event.token1).to_string();
 
-    store_operations.instructions.push(
-        store_operations::append_string(
-            0, 
-            ["LiquidityPool", liquidity_pool_id_string.as_str(), "inputTokens"].join(":"), 
-            token0_id_string.clone(), 
-        )
+    store_operations.append_raw_string(
+        0, 
+        ["LiquidityPool", liquidity_pool_id_string.as_str(), "inputTokens"].join(":"), 
+        token0_id_string.clone(), 
     );
-    store_operations.instructions.push(
-        store_operations::append_string(
-            0, 
-            ["LiquidityPool", liquidity_pool_id_string.as_str(), "inputTokens"].join(":"), 
-            token1_id_string.clone()        
-        )
+    store_operations.append_raw_string(
+        0, 
+        ["LiquidityPool", liquidity_pool_id_string.as_str(), "inputTokens"].join(":"), 
+        token1_id_string.clone()        
     );
-
-    store_operations.instructions.push(
-        store_operations::set_bigdecimal(
-            0, 
-            ["LiquidityPoolFee", &liquidity_pool_supply_side_fee_id, "feePercentage"].join(":"), 
-            convert_fee_to_percentage(&pool_created_event.fee),
-        )
+    store_operations.set_raw_bigdecimal(
+        0, 
+        ["LiquidityPoolFee", &liquidity_pool_supply_side_fee_id, "feePercentage"].join(":"), 
+        convert_fee_to_percentage(&pool_created_event.fee),
     );
-    store_operations.instructions.push(
-        store_operations::set_bigdecimal(
-            0, 
-            ["LiquidityPoolFee", &liquidity_pool_protocol_side_fee_id, "feePercentage"].join(":"), 
-            convert_fee_to_percentage(&pool_created_event.fee),
-        )
+    store_operations.set_raw_bigdecimal(
+        0, 
+        ["LiquidityPoolFee", &liquidity_pool_protocol_side_fee_id, "feePercentage"].join(":"), 
+        convert_fee_to_percentage(&pool_created_event.fee),
     );
-    store_operations.instructions.push(
-        store_operations::set_bigdecimal(
-            0, 
-            ["LiquidityPoolFee", &liquidity_pool_total_fee_id, "feePercentage"].join(":"), 
-            constants::BIGDECIMAL_ZERO.clone(),
-        )
+    store_operations.set_raw_bigdecimal(
+        0, 
+        ["LiquidityPoolFee", &liquidity_pool_total_fee_id, "feePercentage"].join(":"), 
+        constants::BIGDECIMAL_ZERO.clone(),
     );
 
-    store_operations.instructions.push(
-        store_operations::add_int_64(
-            0, 
-            ["mutable-entity-count", "DexAmmProtocol", Hex(&UNISWAP_V3_FACTORY_SLICE).to_string().as_str()].join(":"), 
-            1
-        ) 
-    );
-    store_operations.instructions.push(
-        store_operations::add_int_64(
-            0, 
-            ["mutable-entity-count", "LiquidityPool", liquidity_pool_id_string.as_str()].join(":"), 
-            1
-        ) 
-    );
-    store_operations.instructions.push(
-        store_operations::add_int_64(
-            0, 
-            ["mutable-entity-count", "LiquidityPoolFee", liquidity_pool_supply_side_fee_id.as_str()].join(":"), 
-            1
-        ) 
-    );
-    store_operations.instructions.push(
-        store_operations::add_int_64(
-            0, 
-            ["mutable-entity-count", "LiquidityPoolFee", liquidity_pool_protocol_side_fee_id.as_str()].join(":"), 
-            1
-        ) 
-    );
-    store_operations.instructions.push(
-        store_operations::add_int_64(
-            0, 
-            ["mutable-entity-count", "LiquidityPoolFee", liquidity_pool_total_fee_id.as_str()].join(":"), 
-            1
-        ) 
-    );
-    store_operations.instructions.push(
-        store_operations::add_int_64(
-            0, 
-            ["mutable-entity-count", "Token", token0_id_string.as_str()].join(":"), 
-            1
-        ) 
-    );
-    store_operations.instructions.push(
-        store_operations::add_int_64(
-            0, 
-            ["mutable-entity-count", "Token", token1_id_string.as_str()].join(":"), 
-            1
-        ) 
-    );
+    store_operations.track_dex_amm_protocol_mutation(Hex(&UNISWAP_V3_FACTORY_SLICE).to_string());
+    store_operations.track_liquidity_pool_mutation(liquidity_pool_id_string);
+    store_operations.track_liquidity_pool_fee_mutation(liquidity_pool_supply_side_fee_id);
+    store_operations.track_liquidity_pool_fee_mutation(liquidity_pool_protocol_side_fee_id);
+    store_operations.track_liquidity_pool_fee_mutation(liquidity_pool_total_fee_id);
+    store_operations.track_token_mutation(token0_id_string);
+    store_operations.track_token_mutation(token1_id_string);
 }
 
 pub fn prepare_pool_created_entity_changes(
-    entity_update_factory: &mut sdk::DexAmmEntityUpdateFactory, 
+    entity_update_factory: &mut sdk::EntityUpdateFactory, 
     transaction_trace: &eth::TransactionTrace,
     call: &eth::Call, 
     log: &eth::Log,
@@ -207,10 +154,9 @@ pub fn prepare_pool_created_entity_changes(
         &pool_trading_fee.fee_percentage
     );
 
-    entity_update_factory.store_operations.add_dex_amm_protocol_total_pool_count(
-        &protocol_entity_id, 
-        0, 
-        1
+    entity_update_factory.store_operations.increment_dex_amm_protocol_total_pool_count(
+        0,
+        &protocol_entity_id,
     );
 }
 

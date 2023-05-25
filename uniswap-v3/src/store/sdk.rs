@@ -14,7 +14,7 @@ use crate::store::store_operations;
 use substreams::store;
 use crate::pb::dex_amm::v3_0_3::{EntityUpdates, PrunedTransaction, EntityCreation, SwapEntityCreation, DepositEntityCreation, WithdrawEntityCreation, TokenEntityCreation, LiquidityPoolFeeEntityCreation};
 use crate::pb::dex_amm::v3_0_3::entity_creation::Type;
-use crate::pb::store::v1::StoreOperation;
+use crate::pb::store::v1::{StoreOperation, StoreOperations};
 use crate::schema_lib::dex_amm::v_3_0_3::enums;
 use crate::schema_lib::dex_amm::v_3_0_3::keys;
 
@@ -53,18 +53,19 @@ impl std::fmt::Display for EntityAccount {
     }
 }
 
-pub struct DexAmmEntityUpdateFactory {
+// Implementation of core logic for creating entities
+pub struct EntityUpdateFactory {
     pruned_transactions_map: HashMap<Vec<u8>, PrunedTransaction>,
-    entity_accounting_table: HashMap<String, EntityAccount>,
     pub store_operations: StoreOperations,
+    entity_accounting_table: HashMap<String, EntityAccount>,
 }
 
-impl DexAmmEntityUpdateFactory {
+impl EntityUpdateFactory {
     pub fn new(int64_store_deltas: &store::Deltas<store::DeltaInt64>) -> Self {
-        DexAmmEntityUpdateFactory {
+        EntityUpdateFactory {
             pruned_transactions_map: HashMap::new(),
-            entity_accounting_table: Self::get_entity_accounting_table(int64_store_deltas),
             store_operations: StoreOperations::new(),
+            entity_accounting_table: Self::get_entity_accounting_table(int64_store_deltas),
         }
     }
 
@@ -74,7 +75,7 @@ impl DexAmmEntityUpdateFactory {
         let mut entity_accounting_table: HashMap<String, EntityAccount> = HashMap::new();
         for delta in &int64_store_deltas.deltas {
             let key_list = delta.key.split(":").collect::<Vec<_>>();
-            if key_list[0] == "mutable-entity-count" {
+            if key_list[0] == "entity-mutation-count" {
                 entity_accounting_table.insert(
                     key_list[1..].join(":"),
                     EntityAccount::new(delta.old_value),
@@ -100,7 +101,8 @@ impl DexAmmEntityUpdateFactory {
             }
             None => {
                 let key_list = entity_id.split(":").collect::<Vec<_>>();
-                panic!("Creation of mutable entity {} not accounted for in entity_accounting_table. Please add to byte_store, before prepare_entity_changes module if you would like to create this entity. ID: {}", key_list[0], key_list[1])
+                return false;
+                // panic!("Creation of mutable entity {} not accounted for in entity_accounting_table. Please add to byte_store, before prepare_entity_changes module if you would like to create this entity. ID: {}", key_list[0], key_list[1])
             }
         }
     }
@@ -111,7 +113,7 @@ impl DexAmmEntityUpdateFactory {
                 for (key, value) in self.entity_accounting_table.iter() {
                     log::println(format!("{}: {}", key, value));
                 }
-                panic!("Mutable entity {} was not seen. Please add to byte_store, before prepare_entity_changes module if you would like to create this entity. {}", entity_id, entity_account);
+                // panic!("Mutable entity {} was not seen. Please add to byte_store, before prepare_entity_changes module if you would like to create this entity. {}", entity_id, entity_account);
             }
         }
         EntityUpdates {
@@ -119,7 +121,10 @@ impl DexAmmEntityUpdateFactory {
             store_operations: self.store_operations.get_operations(),
         }
     }
+}
 
+// Implementation of entity creation logic for DEX protocols.
+impl EntityUpdateFactory {
     pub fn create_dex_amm_protocol_entity_if_not_exists(
         &mut self,
         transaction_trace: &eth::TransactionTrace,
@@ -509,372 +514,613 @@ impl DexAmmEntityUpdateFactory {
     }
 }
 
-pub struct StoreOperations {
-    store_operations: Vec<StoreOperation>,
-}   
-
-impl StoreOperations {
-    pub fn new() -> Self {
-        StoreOperations {
-            store_operations: Vec::<StoreOperation>::new(),
-        }
-    }
-    
-    pub fn get_operations(&self) -> Vec<StoreOperation> {
-        self.store_operations.clone()
-    }
-
-    pub fn add_liquidity_pool_cumulative_swap_count(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: i64,
-    ) {
-        self.store_operations.push(
-            store_operations::add_int_64(
-                ordinal,
-                entity_change_key("LiquidityPool", entity_id, "cumulativeSwapCount"),
-                value,
-            )
-        );
-    }
-
-    pub fn add_liquidity_pool_cumulative_deposit_count(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: i64,
-    ) {
-        self.store_operations.push(
-            store_operations::add_int_64(
-                ordinal,
-                entity_change_key("LiquidityPool", entity_id, "cumulativeDepositCount"),
-                value,
-            )
-        );
-    }
-
-    pub fn add_liquidity_pool_cumulative_withdraw_count(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: i64,
-    ) {
-        self.store_operations.push(
-            store_operations::add_int_64(
-                ordinal,
-                entity_change_key("LiquidityPool", entity_id, "cumulativeWithdrawCount"),
-                value,
-            )
-        );
-    }
-    
-    pub fn add_liquidity_pool_input_token_balances(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &Vec<BigInt>,
-    ) {
-        for (i, v) in value.into_iter().enumerate() {
-            self.store_operations.push(
-                store_operations::add_bigint(
-                    ordinal,
-                    entity_array_change_key("LiquidityPool", entity_id, "inputTokenBalances", i , value.len()),
-                    v.clone(),
-                )
-            );
-        }
-    }
-
-    pub fn add_liquidity_pool_cumulative_volume_token_amounts(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &Vec<BigInt>,
-    ) {
-        for (i, v) in value.into_iter().enumerate() {
-            self.store_operations.push(
-                store_operations::add_bigint(
-                    ordinal,
-                    entity_array_change_key("LiquidityPool", entity_id, "cumulativeVolumeTokenAmounts", i , value.len()),
-                    v.clone(),
-                )
-            );
-        }
-    }
-
-    pub fn add_liquidity_pool_cumulative_supply_side_revenue_token_amounts(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &Vec<BigInt>,
-    ) {
-        for (i, v) in value.into_iter().enumerate() {
-            self.store_operations.push(
-                store_operations::add_bigint(
-                    ordinal,
-                    entity_array_change_key("LiquidityPool", entity_id, "cumulativeSupplySideRevenueTokenAmounts", i , value.len()),
-                    v.clone(),
-                )
-            );
-        }
-    }
-
-    pub fn add_liquidity_pool_cumulative_protocol_side_revenue_token_amounts(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &Vec<BigInt>,
-    ) {
-        for (i, v) in value.into_iter().enumerate() {
-            self.store_operations.push(
-                store_operations::add_bigint(
-                    ordinal,
-                    entity_array_change_key("LiquidityPool", entity_id, "cumulativeProtocolSideRevenueTokenAmounts", i , value.len()),
-                    v.clone(),
-                )
-            );
-        }
-    }
-
-    pub fn add_liquidity_pool_cumulative_total_revenue_token_amounts(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &Vec<BigInt>,
-    ) {
-        for (i, v) in value.into_iter().enumerate() {
-            self.store_operations.push(
-                store_operations::add_bigint(
-                    ordinal,
-                    entity_array_change_key("LiquidityPool", entity_id, "cumulativeTotalRevenueTokenAmounts", i , value.len()),
-                    v.clone(),
-                )
-            );
-        }
-    }
-
-    pub fn add_liquidity_pool_total_liquidity(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &BigInt,
-    ) {
-        self.store_operations.push(
-            store_operations::add_bigint(
-                ordinal,
-                entity_change_key("LiquidityPool", entity_id, "totalLiquidity"),
-                value.clone(),
-            )
-        );
-    }
-
-    pub fn set_liquidity_pool_active_liquidity(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &BigInt,
-    ) {
-        self.store_operations.push(
-            store_operations::set_bigint(
-                ordinal,
-                entity_change_key("LiquidityPool", entity_id, "activeLiquidity"),
-                value.clone(),
-            )
-        );
-    }
-
-    pub fn set_liquidity_pool_tick(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &BigInt,
-    ) {
-        self.store_operations.push(
-            store_operations::set_bigint(
-                ordinal,
-                entity_change_key("LiquidityPool", entity_id, "tick"),
-                value.clone(),
-            )
-        );
-    }
-
-    pub fn append_liquidity_pool_input_tokens(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &Vec<Vec<u8>>,
-    ) {
-        for address in value.into_iter() {
-            self.store_operations.push(
-                store_operations::append_bytes(
-                    ordinal,
-                    entity_change_key("LiquidityPool", entity_id, "inputTokens"),
-                    address.clone(),
-                )
-            );
-        }
-    }
-
-    pub fn add_dex_amm_protocol_total_pool_count(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: i64,
-    ) {
-        self.store_operations.push(
-            store_operations::add_int_64(
-                ordinal,
-                entity_change_key("DexAmmProtocol", entity_id, "totalPoolCount"),
-                value,
-            )
-        );
-    }
-
-    pub fn add_dex_amm_protocol_open_position_count(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: i64,
-    ) {
-        self.store_operations.push(
-            store_operations::add_int_64(
-                ordinal,
-                entity_change_key("DexAmmProtocol", entity_id, "openPositionCount"),
-                value,
-            )
-        );
-    }
-
-    pub fn add_dex_amm_protocol_cumulative_position_count(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: i64,
-    ) {
-        self.store_operations.push(
-            store_operations::add_int_64(
-                ordinal,
-                entity_change_key("DexAmmProtocol", entity_id, "cumulativePositionCount"),
-                value,
-            )
-        );
-    }
-
-    pub fn add_position_deposit_count(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: i64,
-    ) {
-        self.store_operations.push(
-            store_operations::add_int_64(
-                ordinal,
-                entity_change_key("Position", entity_id, "depositCount"),
-                value,
-            )
-        );
-    }
-
-    pub fn add_position_withdraw_count(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: i64,
-    ) {
-        self.store_operations.push(
-            store_operations::add_int_64(
-                ordinal,
-                entity_change_key("Position", entity_id, "withdrawCount"),
-                value,
-            )
-        );
-    }
-    
-    pub fn add_position_cumulative_deposit_token_amounts(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &Vec<BigInt>,
-    ) {
-        for (i, v) in value.into_iter().enumerate() {
-            self.store_operations.push(
-                store_operations::add_bigint(
-                    ordinal,
-                    entity_array_change_key("Position", entity_id, "cumulativeDepositTokenAmounts", i , value.len()),
-                    v.clone(),
-                )
-            );
-        }
-    }
-
-    pub fn add_position_cumulative_withdraw_token_amounts(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &Vec<BigInt>,
-    ) {
-        for (i, v) in value.into_iter().enumerate() {
-            self.store_operations.push(
-                store_operations::add_bigint(
-                    ordinal,
-                    entity_array_change_key("Position", entity_id, "cumulativeWithdrawTokenAmounts", i , value.len()),
-                    v.clone(),
-                )
-            );
-        }
-    }
-
-    pub fn add_position_liquidity(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &BigInt,
-    ) {
-        self.store_operations.push(
-            store_operations::add_bigint(
-                ordinal,
-                entity_change_key("Position", entity_id, "liquidity"),
-                value.clone(),
-            )
-        );
-    }
-
-    pub fn add_tick_liquidity_gross(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &BigInt,
-    ) {
-        self.store_operations.push(
-            store_operations::add_bigint(
-                ordinal,
-                entity_change_key("Tick", entity_id, "liquidityGross"),
-                value.clone(),
-            )
-        );
-    }
-
-    pub fn add_tick_liquidity_net(
-        &mut self,
-        entity_id: &str,
-        ordinal: u64, 
-        value: &BigInt,
-    ) {
-        self.store_operations.push(
-            store_operations::add_bigint(
-                ordinal,
-                entity_change_key("Tick", entity_id, "liquidityNet"),
-                value.clone(),
-            )
-        );
-    }
-}
-
 fn entity_change_key(entity_type: &str, entity_id: &str, field: &str) -> String {
     ["entity-change", entity_type, entity_id, field].join(":")
 }
 
 fn entity_array_change_key(entity_type: &str, entity_id: &str, field: &str, index: usize, array_size: usize) -> String {
     ["entity-change", entity_type, entity_id, field, index.to_string().as_str(), array_size.to_string().as_str()].join(":")
+}
+
+fn raw_store_key(key: &str) -> String {
+    ["raw", key].join(":")
+}
+
+fn track_entity_mutation_key(entity_type: &str, entity_id: &str) -> String {
+    ["entity-mutation-count", entity_type, entity_id].join(":")
+}
+
+// Implement core methods for StoreOperations
+impl StoreOperations {
+    pub fn new() -> Self {
+        StoreOperations {
+            operations: Vec::<StoreOperation>::new(),
+        }
+    }
+    
+    pub fn get_operations(&self) -> Vec<StoreOperation> {
+        self.operations.clone()
+    }
+}
+
+// Implement raw store operations
+impl StoreOperations {
+    pub fn add_raw_int64<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        key: K,
+        value: i64,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                ordinal,
+                raw_store_key(key.as_ref()),
+                value,
+            )
+        );
+    }
+
+    pub fn set_raw_int64<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        key: K,
+        value: i64,
+    ) {
+        self.operations.push(
+            store_operations::set_int64(
+                ordinal,
+                raw_store_key(key.as_ref()),
+                value,
+            )
+        );
+    }
+
+    pub fn add_raw_bigint<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        key: K,
+        value: scalar::BigInt,
+    ) {
+        self.operations.push(
+            store_operations::add_bigint(
+                ordinal,
+                raw_store_key(key.as_ref()),
+                value,
+            )
+        );
+    }
+
+    pub fn set_raw_bigint<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        key: K,
+        value: scalar::BigInt,
+    ) {
+        self.operations.push(
+            store_operations::set_bigint(
+                ordinal,
+                raw_store_key(key.as_ref()),
+                value,
+            )
+        );
+    }
+
+    pub fn add_raw_bigdecimal<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        key: K,
+        value: scalar::BigDecimal,
+    ) {
+        self.operations.push(
+            store_operations::add_bigdecimal(
+                ordinal,
+                raw_store_key(key.as_ref()),
+                value,
+            )
+        );
+    }
+
+    pub fn set_raw_bigdecimal<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        key: K,
+        value: scalar::BigDecimal,
+    ) {
+        self.operations.push(
+            store_operations::set_bigdecimal(
+                ordinal,
+                raw_store_key(key.as_ref()),
+                value,
+            )
+        );
+    }
+
+    pub fn set_raw_bytes<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        key: K,
+        value: Vec<u8>,
+    ) {
+        self.operations.push(
+            store_operations::set_bytes(
+                ordinal,
+                raw_store_key(key.as_ref()),
+                value,
+            )
+        );
+    }
+
+    pub fn append_raw_bytes<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        key: K,
+        value: Vec<u8>,
+    ) {
+        self.operations.push(
+            store_operations::append_bytes(
+                ordinal,
+                raw_store_key(key.as_ref()),
+                value,
+            )
+        );
+    }
+
+    pub fn set_raw_string<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        key: K,
+        value: String,
+    ) {
+        self.operations.push(
+            store_operations::set_string(
+                ordinal,
+                raw_store_key(key.as_ref()),
+                value,
+            )
+        );
+    }
+
+    pub fn append_raw_string<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        key: K,
+        value: String,
+    ) {
+        self.operations.push(
+            store_operations::append_string(
+                ordinal,
+                raw_store_key(key.as_ref()),
+                value,
+            )
+        );
+    }
+}
+
+
+
+// Implement store operations for DEX protocols. 
+impl StoreOperations {
+    pub fn increment_liquidity_pool_cumulative_swap_count<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                ordinal,
+                entity_change_key("LiquidityPool", entity_id.as_ref(), "cumulativeSwapCount"),
+                1,
+            )
+        );
+    }
+
+    pub fn increment_liquidity_pool_cumulative_deposit_count<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                ordinal,
+                entity_change_key("LiquidityPool", entity_id.as_ref(), "cumulativeDepositCount"),
+                1,
+            )
+        );
+    }
+
+    pub fn increment_liquidity_pool_cumulative_withdraw_count<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                ordinal,
+                entity_change_key("LiquidityPool", entity_id.as_ref(), "cumulativeWithdrawCount"),
+                1,
+            )
+        );
+    }
+    
+    pub fn add_liquidity_pool_input_token_balances<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+        value: Vec<BigInt>,
+    ) {
+        let array_size = value.len();
+        for (i, v) in value.into_iter().enumerate() {
+            self.operations.push(
+                store_operations::add_bigint(
+                    ordinal,
+                    entity_array_change_key("LiquidityPool", entity_id.as_ref(), "inputTokenBalances", i , array_size),
+                    v.clone(),
+                )
+            );
+        }
+    }
+
+    pub fn add_liquidity_pool_cumulative_volume_token_amounts<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+        value: Vec<BigInt>,
+    ) {
+        let array_size = value.len();
+        for (i, v) in value.into_iter().enumerate() {
+            self.operations.push(
+                store_operations::add_bigint(
+                    ordinal,
+                    entity_array_change_key("LiquidityPool", entity_id.as_ref(), "cumulativeVolumeTokenAmounts", i , array_size),
+                    v.clone(),
+                )
+            );
+        }
+    }
+
+    pub fn add_liquidity_pool_cumulative_supply_side_revenue_token_amounts<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+        value: Vec<BigInt>,
+    ) {
+        let array_size = value.len();
+        for (i, v) in value.into_iter().enumerate() {
+            self.operations.push(
+                store_operations::add_bigint(
+                    ordinal,
+                    entity_array_change_key("LiquidityPool", entity_id.as_ref(), "cumulativeSupplySideRevenueTokenAmounts", i , array_size),
+                    v.clone(),
+                )
+            );
+        }
+    }
+
+    pub fn add_liquidity_pool_cumulative_protocol_side_revenue_token_amounts<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+        value: Vec<BigInt>,
+    ) {
+        let array_size = value.len();
+        for (i, v) in value.into_iter().enumerate() {
+            self.operations.push(
+                store_operations::add_bigint(
+                    ordinal,
+                    entity_array_change_key("LiquidityPool", entity_id.as_ref(), "cumulativeProtocolSideRevenueTokenAmounts", i , array_size),
+                    v.clone(),
+                )
+            );
+        }
+    }
+
+    pub fn add_liquidity_pool_cumulative_total_revenue_token_amounts<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+        value: Vec<BigInt>,
+    ) {
+        let array_size = value.len();
+        for (i, v) in value.into_iter().enumerate() {
+            self.operations.push(
+                store_operations::add_bigint(
+                    ordinal,
+                    entity_array_change_key("LiquidityPool", entity_id.as_ref(), "cumulativeTotalRevenueTokenAmounts", i , array_size),
+                    v.clone(),
+                )
+            );
+        }
+    }
+
+    pub fn add_liquidity_pool_total_liquidity<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K, 
+        value: BigInt,
+    ) {
+        self.operations.push(
+            store_operations::add_bigint(
+                ordinal,
+                entity_change_key("LiquidityPool", entity_id.as_ref(), "totalLiquidity"),
+                value.clone(),
+            )
+        );
+    }
+
+    pub fn set_liquidity_pool_active_liquidity<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+        value: BigInt,
+    ) {
+        self.operations.push(
+            store_operations::set_bigint(
+                ordinal,
+                entity_change_key("LiquidityPool", entity_id.as_ref(), "activeLiquidity"),
+                value.clone(),
+            )
+        );
+    }
+
+    pub fn set_liquidity_pool_tick<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+        value: BigInt,
+    ) {
+        self.operations.push(
+            store_operations::set_bigint(
+                ordinal,
+                entity_change_key("LiquidityPool", entity_id.as_ref(), "tick"),
+                value.clone(),
+            )
+        );
+    }
+
+    pub fn append_liquidity_pool_input_tokens<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+        value: Vec<Vec<u8>>,
+    ) {
+        for address in value.into_iter() {
+            self.operations.push(
+                store_operations::append_bytes(
+                    ordinal,
+                    entity_change_key("LiquidityPool", entity_id.as_ref(), "inputTokens"),
+                    address.clone(),
+                )
+            );
+        }
+    }
+
+    pub fn increment_dex_amm_protocol_total_pool_count<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                ordinal,
+                entity_change_key("DexAmmProtocol", entity_id.as_ref(), "totalPoolCount"),
+                1,
+            )
+        );
+    }
+
+    pub fn increment_dex_amm_protocol_open_position_count<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                ordinal,
+                entity_change_key("DexAmmProtocol", entity_id.as_ref(), "openPositionCount"),
+                1,
+            )
+        );
+    }
+
+    pub fn increment_dex_amm_protocol_cumulative_position_count<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K, 
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                ordinal,
+                entity_change_key("DexAmmProtocol", entity_id.as_ref(), "cumulativePositionCount"),
+                1,
+            )
+        );
+    }
+
+    pub fn increment_position_deposit_count<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                ordinal,
+                entity_change_key("Position", entity_id.as_ref(), "depositCount"),
+                1,
+            )
+        );
+    }
+
+    pub fn increment_position_withdraw_count<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                ordinal,
+                entity_change_key("Position", entity_id.as_ref(), "withdrawCount"),
+                1,
+            )
+        );
+    }
+    
+    pub fn add_position_cumulative_deposit_token_amounts<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K, 
+        value: Vec<BigInt>,
+    ) {
+        let array_size = value.len();
+        for (i, v) in value.into_iter().enumerate() {
+            self.operations.push(
+                store_operations::add_bigint(
+                    ordinal,
+                    entity_array_change_key("Position", entity_id.as_ref(), "cumulativeDepositTokenAmounts", i , array_size),
+                    v,
+                )
+            );
+        }
+    }
+
+    pub fn add_position_cumulative_withdraw_token_amounts<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+        value: Vec<BigInt>,
+    ) {
+        let array_size = value.len();
+        for (i, v) in value.into_iter().enumerate() {
+            self.operations.push(
+                store_operations::add_bigint(
+                    ordinal,
+                    entity_array_change_key("Position", entity_id.as_ref(), "cumulativeWithdrawTokenAmounts", i , array_size),
+                    v,
+                )
+            );
+        }
+    }
+
+    pub fn add_position_liquidity<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+        value: BigInt,
+    ) {
+        self.operations.push(
+            store_operations::add_bigint(
+                ordinal,
+                entity_change_key("Position", entity_id.as_ref(), "liquidity"),
+                value,
+            )
+        );
+    }
+
+    pub fn add_tick_liquidity_gross<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+        value: BigInt,
+    ) {
+        self.operations.push(
+            store_operations::add_bigint(
+                ordinal,
+                entity_change_key("Tick", entity_id.as_ref(), "liquidityGross"),
+                value,
+            )
+        );
+    }
+
+    pub fn add_tick_liquidity_net<K: AsRef<str>>(
+        &mut self,
+        ordinal: u64, 
+        entity_id: K,
+        value: BigInt,
+    ) {
+        self.operations.push(
+            store_operations::add_bigint(
+                ordinal,
+                entity_change_key("Tick", entity_id.as_ref(), "liquidityNet"),
+                value,
+            )
+        );
+    }
+
+    // Track Mutable Entity Mutations
+    pub fn track_dex_amm_protocol_mutation<K: AsRef<str>>(
+        &mut self, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                0,
+                track_entity_mutation_key("DexAmmProtocol", entity_id.as_ref()),
+                1,
+            )
+        );
+    }
+
+    pub fn track_liquidity_pool_mutation<K: AsRef<str>>(
+        &mut self, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                0,
+                track_entity_mutation_key("LiquidityPool", entity_id.as_ref()),
+                1,
+            )
+        );
+    }
+
+    pub fn track_liquidity_pool_fee_mutation<K: AsRef<str>>(
+        &mut self, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                0,
+                track_entity_mutation_key("LiquidityPoolFee", entity_id.as_ref()),
+                1,
+            )
+        );
+    }
+
+    pub fn track_position_mutation<K: AsRef<str>>(
+        &mut self, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                0,
+                track_entity_mutation_key("Position", entity_id.as_ref()),
+                1,
+            )
+        );
+    }
+
+    pub fn track_tick_mutation<K: AsRef<str>>(
+        &mut self, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                0,
+                track_entity_mutation_key("Tick", entity_id.as_ref()),
+                1,
+            )
+        );
+    }
+
+    pub fn track_token_mutation<K: AsRef<str>>(
+        &mut self, 
+        entity_id: K,
+    ) {
+        self.operations.push(
+            store_operations::add_int64(
+                0,
+                track_entity_mutation_key("Token", entity_id.as_ref()),
+                1,
+            )
+        );
+    }
 }

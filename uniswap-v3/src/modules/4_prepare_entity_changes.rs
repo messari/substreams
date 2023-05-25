@@ -38,7 +38,7 @@ pub fn prepare_entity_changes(
     set_bigdecimal_l1_store: store::StoreGetBigDecimal,
     append_string_l1_store: store::StoreGetArray<String>,
 ) -> Result<EntityUpdates, Error>{
-    let mut entity_update_factory = sdk::DexAmmEntityUpdateFactory::new(
+    let mut entity_update_factory = sdk::EntityUpdateFactory::new(
         &add_int64_l1_store_deltas
     );
 
@@ -58,70 +58,71 @@ pub fn prepare_entity_changes(
                                     &set_bigdecimal_l1_store, 
                                     &append_string_l1_store
                                 );
-                            } else if let Some(mint_event) = PoolContract::events::Mint::match_and_decode(&log) {
-                                interactions::mint::prepare_mint_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    call_view.call, 
-                                    log, 
-                                    mint_event, 
-                                    &append_string_l1_store
-                                );
-                            } 
-                            else if let Some(burn_event) = PoolContract::events::Burn::match_and_decode(&log) {
-                                interactions::burn::prepare_burn_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    call_view.call, 
-                                    log, 
-                                    burn_event, 
-                                    &append_string_l1_store
-                                );
                             }
+                            // } else if let Some(mint_event) = PoolContract::events::Mint::match_and_decode(&log) {
+                            //     interactions::mint::prepare_mint_entity_changes(
+                            //         &mut entity_update_factory, 
+                            //         &transaction_trace, 
+                            //         call_view.call, 
+                            //         log, 
+                            //         mint_event, 
+                            //         &append_string_l1_store
+                            //     );
+                            // } 
+                            // else if let Some(burn_event) = PoolContract::events::Burn::match_and_decode(&log) {
+                            //     interactions::burn::prepare_burn_entity_changes(
+                            //         &mut entity_update_factory, 
+                            //         &transaction_trace, 
+                            //         call_view.call, 
+                            //         log, 
+                            //         burn_event, 
+                            //         &append_string_l1_store
+                            //     );
+                            // }
                         }
                     }
-                    1 => {
-                        for log in &call_view.call.logs {
-                            if let Some(pool_created_event) = FactoryContract::events::PoolCreated::match_and_decode(&log) {
-                                interactions::pool_created::prepare_pool_created_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    call_view.call, 
-                                    log,
-                                    pool_created_event, 
-                                );
-                            }
-                        }
-                    }
-                    2 => {
-                        for log in &call_view.call.logs {
-                            if let Some(increase_liquidity_event) = NonFungiblePositionManagerContract::events::IncreaseLiquidity::match_and_decode(&log) {
-                                interactions::increase_liquidity::prepare_increase_liquidity_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    call_view.call, 
-                                    log, 
-                                    increase_liquidity_event, 
-                                );
-                            } else if let Some(decrease_liquidity_event) = NonFungiblePositionManagerContract::events::DecreaseLiquidity::match_and_decode(&log) {
-                                interactions::decrease_liquidity::prepare_decrease_liquidity_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    call_view.call, 
-                                    log, 
-                                    decrease_liquidity_event, 
-                                );
-                            } else if let Some(transfer_event) = NonFungiblePositionManagerContract::events::Transfer::match_and_decode(&log) {
-                                interactions::transfer::prepare_transfer_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    call_view.call, 
-                                    log, 
-                                    transfer_event, 
-                                );
-                            }
-                        }
-                    }
+                    // 1 => {
+                    //     for log in &call_view.call.logs {
+                    //         if let Some(pool_created_event) = FactoryContract::events::PoolCreated::match_and_decode(&log) {
+                    //             interactions::pool_created::prepare_pool_created_entity_changes(
+                    //                 &mut entity_update_factory, 
+                    //                 &transaction_trace, 
+                    //                 call_view.call, 
+                    //                 log,
+                    //                 pool_created_event, 
+                    //             );
+                    //         }
+                    //     }
+                    // }
+                    // 2 => {
+                    //     for log in &call_view.call.logs {
+                    //         if let Some(increase_liquidity_event) = NonFungiblePositionManagerContract::events::IncreaseLiquidity::match_and_decode(&log) {
+                    //             interactions::increase_liquidity::prepare_increase_liquidity_entity_changes(
+                    //                 &mut entity_update_factory, 
+                    //                 &transaction_trace, 
+                    //                 call_view.call, 
+                    //                 log, 
+                    //                 increase_liquidity_event, 
+                    //             );
+                    //         } else if let Some(decrease_liquidity_event) = NonFungiblePositionManagerContract::events::DecreaseLiquidity::match_and_decode(&log) {
+                    //             interactions::decrease_liquidity::prepare_decrease_liquidity_entity_changes(
+                    //                 &mut entity_update_factory, 
+                    //                 &transaction_trace, 
+                    //                 call_view.call, 
+                    //                 log, 
+                    //                 decrease_liquidity_event, 
+                    //             );
+                    //         } else if let Some(transfer_event) = NonFungiblePositionManagerContract::events::Transfer::match_and_decode(&log) {
+                    //             interactions::transfer::prepare_transfer_entity_changes(
+                    //                 &mut entity_update_factory, 
+                    //                 &transaction_trace, 
+                    //                 call_view.call, 
+                    //                 log, 
+                    //                 transfer_event, 
+                    //             );
+                    //         }
+                    //     }
+                    // }
                     _ => {}
                 }
             }

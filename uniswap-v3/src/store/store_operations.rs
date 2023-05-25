@@ -15,7 +15,7 @@ where
     }
 }
 
-pub fn add_int_64<K: AsRef<str>>(
+pub fn add_int64<K: AsRef<str>>(
     ordinal: u64, 
     key: K, 
     value: i64
@@ -29,7 +29,7 @@ pub fn add_int_64<K: AsRef<str>>(
     )
 }
 
-pub fn set_int_64<K: AsRef<str>>(
+pub fn set_int64<K: AsRef<str>>(
     ordinal: u64, 
     key: K, 
     value: i64
@@ -136,7 +136,7 @@ pub fn set_string<K: AsRef<str>>(
         ordinal, 
         key,
         |key| {
-            store::store_operation::Type::SetString(store::SetString { ordinal, key, value: value })
+            store::store_operation::Type::SetString(store::SetString { ordinal, key, value: value.to_string() })
         }
     )
 }
@@ -150,7 +150,7 @@ pub fn append_string<K: AsRef<str>>(
         ordinal, 
         key,
         |key| {
-            store::store_operation::Type::AppendString(store::AppendString { ordinal, key, value: value })
+            store::store_operation::Type::AppendString(store::AppendString { ordinal, key, value: value.to_string() })
         }
     )
 }

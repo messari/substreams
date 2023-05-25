@@ -30,7 +30,7 @@ pub fn create_store_operations_l1(
     data_sources_store: store::StoreGetProto<DataSource>,
 ) -> Result<StoreOperations, Error>{
     let mut store_operations = StoreOperations {
-        instructions: Vec::<StoreOperation>::new(),
+        operations: Vec::<StoreOperation>::new(),
     };
 
     for transaction_trace in block.transaction_traces { 
@@ -79,7 +79,7 @@ pub fn add_bigdecimal_l1(
     store_operations: StoreOperations,
     add_bigdecimal_store: store::StoreAddBigDecimal,
 ) {
-    for store_operation in store_operations.instructions {
+    for store_operation in store_operations.operations {
         match store_operation.r#type.unwrap() {
             store_operation::Type::AddBigDecimal(item) => {
                 let item_value: BigDecimal = BigDecimal::try_from(item.value.unwrap().value).unwrap();
@@ -99,7 +99,7 @@ pub fn add_bigint_l1(
     store_operations: StoreOperations,
     add_bigint_store: store::StoreAddBigInt,
 ) {
-    for store_operation in store_operations.instructions {
+    for store_operation in store_operations.operations {
         match store_operation.r#type.unwrap() {
             store_operation::Type::AddBigInt(item) => {
                 let item_value: BigInt = BigInt::try_from(item.value.unwrap().value).unwrap();
@@ -119,7 +119,7 @@ pub fn add_int64_l1(
     store_operations: StoreOperations,
     add_int64_store: store::StoreAddInt64,
 ) {
-    for store_operation in store_operations.instructions {
+    for store_operation in store_operations.operations {
         match store_operation.r#type.unwrap() {
             store_operation::Type::AddInt64(item) => {
                 add_int64_store.add(item.ordinal, item.key, item.value);
@@ -137,7 +137,7 @@ pub fn append_string_l1(
     store_operations: StoreOperations,
     append_string_store: store::StoreAppend<String>,
 ) {
-    for store_operation in store_operations.instructions {
+    for store_operation in store_operations.operations {
         match store_operation.r#type.unwrap() {
             store_operation::Type::AppendString(item) => {
                 append_string_store.append(item.ordinal, item.key, item.value);
@@ -152,7 +152,7 @@ pub fn set_bigint_l1(
     store_operations: StoreOperations,
     set_bigint_store: store::StoreSetBigInt,
 ) {
-    for store_operation in store_operations.instructions {
+    for store_operation in store_operations.operations {
         match store_operation.r#type.unwrap() {
             store_operation::Type::SetBigInt(item) => {
                 let item_value: BigInt = BigInt::try_from(item.value.unwrap().value).unwrap();
@@ -172,7 +172,7 @@ pub fn set_bigdecimal_l1(
     store_operations: StoreOperations,
     set_bigdecimal_store: store::StoreSetBigDecimal,
 ) {
-    for store_operation in store_operations.instructions {
+    for store_operation in store_operations.operations {
         match store_operation.r#type.unwrap() {
             store_operation::Type::SetBigDecimal(item) => {
                 let item_value: BigDecimal = BigDecimal::try_from(item.value.unwrap().value).unwrap();
@@ -188,7 +188,7 @@ pub fn set_bytes_l1(
     store_operations: StoreOperations,
     set_bytes_store: store::StoreSetRaw,
 ) {
-    for store_operation in store_operations.instructions {
+    for store_operation in store_operations.operations {
         match store_operation.r#type.unwrap() {
             store_operation::Type::SetBytes(item) => {
                 set_bytes_store.set(item.ordinal, item.key, &item.value);

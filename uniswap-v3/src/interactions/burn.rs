@@ -20,24 +20,16 @@ pub fn create_store_operations_l1_burn(
     log: &eth::Log,
 ) {
     let pool_address = Hex(&call.address).to_string();
-    store_operations.instructions.push(
-        store_operations::add_int_64(
-            0, 
-            ["mutable-entity-count", "Tick", &keys::get_tick_key(&pool_address, burn_event.tick_lower)].join(":"),
-            1
-        ) 
+    store_operations.track_tick_mutation(
+        keys::get_tick_key(&pool_address, &burn_event.tick_lower)
     );
-    store_operations.instructions.push(
-        store_operations::add_int_64(
-            0, 
-            ["mutable-entity-count", "Tick", &keys::get_tick_key(&pool_address, burn_event.tick_lower)].join(":"),
-            1
-        ) 
+    store_operations.track_tick_mutation(
+        keys::get_tick_key(&pool_address, &burn_event.tick_upper)
     );
 }
 
 pub fn prepare_burn_entity_changes(
-    entity_update_factory: &mut sdk::DexAmmEntityUpdateFactory, 
+    entity_update_factory: &mut sdk::EntityUpdateFactory, 
     transaction_trace: &eth::TransactionTrace,
     call: &eth::Call, 
     log: &eth::Log,
@@ -45,8 +37,8 @@ pub fn prepare_burn_entity_changes(
     append_string_l1_store: &store::StoreGetArray<String>,
 ) {
     let liquidity_pool_id: String = Hex(&call.address).to_string(); 
-    let tick_lower_id = keys::get_tick_key(&pool_address, burn_event.tick_lower);
-    let tick_upper_id = keys::get_tick_key(&pool_address, burn_event.tick_lower);
+    let tick_lower_id = keys::get_tick_key(&liquidity_pool_id, &burn_event.tick_lower);
+    let tick_upper_id = keys::get_tick_key(&liquidity_pool_id, &burn_event.tick_lower);
 
     let input_tokens = match append_string_l1_store.get_last(["LiquidityPool", liquidity_pool_id.as_str(), "inputTokens"].join(":")) {
         Some(input_tokens) => input_tokens.into_iter().map(|s| s.into_bytes()).collect(),
@@ -85,40 +77,39 @@ pub fn prepare_burn_entity_changes(
     );
 
     entity_update_factory.store_operations.add_liquidity_pool_input_token_balances(
+        0,
         &liquidity_pool_id, 
-        0, 
-        &vec![burn_event.amount0.clone().neg(), burn_event.amount1.clone().neg()]
+        vec![burn_event.amount0.clone().neg(), burn_event.amount1.clone().neg()]
     );
     entity_update_factory.store_operations.add_liquidity_pool_total_liquidity(
+        0,
         &liquidity_pool_id, 
-        0, 
-        &burn_event.amount.neg()
+        burn_event.amount.neg()
     );
-    entity_update_factory.store_operations.add_liquidity_pool_cumulative_withdraw_count(
+    entity_update_factory.store_operations.increment_liquidity_pool_cumulative_withdraw_count(
+        0,
         &liquidity_pool_id, 
-        0, 
-        1
     );
 
     entity_update_factory.store_operations.add_tick_liquidity_gross(
+        0,
         &tick_lower_id, 
-        0, 
-        &burn_event.amount.neg(),
+        burn_event.amount.neg(),
     );
     entity_update_factory.store_operations.add_tick_liquidity_net(
+        0,
         &tick_lower_id, 
-        0, 
-        &burn_event.amount.neg(),
+        burn_event.amount.neg(),
     );
 
     entity_update_factory.store_operations.add_tick_liquidity_gross(
+        0,
         &tick_upper_id, 
-        0, 
-        &burn_event.amount.neg(),
+        burn_event.amount.neg(),
     );
     entity_update_factory.store_operations.add_tick_liquidity_net(
+        0,
         &tick_upper_id, 
-        0, 
-        &burn_event.amount,
+        burn_event.amount,
     );
 }

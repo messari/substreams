@@ -18,7 +18,7 @@ use crate::utils;
 use crate::schema_lib::dex_amm::v_3_0_3::{enums, keys};
 
 pub fn prepare_swap_entity_changes(
-    entity_update_factory: &mut sdk::DexAmmEntityUpdateFactory, 
+    entity_update_factory: &mut sdk::EntityUpdateFactory, 
     transaction_trace: &eth::TransactionTrace,
     call: &eth::Call, 
     log: &eth::Log,
@@ -32,7 +32,7 @@ pub fn prepare_swap_entity_changes(
     let liquidity_pool_fee_protocol_side = keys::get_liquidity_pool_fee_key(&liquidity_pool_id, &enums::LiquidityPoolFeeType::FIXED_PROTOCOL_FEE);
     let liquidity_pool_fee_total = keys::get_liquidity_pool_fee_key(&liquidity_pool_id, &enums::LiquidityPoolFeeType::FIXED_TRADING_FEE);
     
-    let input_tokens: Vec<Vec<u8>> = match append_string_l1_store.get_last(["LiquidityPool", liquidity_pool_id.as_str(), "inputTokens"].join(":")) {
+    let input_tokens: Vec<Vec<u8>> = match append_string_l1_store.get_last(["raw", "LiquidityPool", liquidity_pool_id.as_str(), "inputTokens"].join(":")) {
         Some(input_tokens) => input_tokens.into_iter().map(|s| s.into_bytes()).collect(),
         None => {
             panic!("No input tokens found for pool address: {}", liquidity_pool_id)
@@ -53,30 +53,29 @@ pub fn prepare_swap_entity_changes(
         log.index, 
         log.ordinal,
     );
-    entity_update_factory.store_operations.add_liquidity_pool_cumulative_swap_count(
+    entity_update_factory.store_operations.increment_liquidity_pool_cumulative_swap_count(
+        0,
         &liquidity_pool_id, 
-        0, 
-        1
     );
     entity_update_factory.store_operations.add_liquidity_pool_input_token_balances(
+        0,
         &liquidity_pool_id, 
-        0, 
-        &vec![swap_event.amount0.clone(), swap_event.amount1.clone()]
+        vec![swap_event.amount0.clone(), swap_event.amount1.clone()]
     );
     entity_update_factory.store_operations.add_liquidity_pool_cumulative_volume_token_amounts(
+        0,
         &liquidity_pool_id, 
-        0, 
-        &vec![utils::abs_bigint(&swap_event.amount0), utils::abs_bigint(&swap_event.amount1)]
+        vec![utils::abs_bigint(&swap_event.amount0), utils::abs_bigint(&swap_event.amount1)]
     );
     entity_update_factory.store_operations.set_liquidity_pool_active_liquidity(
+        0,
         &liquidity_pool_id, 
-        0, 
-        &swap_event.liquidity
+        swap_event.liquidity
     );
     entity_update_factory.store_operations.set_liquidity_pool_tick(
+        0,
         &liquidity_pool_id, 
-        0, 
-        &swap_event.tick
+        swap_event.tick
     );
 
     let mut supply_side_revenue_token_amounts: Vec<BigInt> = vec![constants::BIGINT_ZERO.clone(); amounts.len()];
@@ -105,19 +104,19 @@ pub fn prepare_swap_entity_changes(
     }
 
     entity_update_factory.store_operations.add_liquidity_pool_cumulative_supply_side_revenue_token_amounts(
+        0,
         &liquidity_pool_id, 
-        0, 
-        &supply_side_revenue_token_amounts
+        supply_side_revenue_token_amounts
     );
     entity_update_factory.store_operations.add_liquidity_pool_cumulative_protocol_side_revenue_token_amounts(
+        0,
         &liquidity_pool_id, 
-        0, 
-        &protocol_side_revenue_token_amounts
+        protocol_side_revenue_token_amounts
     );
     entity_update_factory.store_operations.add_liquidity_pool_cumulative_total_revenue_token_amounts(
+        0,
         &liquidity_pool_id, 
-        0, 
-        &total_revenue_token_amounts
+        total_revenue_token_amounts
     );
 }
 

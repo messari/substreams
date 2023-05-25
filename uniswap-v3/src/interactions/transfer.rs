@@ -9,6 +9,7 @@ use crate::store::sdk;
 
 use crate::store::store_operations;
 use crate::pb::store::v1::{StoreOperation, StoreOperations};
+use crate::schema_lib::dex_amm::v_3_0_3::keys;
 
 use crate::abi::nonFungiblePositionManager as NonFungiblePositionManagerContract;
 
@@ -19,27 +20,19 @@ pub fn create_store_operations_l1_transfer(
     call: &eth::Call, 
     log: &eth::Log,
 ) {
-    store_operations.instructions.push(
-        store_operations::add_int_64(
-            0, 
-            ["mutable-entity-count", "Position", &Hex(&NULL_ADDRESS).to_string(), transfer_event.token_id.to_string().as_str()].join(":"),
-            1
-        ) 
+    store_operations.track_position_mutation(
+        keys::get_position_key(&Hex(&NULL_ADDRESS).to_string(), &transfer_event.token_id.to_string())
     );
 }
 
 pub fn prepare_transfer_entity_changes(
-    entity_update_factory: &mut sdk::DexAmmEntityUpdateFactory, 
+    entity_update_factory: &mut sdk::EntityUpdateFactory, 
     transaction_trace: &eth::TransactionTrace,
     call: &eth::Call, 
     log: &eth::Log,
     transfer_event: NonFungiblePositionManagerContract::events::Transfer, 
 ) {
-    let pool_address = Hex(&NULL_ADDRESS).to_string();
-    let position_id = [
-            &pool_address,
-            transfer_event.token_id.to_string().as_str(),
-        ].join(":");
+    let position_id = &keys::get_position_key(&Hex(&NULL_ADDRESS).to_string(), &transfer_event.token_id.to_string());
     entity_update_factory.create_position_entity_if_not_exists(
         &transaction_trace,
         &position_id,

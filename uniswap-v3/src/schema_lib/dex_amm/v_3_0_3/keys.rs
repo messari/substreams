@@ -10,8 +10,12 @@ pub fn get_liquidity_pool_fee_key(pool_address: &str, fee_type: &enums::Liquidit
     format!("{}-{}", pool_address, fee_type.to_string())
 }
 
-pub fn get_tick_key(pool_address: &str, tick_index: scalar::BigInt) -> String {
+pub fn get_tick_key(pool_address: &str, tick_index: &scalar::BigInt) -> String {
     format!("{}-{}", pool_address, tick_index.to_string())
+}
+
+pub fn get_position_key(pool_address: &str, position_id: &str) -> String {
+    format!("{}-{}", pool_address, position_id)
 }
 
 pub fn get_pool_name(protocol: &str, input_token_symbols: &Vec<String>) -> String {
