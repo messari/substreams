@@ -10,9 +10,8 @@ use substreams_helper::storage::{
 };
 
 use crate::constants::EscrowContractStorageData;
-use crate::pb::synthetix::v1::EscrowContractVersion;
 use crate::pb::synthetix::v1::Timestamp;
-use crate::pb::synthetix::v1::{BalanceType, EscrowReward, EscrowRewards};
+use crate::pb::synthetix::v1::{EscrowReward, EscrowRewards};
 
 #[substreams::handlers::map]
 fn map_escrow_rewards(block: pbeth::v2::Block) -> Result<EscrowRewards, substreams::errors::Error> {
@@ -59,7 +58,7 @@ fn get_escrowed_balance_from_change(
         &Mapping {
             slot: BigInt::from(storage.escrowed_balance_slot),
         },
-        BalanceType::Escrowed,
+        "ESCROWED",
         &storage.version,
     );
 }
@@ -73,7 +72,7 @@ fn get_vested_balance_from_change(
         &Mapping {
             slot: BigInt::from(storage.vested_balance_slot),
         },
-        BalanceType::Vested,
+        "VESTED",
         &storage.version,
     );
 }
@@ -81,8 +80,8 @@ fn get_vested_balance_from_change(
 fn get_balance_from_mapping_change(
     change: &StorageChange,
     mapping: &Mapping,
-    balance_type: BalanceType,
-    version: &EscrowContractVersion,
+    balance_type: &str,
+    version: &str,
 ) -> Option<EscrowReward> {
     if let Some(preimage) = &change.preimage {
         let holder = mapping.key_from_preimage::<Address>(preimage.to_owned());

@@ -3,9 +3,7 @@ use substreams_entity_change::pb::entity::EntityChanges;
 use substreams_helper::convert::BigIntDeserializeExt;
 use substreams_helper::tables::Tables;
 
-use crate::pb::synthetix::v1::{
-    BalanceType, EscrowContractVersion, EscrowReward, EscrowRewards, TokenBalance, TokenBalances,
-};
+use crate::pb::synthetix::v1::{EscrowReward, EscrowRewards, TokenBalance, TokenBalances};
 
 #[substreams::handlers::map]
 fn graph_out(
@@ -44,18 +42,8 @@ fn graph_out(
         let amount = reward.balance.unwrap().deserialize();
         tables
             .update_row("EscrowReward", ids.0.clone())
-            .set(
-                "balance_type",
-                escrow_balance_type_to_graphql_enum(
-                    BalanceType::from_i32(reward.balance_type).unwrap(),
-                ),
-            )
-            .set(
-                "contract_version",
-                escrow_contract_version_to_graphql_enum(
-                    EscrowContractVersion::from_i32(reward.escrow_contract_version).unwrap(),
-                ),
-            )
+            .set("balance_type", reward.balance_type)
+            .set("contract_version", reward.escrow_contract_version)
             .set("holder", reward.holder)
             .set_bigint("balance", amount.as_ref())
             .set_bigint("timestamp", &timestamp.into())
@@ -85,18 +73,4 @@ fn reward_ids(reward: &EscrowReward) -> (String, String) {
         reward.balance_type, reward.escrow_contract_version, reward.holder
     );
     return (id.clone(), format!("{}-{}", id, timestamp.block_number));
-}
-
-fn escrow_balance_type_to_graphql_enum(btype: BalanceType) -> String {
-    match btype {
-        BalanceType::Escrowed => "ESCROWED".to_string(),
-        BalanceType::Vested => "VESTED".to_string(),
-    }
-}
-
-fn escrow_contract_version_to_graphql_enum(version: EscrowContractVersion) -> String {
-    match version {
-        EscrowContractVersion::V1 => "V1".to_string(),
-        EscrowContractVersion::V2 => "V2".to_string(),
-    }
 }

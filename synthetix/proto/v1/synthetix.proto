@@ -23,19 +23,11 @@ message TokenBalances {
   repeated TokenBalance balances = 1;
 }
 
-enum BALANCE_TYPE{
-    ESCROWED = 0;
-    VESTED = 1;
-}
 
-enum ESCROW_CONTRACT_VERSION {
-    V1 = 0;
-    V2 = 1;
-}
  
 message EscrowReward {
-  BALANCE_TYPE balance_type = 1;
-  ESCROW_CONTRACT_VERSION escrow_contract_version = 2;
+  string balance_type = 1;
+  string escrow_contract_version = 2;
   BigInt balance = 3;
   string holder = 4;
 
