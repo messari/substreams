@@ -5,8 +5,9 @@ use substreams::store::{StoreGet, StoreGetBigDecimal, StoreGetBigInt};
 use substreams_entity_change::pb::entity::entity_change::Operation;
 use substreams_entity_change::pb::entity::{EntityChange, EntityChanges};
 
+use crate::common::constants;
 use crate::store_key::StoreKey;
-use crate::utils::{get_day_id, UNISWAP_V2_FACTORY};
+use crate::utils;
 
 #[substreams::handlers::map]
 pub fn map_financial_daily_snapshot_entity(
@@ -27,14 +28,15 @@ pub fn map_financial_daily_snapshot_entity(
                     continue;
                 }
 
-                let delta_timestamp = delta.new_value.clone().to_u64() as i64;
-                let day_id = get_day_id(delta_timestamp) - BigInt::one();
+                let delta_timestamp = delta.new_value.to_u64() as i64;
+                let day_id = utils::get_day_id(delta_timestamp) - BigInt::one();
 
                 let block_number = input_token_balances_store
-                    .get_last(StoreKey::LatestBlockNumber.unique_id())
+                    .get_at(delta.ordinal, StoreKey::LatestBlockNumber.unique_id())
                     .unwrap();
 
                 entity_changes.push(create_financial_daily_snapshot(
+                    delta.ordinal,
                     day_id,
                     &protocol_tvl_store,
                     &protocol_cumulative_fields_store,
@@ -51,6 +53,7 @@ pub fn map_financial_daily_snapshot_entity(
 }
 
 fn create_financial_daily_snapshot(
+    ordinal: u64,
     day_id: BigInt,
     protocol_tvl_store: &StoreGetBigDecimal,
     protocol_cumulative_fields_store: &StoreGetBigDecimal,
@@ -58,36 +61,54 @@ fn create_financial_daily_snapshot(
     block_number: &BigInt,
     timestamp: &BigInt,
 ) -> EntityChange {
-    let id = [UNISWAP_V2_FACTORY.to_string(), day_id.clone().to_string()].join("-");
+    let id = [
+        constants::UNISWAP_V2_FACTORY.to_string(),
+        day_id.clone().to_string(),
+    ]
+    .join("-");
 
-    let mut financial_daily_snapshot: EntityChange =
-        EntityChange::new("FinancialsDailySnapshot", id.as_str(), 0, Operation::Create);
+    let mut financial_daily_snapshot: EntityChange = EntityChange::new(
+        "FinancialsDailySnapshot",
+        id.as_str(),
+        ordinal,
+        Operation::Create,
+    );
 
     financial_daily_snapshot
         .change("id", id)
-        .change("protocol", "DexAmmProtocol".to_string())
+        .change("protocol", constants::UNISWAP_V2_FACTORY.to_string())
         .change(
             "totalValueLockedUSD",
             protocol_tvl_store
-                .get_last(StoreKey::TotalValueLockedUSD.get_unique_protocol_key())
+                .get_at(
+                    ordinal,
+                    StoreKey::TotalValueLockedUSD.get_unique_protocol_key(),
+                )
                 .unwrap_or(BigDecimal::zero()),
         )
         .change(
             "dailyVolumeUSD",
             protocol_daily_fields_store
-                .get_last(StoreKey::DailyVolumeUSD.get_unique_daily_protocol_key(day_id.clone()))
+                .get_at(
+                    ordinal,
+                    StoreKey::DailyVolumeUSD.get_unique_daily_protocol_key(day_id.clone()),
+                )
                 .unwrap_or(BigDecimal::zero()),
         )
         .change(
             "cumulativeVolumeUSD",
             protocol_cumulative_fields_store
-                .get_last(StoreKey::CumulativeVolumeUSD.get_unique_protocol_key())
+                .get_at(
+                    ordinal,
+                    StoreKey::CumulativeVolumeUSD.get_unique_protocol_key(),
+                )
                 .unwrap_or(BigDecimal::zero()),
         )
         .change(
             "dailySupplySideRevenueUSD",
             protocol_daily_fields_store
-                .get_last(
+                .get_at(
+                    ordinal,
                     StoreKey::DailySupplySideRevenueUSD
                         .get_unique_daily_protocol_key(day_id.clone()),
                 )
@@ -96,13 +117,17 @@ fn create_financial_daily_snapshot(
         .change(
             "cumulativeSupplySideRevenueUSD",
             protocol_cumulative_fields_store
-                .get_last(StoreKey::CumulativeSupplySideRevenueUSD.get_unique_protocol_key())
+                .get_at(
+                    ordinal,
+                    StoreKey::CumulativeSupplySideRevenueUSD.get_unique_protocol_key(),
+                )
                 .unwrap_or(BigDecimal::zero()),
         )
         .change(
             "dailyProtocolSideRevenueUSD",
             protocol_daily_fields_store
-                .get_last(
+                .get_at(
+                    ordinal,
                     StoreKey::DailyProtocolSideRevenueUSD
                         .get_unique_daily_protocol_key(day_id.clone()),
                 )
@@ -111,13 +136,17 @@ fn create_financial_daily_snapshot(
         .change(
             "cumulativeProtocolSideRevenueUSD",
             protocol_cumulative_fields_store
-                .get_last(StoreKey::CumulativeProtocolSideRevenueUSD.get_unique_protocol_key())
+                .get_at(
+                    ordinal,
+                    StoreKey::CumulativeProtocolSideRevenueUSD.get_unique_protocol_key(),
+                )
                 .unwrap_or(BigDecimal::zero()),
         )
         .change(
             "dailyTotalRevenueUSD",
             protocol_daily_fields_store
-                .get_last(
+                .get_at(
+                    ordinal,
                     StoreKey::DailyTotalRevenueUSD.get_unique_daily_protocol_key(day_id.clone()),
                 )
                 .unwrap_or(BigDecimal::zero()),
@@ -125,7 +154,10 @@ fn create_financial_daily_snapshot(
         .change(
             "cumulativeTotalRevenueUSD",
             protocol_cumulative_fields_store
-                .get_last(StoreKey::CumulativeTotalRevenueUSD.get_unique_protocol_key())
+                .get_at(
+                    ordinal,
+                    StoreKey::CumulativeTotalRevenueUSD.get_unique_protocol_key(),
+                )
                 .unwrap_or(BigDecimal::zero()),
         )
         .change("blockNumber", block_number)

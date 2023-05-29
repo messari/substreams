@@ -1,7 +1,6 @@
-use substreams::store::{DeltaBigDecimal, Deltas};
+use substreams::store::{DeltaBigDecimal, Deltas, StoreAdd};
 use substreams::store::{StoreAddBigDecimal, StoreNew};
 
-use crate::common::traits::StoreSetter;
 use crate::store_key::StoreKey;
 use crate::utils::delta_value;
 
@@ -13,7 +12,8 @@ pub fn store_protocol_cumulative_fields(
     for delta in pool_cumulative_fields_deltas.deltas {
         match &delta.key {
             key if key.starts_with(StoreKey::CumulativeVolumeUSD.unique_id().as_str()) => {
-                output_store.add_value(
+                output_store.add(
+                    delta.ordinal,
                     StoreKey::CumulativeVolumeUSD.get_unique_protocol_key(),
                     &delta_value(&delta),
                 )
@@ -24,7 +24,8 @@ pub fn store_protocol_cumulative_fields(
                     .as_str(),
             ) =>
             {
-                output_store.add_value(
+                output_store.add(
+                    delta.ordinal,
                     StoreKey::CumulativeSupplySideRevenueUSD.get_unique_protocol_key(),
                     &delta_value(&delta),
                 )
@@ -35,13 +36,15 @@ pub fn store_protocol_cumulative_fields(
                     .as_str(),
             ) =>
             {
-                output_store.add_value(
+                output_store.add(
+                    delta.ordinal,
                     StoreKey::CumulativeProtocolSideRevenueUSD.get_unique_protocol_key(),
                     &delta_value(&delta),
                 )
             }
             key if key.starts_with(StoreKey::CumulativeTotalRevenueUSD.unique_id().as_str()) => {
-                output_store.add_value(
+                output_store.add(
+                    delta.ordinal,
                     StoreKey::CumulativeTotalRevenueUSD.get_unique_protocol_key(),
                     &delta_value(&delta),
                 )

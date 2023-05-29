@@ -1,15 +1,10 @@
 use std::ops::Sub;
 
-use substreams::hex;
-use substreams::scalar::{BigDecimal, BigInt};
-use substreams::store::{DeltaBigDecimal, StoreGet, StoreGetBigInt};
-
-use crate::pb::erc20::v1::Erc20Token;
-use crate::pb::uniswap::v2::Pool;
+use crate::common::constants;
 use crate::store_key::StoreKey;
-
-pub const UNISWAP_V2_FACTORY: &str = "5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f";
-pub const UNISWAP_V2_FACTORY_SLICE: [u8; 20] = hex!("5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f");
+use substreams::scalar::{BigDecimal, BigInt};
+use substreams::store::{DeltaBigDecimal, DeltaBigInt, Deltas};
+use substreams::store::{StoreGet, StoreGetBigDecimal};
 
 pub fn get_day_id(timestamp: i64) -> BigInt {
     const SECONDS_IN_DAY: i64 = 86400_i64;
@@ -21,6 +16,11 @@ pub fn get_hour_id(timestamp: i64) -> BigInt {
     BigInt::from(timestamp / SECONDS_IN_HOUR)
 }
 
+pub fn is_pricing_asset(address: &String) -> bool {
+    constants::STABLE_COINS.contains(&address.as_str())
+        || constants::WHITELIST_TOKENS.contains(&address.as_str())
+}
+
 pub fn delta_value(delta: &DeltaBigDecimal) -> BigDecimal {
     let old_value = delta.old_value.clone();
     let new_value = delta.new_value.clone();
@@ -28,48 +28,32 @@ pub fn delta_value(delta: &DeltaBigDecimal) -> BigDecimal {
     return new_value.clone().sub(old_value);
 }
 
-impl Pool {
-    pub fn token0_ref(&self) -> Erc20Token {
-        self.input_tokens.as_ref().unwrap().items[0].clone()
+pub fn calculate_revenue(volume: BigDecimal) -> (BigDecimal, BigDecimal) {
+    let supply_side_revenue =
+        volume.clone() * BigDecimal::from(25_i32) / BigDecimal::from(10000_i32);
+    let protocol_side_revenue =
+        volume.clone() * BigDecimal::from(5_i32) / BigDecimal::from(10000_i32);
+
+    (supply_side_revenue, protocol_side_revenue)
+}
+
+pub fn get_token_price(ordinal: u64, store: &StoreGetBigDecimal, address: &String) -> BigDecimal {
+    store
+        .get_at(ordinal, StoreKey::TokenPrice.get_unique_pool_key(address))
+        .unwrap_or(BigDecimal::zero())
+}
+
+pub fn get_output_token_amount(
+    balance_deltas: &Deltas<DeltaBigInt>,
+    pool_address: &String,
+) -> BigInt {
+    let mut balance_diff = BigInt::zero();
+
+    for delta in balance_deltas.deltas.iter() {
+        if delta.key == StoreKey::OutputTokenBalance.get_unique_pool_key(pool_address) {
+            balance_diff = delta.new_value.clone() - delta.old_value.clone();
+        }
     }
 
-    pub fn token0_address(&self) -> String {
-        self.token0_ref().name
-    }
-
-    pub fn token0_decimals(&self) -> u64 {
-        self.token0_ref().decimals as u64
-    }
-
-    pub fn token0_balance(&self, balances_store: &StoreGetBigInt) -> BigInt {
-        balances_store
-            .get_last(StoreKey::Token0Balance.get_unique_pool_key(&self.address))
-            .unwrap_or(BigInt::zero())
-    }
-
-    pub fn token1_ref(&self) -> Erc20Token {
-        self.input_tokens.as_ref().unwrap().items[1].clone()
-    }
-
-    pub fn token1_address(&self) -> String {
-        self.token1_ref().name
-    }
-
-    pub fn token1_decimals(&self) -> u64 {
-        self.token1_ref().decimals as u64
-    }
-
-    pub fn token1_balance(&self, balances_store: &StoreGetBigInt) -> BigInt {
-        balances_store
-            .get_last(StoreKey::Token1Balance.get_unique_pool_key(&self.address))
-            .unwrap_or(BigInt::zero())
-    }
-
-    pub fn input_tokens(&self) -> Vec<String> {
-        vec![self.token0_address(), self.token1_address()]
-    }
-
-    pub fn output_token(&self) -> String {
-        self.output_token.clone().unwrap().address
-    }
+    balance_diff
 }
