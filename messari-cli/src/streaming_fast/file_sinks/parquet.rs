@@ -84,11 +84,21 @@ mod tests {
     use crate::streaming_fast::streaming_fast_utils::assert_data_sinks_to_parquet_correctly;
 
     #[derive(TestData)]
-    struct FlatSimple {
+    pub enum TestEnum {
+        Field1,
+        Field2,
+        Field3
+    }
+
+    #[derive(TestData)]
+    pub struct FlatSimple {
         field1: u32,
         field2: u64,
         field3: i32,
         field4: i64,
+        #[proto_type(Enum)]
+        field5: TestEnum,
+        field6: String
         // TODO: Put all types here for testing
     }
 

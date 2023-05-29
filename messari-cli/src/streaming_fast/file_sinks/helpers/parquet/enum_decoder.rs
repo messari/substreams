@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use parquet::data_type::{ByteArray, ByteArrayType};
+use parquet::data_type::{BoolType, ByteArray, ByteArrayType, Int32Type};
 use parquet::file::writer::SerializedRowGroupWriter;
 use derives::proto_structure_info::{FieldInfo, FieldSpecification};
 
@@ -88,7 +88,7 @@ impl EnumDecoder {
         match self.field_specification {
             FieldSpecification::Required => {
                 // Assuming 0 to be the default enum variant value
-                if let Some(default_enum_value) = self.enum_mappings.get(&0) {
+                if let Some(default_enum_value) = self.enum_mappings.get(&1) {
                     self.values.push(default_enum_value.clone());
                 } else {
                     panic!("TODO: (no default enum value set!)");

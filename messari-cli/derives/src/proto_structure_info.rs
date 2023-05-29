@@ -116,7 +116,6 @@ impl EnumInfo {
         }
     }
 
-    #[cfg(test)]
     pub fn from_fields(mut starting_tag: u8, field_names: Vec<String>) -> Self {
         let mut enum_mappings = HashMap::new();
 

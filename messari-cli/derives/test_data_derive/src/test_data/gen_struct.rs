@@ -227,14 +227,19 @@ fn parse_field_info(data_struct: DataStruct, mut tag_number: u8) -> FieldInfo {
 
         check_type(&type_string, &proto_alternative_type);
 
-        let is_struct_type = is_struct_type(&type_string, &outer_type);
-        let is_oneof_type = if let Some(proto_type) = proto_alternative_type.as_ref() {
-            proto_type.is_oneof_type()
+        let (is_oneof_type, is_enum_type) = if let Some(proto_type) = proto_alternative_type.as_ref() {
+            (proto_type.is_oneof_type(), proto_type.is_enum_type())
         } else {
-            false
+            (false, false)
         };
 
-        let (proto_field_type, option_added) = get_proto_field_type(&type_string, &outer_type, is_oneof_type, is_struct_type);
+        let is_struct_type = if is_oneof_type || is_enum_type {
+            false
+        } else {
+            is_struct_type(&type_string, &outer_type)
+        };
+
+        let (proto_field_type, option_added) = get_proto_field_type(&type_string, &outer_type, is_oneof_type, is_struct_type, is_enum_type);
 
         let repetition_type = get_repetition_type(&type_string, is_struct_type);
 
@@ -333,6 +338,7 @@ impl ParquetType {
                 "actual: {:?}\", field_value)};").to_string()
             }
         }
+
         match self {
             ParquetType::Bool => val_unwrap!(Bool),
             ParquetType::Int => val_unwrap!(Int),
@@ -343,9 +349,13 @@ impl ParquetType {
             ParquetType::Double => val_unwrap!(Double),
             ParquetType::String => val_unwrap!(Str),
             ParquetType::Bytes => val_unwrap!(Bytes),
-            ParquetType::Enum(enum_type) => todo!(), // Make sure if enum type we auto derive a from_str trait method to allow for easy mapping
+            ParquetType::Enum(enum_type) => format!("let val: {0} = if let parquet::record::Field::Str(val) = field_value {{\n        \
+                                                                    val.into()\n    \
+                                                                }} else {{\n        \
+                                                                    unreachable!(\"Parquet type read does not match expected type. Expected: Str for deriving enum type: {0}, actual: {{:?}}\", field_value)\n    \
+                                                                }};", enum_type),
             ParquetType::Struct(struct_type) => format!("let val = if let parquet::record::Field::Group(val) = field_value {{\n        \
-                                                                    {}::get_from_parquet_row(val.clone()))\n    \
+                                                                    {}::get_from_parquet_row(val.clone()).0\n    \
                                                                 }} else {{\n        \
                                                                     unreachable!(\"Parquet type read does not match expected type. Expected: Group, actual: {{:?}}\", field_value)\n    \
                                                                 }};", struct_type),
@@ -400,8 +410,12 @@ fn get_proto_type(proto_alternative_type: &Option<ProtoAlternativeType>, is_stru
 }
 
 /// Returns tuple in form => (proto_field_type, option_added)
-fn get_proto_field_type(type_string: &str, outer_type: &str, is_oneof_type: bool, is_struct_type: bool) -> (String, bool) {
-    let mut proto_field_type = if is_struct_type {
+fn get_proto_field_type(type_string: &str, outer_type: &str, is_oneof_type: bool, is_struct_type: bool, is_enum_type: bool) -> (String, bool) {
+    if is_enum_type {
+        return ("i32".to_string(), false);
+    }
+
+    let mut proto_field_type = if is_struct_type || is_oneof_type {
         let inner_type = get_inner_type(type_string);
         let type_name = inner_type.split('<').next().unwrap().to_string();
         let type_name_dto = format!("{}Dto", type_name);
@@ -542,6 +556,7 @@ impl FieldAssociation {
 
     pub(crate) fn from_oneof_field_and_type_idents(field_name: String, field_type: String, oneof_field_and_type_info: Vec<(String, String)>) -> Self {
         fn parse_parquet_type(type_ident: &str) -> ParquetType {
+            // TODO: Add support for optional and repeated types
             match type_ident {
                 "bool" => ParquetType::Bool,
                 "i32" => ParquetType::Int,
@@ -552,7 +567,7 @@ impl FieldAssociation {
                 "f64" => ParquetType::Double,
                 "Vec<u8>" => ParquetType::Bytes,
                 "String" => ParquetType::String,
-                _ => ParquetType::Struct(type_ident.to_string()) // TODO: Here we should really do a check just before to make sure type is not repeated or optional
+                _ => ParquetType::Struct(type_ident.to_string())
             }
         }
 
@@ -589,6 +604,9 @@ impl FieldAssociation {
                                                                  {1}\n    \
                                                                  {0} = Some(val);\n\
                                                               }},", field_info.field_name, field_info.get_unwrap_statement());
+
+
+
                 vec![match_block.parse().unwrap()]
             },
             FieldAssociation::OneofField {field_name, field_type, oneof_fields} => {
@@ -598,9 +616,9 @@ impl FieldAssociation {
                                                                 if {0}.is_some() {{\n    \
                                                                     panic!(\"There is more than one value set for oneof field: {0}!\");\n     \
                                                                 }} else {{\n        \
-                                                                    {0} = Some({2}::{});\n    \
+                                                                    {0} = Some({2}::{3}(val));\n    \
                                                                 }}
-                                                            }},", field_info.field_name, field_info.get_unwrap_statement(), field_type);
+                                                            }},", field_name, field_info.get_unwrap_statement(), field_type, field_info.field_name);
 
                     match_block.parse().unwrap()
                 }).collect()
@@ -636,7 +654,6 @@ fn check_type(type_string: &String, proto_alternative_type: &Option<ProtoAlterna
                 ProtoAlternativeType::Sfixed64 => assert_eq!(type_string, "i64", "Proto alternative type: {:?} is not compatible with underlying field type!\nType: {}", proto_type, type_string),
                 ProtoAlternativeType::Sint32 => assert_eq!(type_string, "i32", "Proto alternative type: {:?} is not compatible with underlying field type!\nType: {}", proto_type, type_string),
                 ProtoAlternativeType::Sint64 => assert_eq!(type_string, "i64", "Proto alternative type: {:?} is not compatible with underlying field type!\nType: {}", proto_type, type_string),
-                ProtoAlternativeType::Enum => assert_eq!(type_string, "i32", "Proto alternative type: {:?} is not compatible with underlying field type!\nType: {}", proto_type, type_string),
                 ProtoAlternativeType::Oneof(_) => {
                     assert!(!type_string.starts_with("Option<"), "Oneof type: {:?} can't be an optional type!\nType: {}", proto_type, type_string);
                     assert!(!type_string.starts_with("Vec<"), "Oneof type: {:?} can't be a repeated type!\nType: {}", proto_type, type_string);

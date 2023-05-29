@@ -44,6 +44,10 @@ impl ProtoAlternativeType {
         }
     }
 
+    pub(crate) fn is_enum_type(&self) -> bool {
+        self == &ProtoAlternativeType::Enum
+    }
+
     pub(crate) fn get_num_tags(&self) -> u8 {
         if let ProtoAlternativeType::Oneof(field_idents) = self {
             field_idents.len() as u8
@@ -99,8 +103,9 @@ struct ProtoTypeInfo(ProtoAlternativeType);
 impl Parse for ProtoTypeInfo {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let ident: Ident = input.parse()?;
+
         let ident_string = ident.to_string();
-        if ident_string=="oneof" {
+        if ident_string=="Oneof" {
             let group = proc_macro2::Group::parse(input).unwrap();
             let field_idents = match syn::parse2::<OneofFieldInfo>(group.stream()) {
                 Ok(oneof_field_info) => oneof_field_info.0,
@@ -118,13 +123,13 @@ impl Parse for ProtoTypeInfo {
             Ok(ProtoTypeInfo(ProtoAlternativeType::Oneof(field_idents)))
         } else {
             Ok(match ident_string.as_str() {
-                "fixed32" => ProtoTypeInfo(ProtoAlternativeType::Fixed32),
-                "fixed64" => ProtoTypeInfo(ProtoAlternativeType::Fixed64),
-                "sfixed32" => ProtoTypeInfo(ProtoAlternativeType::Sfixed32),
-                "sfixed64" => ProtoTypeInfo(ProtoAlternativeType::Sfixed64),
-                "sint32" => ProtoTypeInfo(ProtoAlternativeType::Sint32),
-                "sint64" => ProtoTypeInfo(ProtoAlternativeType::Sint64),
-                "enum" => ProtoTypeInfo(ProtoAlternativeType::Enum),
+                "Fixed32" => ProtoTypeInfo(ProtoAlternativeType::Fixed32),
+                "Fixed64" => ProtoTypeInfo(ProtoAlternativeType::Fixed64),
+                "Sfixed32" => ProtoTypeInfo(ProtoAlternativeType::Sfixed32),
+                "Sfixed64" => ProtoTypeInfo(ProtoAlternativeType::Sfixed64),
+                "Sint32" => ProtoTypeInfo(ProtoAlternativeType::Sint32),
+                "Sint64" => ProtoTypeInfo(ProtoAlternativeType::Sint64),
+                "Enum" => ProtoTypeInfo(ProtoAlternativeType::Enum),
                 _ => panic!("Unknown proto type!: {}", ident_string),
             })
         }
@@ -142,6 +147,3 @@ impl Parse for OneofFieldInfo {
         }).collect()))
     }
 }
-
-// struct OneofFieldIdentTuplesGroup((String, String));
-// impl Parse for OneofFieldIdentTuplesGroup {}
