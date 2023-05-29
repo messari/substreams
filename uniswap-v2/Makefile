@@ -4,7 +4,6 @@ build_all:
 	$(MAKE) -C ../erc20-price pack
 	cargo build --target wasm32-unknown-unknown --release
 
-
 .PHONY: build
 build:
 	cargo build --target wasm32-unknown-unknown --release
