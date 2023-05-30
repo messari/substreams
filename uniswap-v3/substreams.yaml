@@ -43,6 +43,7 @@ modules:
     kind: map
     initialBlock: 12369620
     inputs:
+      - source: sf.substreams.v1.Clock
       - source: sf.ethereum.type.v2.Block
       - store: store_data_sources
     output:
@@ -74,6 +75,7 @@ modules:
     kind: map
     initialBlock: 12369620
     inputs:
+      - source: sf.substreams.v1.Clock
       - source: sf.ethereum.type.v2.Block
       - store: store_data_sources
       - store: add_int64_l1

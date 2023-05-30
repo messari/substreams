@@ -3,6 +3,7 @@ use substreams::errors::Error;
 use substreams_ethereum::{pb::eth::v2::{self as eth}, Event};
 use substreams::store;
 use substreams::Hex;
+use substreams::pb::substreams::Clock;
 
 use crate::{pb::dex_amm::v3_0_3::{
     DataSource, PrunedTransaction, 
@@ -17,6 +18,7 @@ use crate::abi::nonFungiblePositionManager as NonFungiblePositionManagerContract
 
 use crate::interactions;
 use crate::constants;
+use crate::store::sdk;
 
 use crate::keyer::{get_data_source_key};
 
@@ -26,12 +28,11 @@ use crate::utils;
 
 #[substreams::handlers::map]
 pub fn create_store_operations_l1(
+    clock: Clock,
     block: eth::Block,
     data_sources_store: store::StoreGetProto<DataSource>,
 ) -> Result<StoreOperations, Error>{
-    let mut store_operations = StoreOperations {
-        operations: Vec::<StoreOperation>::new(),
-    };
+    let mut store_operation_factory = sdk::StoreOperationFactory::new(clock);
 
     for transaction_trace in block.transaction_traces { 
         for call_view in transaction_trace.calls() {
@@ -40,27 +41,27 @@ pub fn create_store_operations_l1(
                     0 => {
                         for log in &call_view.call.logs {
                             if let Some(mint_event) = PoolContract::events::Mint::match_and_decode(&log) {
-                                interactions::mint::create_store_operations_l1_mint(&mut store_operations, mint_event, call_view.call, log);
+                                interactions::mint::create_store_operations_l1_mint(&mut store_operation_factory, mint_event, call_view.call, log);
                             } else if let Some(burn_event) = PoolContract::events::Burn::match_and_decode(&log) {
-                                interactions::burn::create_store_operations_l1_burn(&mut store_operations, burn_event, call_view.call, log);
+                                interactions::burn::create_store_operations_l1_burn(&mut store_operation_factory, burn_event, call_view.call, log);
                             }
                         }
                     }
                     1 => {
                         for log in &call_view.call.logs {
                             if let Some(pool_created_event) = FactoryContract::events::PoolCreated::match_and_decode(&log) {
-                                interactions::pool_created::create_store_operations_l1_pool_created(&mut store_operations, pool_created_event, call_view.call, log);
+                                interactions::pool_created::create_store_operations_l1_pool_created(&mut store_operation_factory, pool_created_event, call_view.call, log);
                             }
                         }
                     }
                     2 => {
                         for log in &call_view.call.logs {
                             if let Some(increase_liquidity_event) = NonFungiblePositionManagerContract::events::IncreaseLiquidity::match_and_decode(&log) {
-                                interactions::increase_liquidity::create_store_operations_l1_increase_liquidity(&mut store_operations, increase_liquidity_event, call_view.call, log);
+                                interactions::increase_liquidity::create_store_operations_l1_increase_liquidity(&mut store_operation_factory, increase_liquidity_event, call_view.call, log);
                             } else if let Some(decrease_liquidity_event) = NonFungiblePositionManagerContract::events::DecreaseLiquidity::match_and_decode(&log) {
-                                interactions::decrease_liquidity::create_store_operations_l1_decrease_liquidity(&mut store_operations, decrease_liquidity_event, call_view.call, log);
+                                interactions::decrease_liquidity::create_store_operations_l1_decrease_liquidity(&mut store_operation_factory, decrease_liquidity_event, call_view.call, log);
                             } else if let Some(transfer_event) = NonFungiblePositionManagerContract::events::Transfer::match_and_decode(&log) {
-                                interactions::transfer::create_store_operations_l1_transfer(&mut store_operations, transfer_event, call_view.call, log);
+                                interactions::transfer::create_store_operations_l1_transfer(&mut store_operation_factory, transfer_event, call_view.call, log);
                             }
                         }
                     }
@@ -71,7 +72,11 @@ pub fn create_store_operations_l1(
     }
 
 
-    Ok(store_operations)
+    Ok(
+        StoreOperations {
+            operations: store_operation_factory.get_operations()
+        }
+    )
 }
 
 #[substreams::handlers::store]

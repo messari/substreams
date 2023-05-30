@@ -15,12 +15,12 @@ use substreams_ethereum::NULL_ADDRESS;
 
 
 pub fn create_store_operations_l1_decrease_liquidity(
-    store_operations: &mut StoreOperations,
+    store_operation_factory: &mut sdk::StoreOperationFactory,
     decrease_liquidity_event: NonFungiblePositionManagerContract::events::DecreaseLiquidity, 
     call: &eth::Call, 
     log: &eth::Log,
 ) {
-    store_operations.track_position_mutation(
+    store_operation_factory.track_position_mutation(
         keys::get_position_key(&Hex(&NULL_ADDRESS).to_string(), &decrease_liquidity_event.token_id.to_string())
     );
 }

@@ -15,12 +15,12 @@ use crate::abi::nonFungiblePositionManager as NonFungiblePositionManagerContract
 
 
 pub fn create_store_operations_l1_transfer(
-    store_operations: &mut StoreOperations,
+    store_operation_factory: &mut sdk::StoreOperationFactory,
     transfer_event: NonFungiblePositionManagerContract::events::Transfer, 
     call: &eth::Call, 
     log: &eth::Log,
 ) {
-    store_operations.track_position_mutation(
+    store_operation_factory.track_position_mutation(
         keys::get_position_key(&Hex(&NULL_ADDRESS).to_string(), &transfer_event.token_id.to_string())
     );
 }

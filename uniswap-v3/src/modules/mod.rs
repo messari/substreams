@@ -10,7 +10,10 @@ pub mod store_auxiliary_data;
 #[path = "4_prepare_entity_changes.rs"]
 pub mod prepare_entity_changes;
 
-#[path = "5_map_graph_out.rs"]
+#[path = "5_prepare_entity_snapshots.rs"]
+pub mod prepare_entity_snapshots;
+
+#[path = "6_map_graph_out.rs"]
 pub mod map_graph_out;
 
 pub use store_data_sources::*;

@@ -13,16 +13,16 @@ use crate::store::store_operations;
 use crate::pb::store::v1::{StoreOperation, StoreOperations};
 
 pub fn create_store_operations_l1_mint(
-    store_operations: &mut StoreOperations,
+    store_operation_factory: &mut sdk::StoreOperationFactory,
     mint_event: PoolContract::events::Mint, 
     call: &eth::Call, 
     log: &eth::Log,
 ) {
     let pool_address = Hex(&call.address).to_string();
-    store_operations.track_tick_mutation(
+    store_operation_factory.track_tick_mutation(
         keys::get_tick_key(&pool_address, &mint_event.tick_lower)
     );
-    store_operations.track_tick_mutation(
+    store_operation_factory.track_tick_mutation(
         keys::get_tick_key(&pool_address, &mint_event.tick_upper)
     );
 }
@@ -40,7 +40,7 @@ pub fn prepare_mint_entity_changes(
     let tick_lower_id = keys::get_tick_key(&liquidity_pool_id, &mint_event.tick_lower);
     let tick_upper_id = keys::get_tick_key(&liquidity_pool_id, &mint_event.tick_lower);
 
-    let input_tokens = match append_string_l1_store.get_last(["LiquidityPool", liquidity_pool_id.as_str(), "inputTokens"].join(":")) {
+    let input_tokens = match append_string_l1_store.get_last(["raw", "LiquidityPool", liquidity_pool_id.as_str(), "inputTokens"].join(":")) {
         Some(input_tokens) => input_tokens.into_iter().map(|s| s.into_bytes()).collect(),
         None => {
             panic!("No input tokens found for pool address: {}", liquidity_pool_id)

@@ -1,5 +1,6 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
+use substreams::pb::substreams::Clock;
 use substreams::scalar::{BigDecimal, BigInt, self};
 use substreams_ethereum::pb::eth::v2::{self as eth};
 use substreams::Hex;
@@ -55,16 +56,16 @@ impl std::fmt::Display for EntityAccount {
 
 // Implementation of core logic for creating entities
 pub struct EntityUpdateFactory {
+    pub store_operations: StoreOperationFactory,
     pruned_transactions_map: HashMap<Vec<u8>, PrunedTransaction>,
-    pub store_operations: StoreOperations,
     entity_accounting_table: HashMap<String, EntityAccount>,
 }
 
 impl EntityUpdateFactory {
-    pub fn new(int64_store_deltas: &store::Deltas<store::DeltaInt64>) -> Self {
+    pub fn new(clock: Clock, int64_store_deltas: &store::Deltas<store::DeltaInt64>) -> Self {
         EntityUpdateFactory {
             pruned_transactions_map: HashMap::new(),
-            store_operations: StoreOperations::new(),
+            store_operations: StoreOperationFactory::new(clock),
             entity_accounting_table: Self::get_entity_accounting_table(int64_store_deltas),
         }
     }
@@ -102,7 +103,7 @@ impl EntityUpdateFactory {
             None => {
                 let key_list = entity_id.split(":").collect::<Vec<_>>();
                 return false;
-                // panic!("Creation of mutable entity {} not accounted for in entity_accounting_table. Please add to byte_store, before prepare_entity_changes module if you would like to create this entity. ID: {}", key_list[0], key_list[1])
+                // panic!("Creation of mutable entity {} not accounted for in entity_accounting_table. Please add to int64_store, before prepare_entity_changes module if you would like to create this entity. ID: {}", key_list[0], key_list[1])
             }
         }
     }
@@ -116,6 +117,7 @@ impl EntityUpdateFactory {
                 // panic!("Mutable entity {} was not seen. Please add to byte_store, before prepare_entity_changes module if you would like to create this entity. {}", entity_id, entity_account);
             }
         }
+
         EntityUpdates {
             pruned_transactions: self.pruned_transactions_map.values().cloned().collect(),
             store_operations: self.store_operations.get_operations(),
@@ -522,6 +524,10 @@ fn entity_array_change_key(entity_type: &str, entity_id: &str, field: &str, inde
     ["entity-change", entity_type, entity_id, field, index.to_string().as_str(), array_size.to_string().as_str()].join(":")
 }
 
+fn entity_last_updated_key(entity_type: &str, entity_id: &str) -> String {
+    ["last-updated", entity_type, entity_id].join(":")
+}
+
 fn raw_store_key(key: &str) -> String {
     ["raw", key].join(":")
 }
@@ -530,21 +536,41 @@ fn track_entity_mutation_key(entity_type: &str, entity_id: &str) -> String {
     ["entity-mutation-count", entity_type, entity_id].join(":")
 }
 
+pub struct StoreOperationFactory {
+    timestamp: i64,
+    operations: Vec<StoreOperation>,
+    entity_updates: HashSet<String>,
+}
+
 // Implement core methods for StoreOperations
-impl StoreOperations {
-    pub fn new() -> Self {
-        StoreOperations {
+impl StoreOperationFactory {
+    pub fn new(clock: Clock) -> Self {
+        StoreOperationFactory {
+            timestamp: clock.timestamp.unwrap().seconds,
             operations: Vec::<StoreOperation>::new(),
+            entity_updates: HashSet::<String>::new(),
         }
     }
     
     pub fn get_operations(&self) -> Vec<StoreOperation> {
         self.operations.clone()
     }
+
+    fn track_entity_update_timestamp(&mut self, entity_type: &str, entity_id: &str) {
+        if self.entity_updates.insert([entity_type, entity_id].join(":")) {
+            self.operations.push(
+                store_operations::set_int64(
+                    0,
+                    entity_last_updated_key(entity_type, entity_id),
+                    self.timestamp,
+                )
+            );
+        }
+    }
 }
 
 // Implement raw store operations
-impl StoreOperations {
+impl StoreOperationFactory {
     pub fn add_raw_int64<K: AsRef<str>>(
         &mut self,
         ordinal: u64, 
@@ -699,12 +725,13 @@ impl StoreOperations {
 
 
 // Implement store operations for DEX protocols. 
-impl StoreOperations {
+impl StoreOperationFactory {
     pub fn increment_liquidity_pool_cumulative_swap_count<K: AsRef<str>>(
         &mut self,
         ordinal: u64, 
         entity_id: K,
     ) {
+        self.track_entity_update_timestamp("LiquidityPool", entity_id.as_ref());
         self.operations.push(
             store_operations::add_int64(
                 ordinal,
@@ -719,6 +746,7 @@ impl StoreOperations {
         ordinal: u64, 
         entity_id: K,
     ) {
+        self.track_entity_update_timestamp("LiquidityPool", entity_id.as_ref());
         self.operations.push(
             store_operations::add_int64(
                 ordinal,
@@ -733,6 +761,7 @@ impl StoreOperations {
         ordinal: u64, 
         entity_id: K,
     ) {
+        self.track_entity_update_timestamp("LiquidityPool", entity_id.as_ref());
         self.operations.push(
             store_operations::add_int64(
                 ordinal,
@@ -748,6 +777,7 @@ impl StoreOperations {
         entity_id: K,
         value: Vec<BigInt>,
     ) {
+        self.track_entity_update_timestamp("LiquidityPool", entity_id.as_ref());
         let array_size = value.len();
         for (i, v) in value.into_iter().enumerate() {
             self.operations.push(
@@ -766,6 +796,7 @@ impl StoreOperations {
         entity_id: K,
         value: Vec<BigInt>,
     ) {
+        self.track_entity_update_timestamp("LiquidityPool", entity_id.as_ref());
         let array_size = value.len();
         for (i, v) in value.into_iter().enumerate() {
             self.operations.push(
@@ -784,6 +815,7 @@ impl StoreOperations {
         entity_id: K,
         value: Vec<BigInt>,
     ) {
+        self.track_entity_update_timestamp("LiquidityPool", entity_id.as_ref());
         let array_size = value.len();
         for (i, v) in value.into_iter().enumerate() {
             self.operations.push(
@@ -802,6 +834,7 @@ impl StoreOperations {
         entity_id: K,
         value: Vec<BigInt>,
     ) {
+        self.track_entity_update_timestamp("LiquidityPool", entity_id.as_ref());
         let array_size = value.len();
         for (i, v) in value.into_iter().enumerate() {
             self.operations.push(
@@ -820,6 +853,7 @@ impl StoreOperations {
         entity_id: K,
         value: Vec<BigInt>,
     ) {
+        self.track_entity_update_timestamp("LiquidityPool", entity_id.as_ref());
         let array_size = value.len();
         for (i, v) in value.into_iter().enumerate() {
             self.operations.push(
@@ -838,6 +872,7 @@ impl StoreOperations {
         entity_id: K, 
         value: BigInt,
     ) {
+        self.track_entity_update_timestamp("LiquidityPool", entity_id.as_ref());
         self.operations.push(
             store_operations::add_bigint(
                 ordinal,
@@ -853,6 +888,7 @@ impl StoreOperations {
         entity_id: K,
         value: BigInt,
     ) {
+        self.track_entity_update_timestamp("LiquidityPool", entity_id.as_ref());
         self.operations.push(
             store_operations::set_bigint(
                 ordinal,
@@ -868,6 +904,7 @@ impl StoreOperations {
         entity_id: K,
         value: BigInt,
     ) {
+        self.track_entity_update_timestamp("LiquidityPool", entity_id.as_ref());
         self.operations.push(
             store_operations::set_bigint(
                 ordinal,
@@ -883,6 +920,7 @@ impl StoreOperations {
         entity_id: K,
         value: Vec<Vec<u8>>,
     ) {
+        self.track_entity_update_timestamp("LiquidityPool", entity_id.as_ref());
         for address in value.into_iter() {
             self.operations.push(
                 store_operations::append_bytes(
@@ -899,6 +937,7 @@ impl StoreOperations {
         ordinal: u64, 
         entity_id: K,
     ) {
+        self.track_entity_update_timestamp("DexAmmProtocol", entity_id.as_ref());
         self.operations.push(
             store_operations::add_int64(
                 ordinal,
@@ -913,6 +952,7 @@ impl StoreOperations {
         ordinal: u64, 
         entity_id: K,
     ) {
+        self.track_entity_update_timestamp("DexAmmProtocol", entity_id.as_ref());
         self.operations.push(
             store_operations::add_int64(
                 ordinal,
@@ -927,6 +967,7 @@ impl StoreOperations {
         ordinal: u64, 
         entity_id: K, 
     ) {
+        self.track_entity_update_timestamp("DexAmmProtocol", entity_id.as_ref());
         self.operations.push(
             store_operations::add_int64(
                 ordinal,
@@ -941,6 +982,7 @@ impl StoreOperations {
         ordinal: u64, 
         entity_id: K,
     ) {
+        self.track_entity_update_timestamp("Position", entity_id.as_ref());
         self.operations.push(
             store_operations::add_int64(
                 ordinal,
@@ -955,6 +997,7 @@ impl StoreOperations {
         ordinal: u64, 
         entity_id: K,
     ) {
+        self.track_entity_update_timestamp("Position", entity_id.as_ref());
         self.operations.push(
             store_operations::add_int64(
                 ordinal,
@@ -970,6 +1013,7 @@ impl StoreOperations {
         entity_id: K, 
         value: Vec<BigInt>,
     ) {
+        self.track_entity_update_timestamp("Position", entity_id.as_ref());
         let array_size = value.len();
         for (i, v) in value.into_iter().enumerate() {
             self.operations.push(
@@ -988,6 +1032,7 @@ impl StoreOperations {
         entity_id: K,
         value: Vec<BigInt>,
     ) {
+        self.track_entity_update_timestamp("Position", entity_id.as_ref());
         let array_size = value.len();
         for (i, v) in value.into_iter().enumerate() {
             self.operations.push(
@@ -1006,6 +1051,7 @@ impl StoreOperations {
         entity_id: K,
         value: BigInt,
     ) {
+        self.track_entity_update_timestamp("Position", entity_id.as_ref());
         self.operations.push(
             store_operations::add_bigint(
                 ordinal,
@@ -1021,6 +1067,7 @@ impl StoreOperations {
         entity_id: K,
         value: BigInt,
     ) {
+        self.track_entity_update_timestamp("Tick", entity_id.as_ref());
         self.operations.push(
             store_operations::add_bigint(
                 ordinal,
@@ -1036,6 +1083,7 @@ impl StoreOperations {
         entity_id: K,
         value: BigInt,
     ) {
+        self.track_entity_update_timestamp("Tick", entity_id.as_ref());
         self.operations.push(
             store_operations::add_bigint(
                 ordinal,
