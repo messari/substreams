@@ -829,7 +829,7 @@ type Tick @entity {
   index: BigInt!
 
   " Liquidity pool this tick belongs to "
-  pool: LiquidityPool!
+  pool: Bytes!
 
   " Creation timestamp "
   createdTimestamp: BigInt!
@@ -953,10 +953,10 @@ type Position @entity {
   id: Bytes!
 
   " Account that owns this position "
-  account: Account!
+  account: Bytes!
 
   " The liquidity pool in which this position was opened "
-  pool: LiquidityPool!
+  pool: Bytes!
 
   " The hash of the transaction that opened this position "
   hashOpened: Bytes!
@@ -977,13 +977,13 @@ type Position @entity {
   timestampClosed: BigInt
 
   " lower tick of the position "
-  tickLower: Tick
+  tickLower: Bytes
 
   " upper tick of the position "
-  tickUpper: Tick
+  tickUpper: Bytes
 
   " Token that is to represent ownership of liquidity "
-  liquidityToken: Token
+  liquidityToken: Bytes
 
   " Type of token used to track liquidity "
   liquidityTokenType: TokenType

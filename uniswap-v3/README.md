@@ -45,3 +45,17 @@ The substream has a schema lib implemented for DEX subgraphs, and should be appl
 - Unique users fields
 - Tick prices on the tick entity
 - All positions metrics like count of open and closed positions, and also position status (hash closed).
+
+## Bugs
+- There is current some error when deploying to graph node. Deploying to graph node was working fine before adding the Tick, Position, and DexAmmProtocol entities. The error is as follows:
+    - A non-deterministic fatal error occured at block 12369739: failed to process trigger: Failed to process substreams block: Odd number of digits.
+
+## How to Run
+First navigate to the uniswap-v3 substream directory. Then, you can run the following commands:
+- Executing locally
+    1. `make build`
+    2. `make run`
+- Deploying to graph node
+    1. `make build`
+    2. `substreams pack`
+    3. `graph deploy *subgraph name*`
