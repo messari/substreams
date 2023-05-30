@@ -59,7 +59,7 @@ pub fn generate(name: &Ident, data_struct: DataStruct, starting_tag: u8) -> Toke
                 }
             }
 
-            fn get_from_parquet_row(row: parquet::record::Row) -> (Self, u64) where Self: Sized {
+            fn get_from_parquet_row(row: parquet::record::Row) -> (Self, Option<u64>) where Self: Sized {
                 #(let mut #field_names = None;
                 )*
                 let mut block_number = None;
@@ -83,7 +83,7 @@ pub fn generate(name: &Ident, data_struct: DataStruct, starting_tag: u8) -> Toke
                 (Self {
                     #(#field_names: #field_names.expect(concat!("Field: ", stringify!(#field_names), ", was not seen in parquet row!")),
                     )*
-                }, block_number.expect("Unable to retrieve block number from parquet row!"))
+                }, block_number)
             }
         }
 
@@ -190,6 +190,7 @@ fn get_oneof_groups_initialisation(field_associations: &Vec<FieldAssociation>, m
     }
 }
 
+#[derive(Debug)]
 enum RepetitionType {
     Required,
     Optional,
@@ -312,6 +313,7 @@ fn get_parquet_type(type_string: &str, proto_alternative_type: &Option<ProtoAlte
     }
 }
 
+#[derive(Debug)]
 pub(crate) enum ParquetType {
     Bool,
     Int,
@@ -331,9 +333,9 @@ impl ParquetType {
         // TODO: There should be an indentation amount arg in order to offset the right amount based on the given repetition type
         macro_rules! val_unwrap {
             ($value_type:ident) => {
-                concat!("let val = if let parquet::record::Field::",
+                concat!("let field_val = if let parquet::record::Field::",
                 stringify!($value_type),
-                "(val) = field_value {val.clone()} else {unreachable!(\"Parquet type read does not match expected type. Expected: ",
+                "(field_val) = field_value {field_val.clone()} else {unreachable!(\"Parquet type read does not match expected type. Expected: ",
                 stringify!($value_type),
                 "actual: {:?}\", field_value)};").to_string()
             }
@@ -349,13 +351,13 @@ impl ParquetType {
             ParquetType::Double => val_unwrap!(Double),
             ParquetType::String => val_unwrap!(Str),
             ParquetType::Bytes => val_unwrap!(Bytes),
-            ParquetType::Enum(enum_type) => format!("let val: {0} = if let parquet::record::Field::Str(val) = field_value {{\n        \
-                                                                    val.into()\n    \
+            ParquetType::Enum(enum_type) => format!("let field_val: {0} = if let parquet::record::Field::Str(field_val) = field_value {{\n        \
+                                                                    field_val.into()\n    \
                                                                 }} else {{\n        \
                                                                     unreachable!(\"Parquet type read does not match expected type. Expected: Str for deriving enum type: {0}, actual: {{:?}}\", field_value)\n    \
                                                                 }};", enum_type),
-            ParquetType::Struct(struct_type) => format!("let val = if let parquet::record::Field::Group(val) = field_value {{\n        \
-                                                                    {}::get_from_parquet_row(val.clone()).0\n    \
+            ParquetType::Struct(struct_type) => format!("let field_val = if let parquet::record::Field::Group(field_val) = field_value {{\n        \
+                                                                    {}::get_from_parquet_row(field_val.clone()).0\n    \
                                                                 }} else {{\n        \
                                                                     unreachable!(\"Parquet type read does not match expected type. Expected: Group, actual: {{:?}}\", field_value)\n    \
                                                                 }};", struct_type),
@@ -448,10 +450,6 @@ fn get_repetition_type(type_string: &str, is_struct_type: bool) -> RepetitionTyp
         }
     }
 
-    if is_struct_type {
-        return RepetitionType::Optional;
-    }
-
     RepetitionType::Required
 }
 
@@ -501,7 +499,7 @@ impl FieldInfo {
         self.field_associations.push(field_association);
     }
 }
-
+#[derive(Debug)]
 pub(crate) struct BasicFieldInfo {
     field_name: String,
     field_type: ParquetType,
@@ -515,20 +513,20 @@ impl BasicFieldInfo {
                 format!("{}", self.field_type.get_unwrap_statement())
             },
             RepetitionType::Optional => {
-                format!("let val = if field_value == parquet::record::Field::Null {{\n            \
+                format!("let field_val = if field_value == &parquet::record::Field::Null {{\n            \
                                     None\n        \
                                 }} else {{\n            \
                                     {}\n            \
-                                    Some(val)\n        \
+                                    Some(field_val)\n        \
                                 }};",
                         self.field_type.get_unwrap_statement())
             },
             RepetitionType::Repeated => {
-                format!("let val = if let parquet::record::Field::ListInternal(list) = field_value {{\n            \
+                format!("let field_val = if let parquet::record::Field::ListInternal(list) = field_value {{\n            \
                                     let mut parsed_values = Vec::new();
                                     for field_value in list.elements() {{\n                \
                                         {}\n                \
-                                        parsed_values.push(val);\n            \
+                                        parsed_values.push(field_val);\n            \
                                     }}\n        \
                                     parsed_values\n    \
                                 }} else {{\n       \
@@ -540,6 +538,7 @@ impl BasicFieldInfo {
     }
 }
 
+#[derive(Debug)]
 pub(crate) enum FieldAssociation {
     FieldName(BasicFieldInfo),
     OneofField {
@@ -602,7 +601,7 @@ impl FieldAssociation {
             FieldAssociation::FieldName(field_info) => {
                 let match_block = format!("\"{0}\" => {{\n    \
                                                                  {1}\n    \
-                                                                 {0} = Some(val);\n\
+                                                                 {0} = Some(field_val);\n\
                                                               }},", field_info.field_name, field_info.get_unwrap_statement());
 
 
@@ -616,7 +615,7 @@ impl FieldAssociation {
                                                                 if {0}.is_some() {{\n    \
                                                                     panic!(\"There is more than one value set for oneof field: {0}!\");\n     \
                                                                 }} else {{\n        \
-                                                                    {0} = Some({2}::{3}(val));\n    \
+                                                                    {0} = Some({2}::{3}(field_val));\n    \
                                                                 }}
                                                             }},", field_name, field_info.get_unwrap_statement(), field_type, field_info.field_name);
 

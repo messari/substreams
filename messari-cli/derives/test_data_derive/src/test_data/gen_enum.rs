@@ -25,13 +25,13 @@ pub fn generate(name: &Ident, de: DataEnum, starting_tag: u8) -> TokenStream {
     match (unit_fields.is_empty(), unnamed_fields.is_empty()) {
         (true, true) => panic!("Need to specify at least one field for enum!"),
         (true, false) => get_oneof_derives(name, starting_tag, unnamed_fields),
-        (false, true) => get_enum_derives(name, starting_tag, unit_fields),
+        (false, true) => get_enum_derives(name, unit_fields),
         (false, false) => panic!("You can only form an enum consisting of either all simple variants or all typed variants (making a oneof type) whereas both types were specified here - please go for just one!")
     }
 }
 
-fn get_enum_derives(name: &Ident, starting_tag: u8, unit_fields: Vec<Ident>) -> TokenStream {
-    let enum_values = (1..=(unit_fields.len() as i32)).into_iter().collect::<Vec<_>>();
+fn get_enum_derives(name: &Ident, unit_fields: Vec<Ident>) -> TokenStream {
+    let enum_values = (0..(unit_fields.len() as i32)).into_iter().collect::<Vec<_>>();
     let num_variants = unit_fields.len() as i32;
 
     let mut enum_fields_iter = unit_fields.clone().into_iter();
@@ -54,7 +54,7 @@ fn get_enum_derives(name: &Ident, starting_tag: u8, unit_fields: Vec<Ident>) -> 
                 }
             }
 
-            fn get_from_parquet_row(row: parquet::record::Row) -> (Self, u64) where Self: Sized {
+            fn get_from_parquet_row(row: parquet::record::Row) -> (Self, Option<u64>) where Self: Sized {
                 unreachable!(concat!("fn \"get_from_parquet_row\" should never be called for an enum type! Enum type: ", stringify!(#name)));
             }
         }
@@ -63,7 +63,7 @@ fn get_enum_derives(name: &Ident, starting_tag: u8, unit_fields: Vec<Ident>) -> 
             fn get_proto_field_info(field_name: String, field_number: u8) -> derives::proto_structure_info::FieldInfo {
                 derives::proto_structure_info::FieldInfo {
                     field_name,
-                    field_type: derives::proto_structure_info::FieldType::Enum(derives::proto_structure_info::EnumInfo::from_fields(#starting_tag, #enum_fields_vec)),
+                    field_type: derives::proto_structure_info::FieldType::Enum(derives::proto_structure_info::EnumInfo::from_fields(0, #enum_fields_vec)),
                     field_specification: derives::proto_structure_info::FieldSpecification::Required,
                     field_number: field_number as u64,
                 }
@@ -76,7 +76,7 @@ fn get_enum_derives(name: &Ident, starting_tag: u8, unit_fields: Vec<Ident>) -> 
 
         impl derives::GenRandSamples for #name {
             fn get_sample<R: rand::Rng>(rng: &mut R) -> Self where Self: Sized {
-                let enum_value = rng.gen_range(1..=#num_variants);
+                let enum_value = rng.gen_range(0..#num_variants);
                 match enum_value {
                     #(#enum_values => #name::#unit_fields,
                     )*

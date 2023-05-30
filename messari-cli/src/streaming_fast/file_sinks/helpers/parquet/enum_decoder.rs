@@ -25,7 +25,8 @@ impl EnumDecoder {
             FieldSpecification::Packed => track_repetition_lvls = true,
         };
 
-        let flattened_field_name = parquet_schema_builder.add_column_info(&field_info.field_name, field_info.field_type.clone(), &field_info.field_specification);
+        parquet_schema_builder.add_column_info(&field_info.field_name, field_info.field_type.clone(), &field_info.field_specification);
+        let flattened_field_name = parquet_schema_builder.get_flattened_field_name(&field_info.field_name);
 
         let enum_mappings = field_info.get_enum_mappings().into_iter().map(|(field_number, enum_value)| {
             (*field_number as i64, ByteArray::from(enum_value.as_str()))
@@ -88,7 +89,7 @@ impl EnumDecoder {
         match self.field_specification {
             FieldSpecification::Required => {
                 // Assuming 0 to be the default enum variant value
-                if let Some(default_enum_value) = self.enum_mappings.get(&1) {
+                if let Some(default_enum_value) = self.enum_mappings.get(&0) {
                     self.values.push(default_enum_value.clone());
                 } else {
                     panic!("TODO: (no default enum value set!)");

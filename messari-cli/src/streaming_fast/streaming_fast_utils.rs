@@ -11,11 +11,11 @@ use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
 const DUMMY_BLOCK_NUMBER: i64 = 1;
 
 #[cfg(test)]
-pub(crate) fn assert_data_sinks_to_parquet_correctly<T: TestData>() {
+pub(crate) fn assert_data_sinks_to_parquet_correctly<T: TestData + Debug>() {
     const NUM_SAMPLES: usize = 50;
 
     let mut rng = StdRng::seed_from_u64(42);
-    let test_data = T::get_samples(NUM_SAMPLES, &mut rng);
+    let mut test_data = T::get_samples(NUM_SAMPLES, &mut rng);
     let test_block_numbers = (0..NUM_SAMPLES).into_iter().map(|_| rng.gen()).collect::<Vec<i64>>();
 
     let mut sink = ParquetFileSink::new(T::get_proto_structure_info());
@@ -29,9 +29,10 @@ pub(crate) fn assert_data_sinks_to_parquet_correctly<T: TestData>() {
     let reader = SerializedFileReader::new(bytes::Bytes::from(parquet_file_data)).unwrap();
 
     for ((parquet_row, test_datum), test_block_number) in reader.get_row_iter(None).unwrap().zip(test_data).zip(test_block_numbers.into_iter()) {
-        let (parsed_data, block_number) = T::get_from_parquet_row(parquet_row);
+        let (parsed_data, block_number_result) = T::get_from_parquet_row(parquet_row);
+        assert!(block_number_result.is_some(), "Unable to parse block number from parquet row!\nParsed data: {:?}", parsed_data);
         assert_eq!(parsed_data, test_datum);
-        assert_eq!(block_number as i64, test_block_number);
+        assert_eq!(block_number_result.unwrap() as i64, test_block_number);
     }
 }
 

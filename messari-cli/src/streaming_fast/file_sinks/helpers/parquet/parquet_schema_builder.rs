@@ -22,7 +22,7 @@ impl ParquetSchemaBuilder {
     }
 
     pub(in crate::streaming_fast::file_sinks) fn start_building_sub_group(&mut self, field_name: String) {
-        self.hierarchy_trace.push(field_name.to_string());
+        self.hierarchy_trace.push(field_name);
         self.subgroup_fields.push(Vec::new());
     }
 
@@ -58,16 +58,14 @@ impl ParquetSchemaBuilder {
         }
     }
 
-    pub(in crate::streaming_fast::file_sinks) fn add_column_info(&mut self, field_name: &str, field_type: FieldType, field_specification: &FieldSpecification) -> String {
-        let flattened_field_name = self.get_flattened_field_name(field_name);
-
+    pub(in crate::streaming_fast::file_sinks) fn add_column_info(&mut self, field_name: &str, field_type: FieldType, field_specification: &FieldSpecification) {
         macro_rules! add_field {
             ($physical_type:ident @ $logical_type:expr) => {
-                self.subgroup_fields.last_mut().unwrap().push(Arc::new(PrimitiveTypeBuilder::new(&flattened_field_name, parquet::basic::Type::$physical_type)
+                self.subgroup_fields.last_mut().unwrap().push(Arc::new(PrimitiveTypeBuilder::new(field_name, parquet::basic::Type::$physical_type)
                     .with_id(self.current_id).with_repetition(field_specification.get_repetition()).with_logical_type(Some($logical_type)).build().unwrap()))
             };
             ($physical_type:ident) => {
-                self.subgroup_fields.last_mut().unwrap().push(Arc::new(PrimitiveTypeBuilder::new(&flattened_field_name, parquet::basic::Type::$physical_type)
+                self.subgroup_fields.last_mut().unwrap().push(Arc::new(PrimitiveTypeBuilder::new(field_name, parquet::basic::Type::$physical_type)
                     .with_id(self.current_id).with_repetition(field_specification.get_repetition()).build().unwrap()))
             };
         }
@@ -93,7 +91,5 @@ impl ParquetSchemaBuilder {
         }
 
         self.current_id += 1;
-
-        flattened_field_name
     }
 }
