@@ -17,13 +17,13 @@ The current implementation and plan for this substream can be broken down into 6
 6. Graph Out
     - The purpose of this module is to read the store deltas from steps 3-4 and apply any values in the store that indicated updates to an entity - these are handled by identifying the `entity-change` key at the first index. Additionally, process the entity creation messages from step 4 and use the entity creation logic in the schema library to create these entities. Entities ought to be created before they are updated from store deltas. The EntityCreations output from step 4 can be differentiated into types that are recognized by the schema lib, by looping, matching on the type, and calling the schema lib function to create the entity. Finally, the snapshots messages are processed and snapshots are taken in this module as well use current values and the differences between the most recent snapshot for non-cumulative values. 
 
-**schema_lib/:** 
+**schema_lib/** 
 - Contains the code for the schema library. The `schema_lib` folder is intended to be a standalone library that can be used by any substream for the specific schema type - in this instance DEX. The `dex_amm.proto` contains the protobuf messages that correspond to entity creations that are to be output from step 4. Each of these messages should correspond to a function that is specified in the `enitity_creations` folder and called in the `map.rs` file used by the graph out module.
 
-**store/:** 
+**store/** 
 - Contains implementations for creating store instructions and entity creations. These implementations are meant to be standard for all DEXs and create either the entity change messages from the `dex_amm.proto` or the store operations from the `store.proto` in `../common/proto/`. The `store.proto` is intended to contain generic store operations that can be used by any substream through the methods implemented on the StoreOperations type that create these messages particular to the schema.
 
-**interactions/:**
+**interactions/**
 - contains a set of files that each represent a type of interaction a user might have with a protocol, and logic for creating entities and storing updates to either be used as entity changes, or auxiliary data for creating other entity changes. Some interactions will be processed multiple times due to data dependencies, which is why there are different functions in these files that are called by the separate modules that map blocks/interactions into entity creation and store operation messages.
 
 ### Substream Data Flow Diagram
@@ -31,3 +31,17 @@ The current implementation and plan for this substream can be broken down into 6
 
 ## Vision
 Many of the design choices made in the substream were made such that there could be a lot of code reuse across substreams, and even more so when the schemas are the same. Other DEXs can use the same entity creation messages in the `dex_amm.proto` and the store operations messages by using the implemented types in `Store/SDK.rs`. In order to start working with a new schema, you would just create a new `schema_lib` folder corresponding to the new protocol schema and a new implementation for the StoreOperationFactory and EntityUpdateFactory structs in `store/SDK.rs ` that correspond with the new schema. Then, you can map the substream in the step-by-step process outlined above. Additionally, the vision is that there would be very little changes necessary for modules 1-2 and 5-6, and each substream would just have to implement specific logic if it is new schema in the `schema_lib` and SDK, and if it is a new protocol, which would involve writing code for modules 3-4 with whatever helper functions needed.
+
+## Current State
+The substream has a schema lib implemented for DEX subgraphs, and should be applicable to other DEX substreams with slight modifications. Also, the SDK is implemented for the StoreOperation and EntityUpdate Factories. Other DEXs should be able to use these abstractions as they are and other protocol types could use modified versions of these. The schema lib and SDK are used to index the basic entities to fulfill the graphql schema. 
+
+What sections of the plan are unimplemented?
+- Modules 2: The way this is currently compensated is that the substream processes the whole block each time you need to map or store data. Creating this module and using a filtered version of the data in subsequent modules could help clean up the code and improve performance greatly.
+- Modules 5. In order to get the snapshots working, there will need to be some store operations built into the SDK that can be used to aid in snapshot creation such as the last time an entity was updated and the last time a snapshot was taken. Then create a module that can handle this information about entities to translate it into snapshot messages.
+- Pricing Library - There needs to be a pricing library that for deriving token prices from the protocol using the sqrtX96Price. This pricing library is intended to be usable across different substreams. Yet to be worked out if this will be a module or a library, but at this time, a library seems more appropriate. Once this pricing library is implemented, it could be used to derive all of fields dependent on obtaining the USD value of tokens.
+
+What fields are missing?
+- All fields that are to be derived from USD values of tokens
+- Unique users fields
+- Tick prices on the tick entity
+- All positions metrics like count of open and closed positions, and also position status (hash closed).
