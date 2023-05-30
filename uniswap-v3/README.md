@@ -35,12 +35,12 @@ Many of the design choices made in the substream were made such that there could
 ## Current State
 The substream has a schema lib implemented for DEX subgraphs, and should be applicable to other DEX substreams with slight modifications. Also, the SDK is implemented for the StoreOperation and EntityUpdate Factories. Other DEXs should be able to use these abstractions as they are and other protocol types could use modified versions of these. The schema lib and SDK are used to index the basic entities to fulfill the graphql schema. 
 
-What sections of the plan are unimplemented?
-- Modules 2: The way this is currently compensated is that the substream processes the whole block each time you need to map or store data. Creating this module and using a filtered version of the data in subsequent modules could help clean up the code and improve performance greatly.
-- Modules 5. In order to get the snapshots working, there will need to be some store operations built into the SDK that can be used to aid in snapshot creation such as the last time an entity was updated and the last time a snapshot was taken. Then create a module that can handle this information about entities to translate it into snapshot messages.
-- Pricing Library - There needs to be a pricing library that for deriving token prices from the protocol using the sqrtX96Price. This pricing library is intended to be usable across different substreams. Yet to be worked out if this will be a module or a library, but at this time, a library seems more appropriate. Once this pricing library is implemented, it could be used to derive all of fields dependent on obtaining the USD value of tokens.
+#### What sections of the plan are unimplemented?
+- **Module 2:** The way this is currently compensated is that the substream processes the whole block each time you need to map or store data. Creating this module and using a filtered version of the data in subsequent modules could help clean up the code and improve performance greatly.
+- **Module 5:** In order to get the snapshots working, there will need to be some store operations built into the SDK that can be used to aid in snapshot creation such as the last time an entity was updated and the last time a snapshot was taken. Then create a module that can handle this information about entities to translate it into snapshot messages.
+- **Pricing Library:** There needs to be a pricing library that for deriving token prices from the protocol using the sqrtX96Price. This pricing library is intended to be usable across different substreams. Yet to be worked out if this will be a module or a library, but at this time, a library seems more appropriate. Once this pricing library is implemented, it could be used to derive all of fields dependent on obtaining the USD value of tokens.
 
-What fields are missing?
+#### What fields are missing?
 - All fields that are to be derived from USD values of tokens
 - Unique users fields
 - Tick prices on the tick entity
