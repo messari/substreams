@@ -43,7 +43,8 @@ impl FieldDecoder {
             _ => unreachable!()
         };
 
-        let flattened_field_name = parquet_schema_builder.add_column_info(&field_info.field_name, field_info.field_type, &field_info.field_specification);
+        parquet_schema_builder.add_column_info(&field_info.field_name, field_info.field_type, &field_info.field_specification);
+        let flattened_field_name = parquet_schema_builder.get_flattened_field_name(&field_info.field_name);
 
         FieldDecoder {
             value_store,

@@ -15,7 +15,7 @@ pub trait TestData: ProtoInfo + GenRandSamples + PartialEq + Debug {
 
     fn to_proto_bytes(&self) -> Vec<u8>;
     fn get_proto_value(&self) -> Self::ProtoType;
-    fn get_from_parquet_row(row: Row) -> (Self, u64) where Self: Sized;
+    fn get_from_parquet_row(row: Row) -> (Self, Option<u64>) where Self: Sized;
 }
 
 pub trait ProtoInfo {
@@ -109,7 +109,7 @@ impl<T: TestData> TestData for Option<T> {
         self.as_ref().map(|x| x.get_proto_value())
     }
 
-    fn get_from_parquet_row(row: Row) -> (Self, u64) where Self: Sized {
+    fn get_from_parquet_row(row: Row) -> (Self, Option<u64>) where Self: Sized {
         unreachable!()
     }
 }
@@ -125,7 +125,7 @@ impl<T: TestData> TestData for Vec<T> {
         self.iter().map(|x| x.get_proto_value()).collect()
     }
 
-    fn get_from_parquet_row(row: Row) -> (Self, u64) where Self: Sized {
+    fn get_from_parquet_row(row: Row) -> (Self, Option<u64>) where Self: Sized {
         unreachable!()
     }
 }
@@ -143,7 +143,7 @@ macro_rules! impl_test_data {
                 self.clone()
             }
 
-            fn get_from_parquet_row(row: Row) -> (Self, u64) where Self: Sized {
+            fn get_from_parquet_row(row: Row) -> (Self, Option<u64>) where Self: Sized {
                 unreachable!()
             }
         }

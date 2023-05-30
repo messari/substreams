@@ -97,7 +97,7 @@ impl MessageInfo {
     pub fn get_item_type_info(mut self) -> (MessageInfo, u64) {
         let field = self.fields.pop().unwrap();
         let field_number = field.field_number;
-        (field.get_struct_info(), field_number)
+        (field.get_struct_info().0, field_number)
     }
 }
 
@@ -155,9 +155,9 @@ impl FieldInfo {
         }
     }
 
-    pub fn get_struct_info(self) -> MessageInfo {
+    pub fn get_struct_info(self) -> (MessageInfo, String) {
         match self.field_type {
-            FieldType::Message(message_info) => message_info,
+            FieldType::Message(message_info) => (message_info, self.field_name),
             _ => panic!("No message info found! TODO: Flesh out this error some more")
         }
     }

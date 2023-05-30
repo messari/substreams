@@ -16,7 +16,7 @@ pub(in crate::streaming_fast::file_sinks) struct StructDecoder {
 }
 
 impl StructDecoder {
-    pub(in crate::streaming_fast::file_sinks) fn new(message_info: MessageInfo, parquet_schema_builder: &mut ParquetSchemaBuilder, mut track_definition_lvls: bool, mut track_repetition_lvls: bool) -> Self {
+    pub(in crate::streaming_fast::file_sinks) fn new(field_name: &str, message_info: MessageInfo, parquet_schema_builder: &mut ParquetSchemaBuilder, mut track_definition_lvls: bool, mut track_repetition_lvls: bool) -> Self {
         match message_info.field_specification {
             FieldSpecification::Required => {}
             FieldSpecification::Optional => track_definition_lvls = true,
@@ -43,7 +43,7 @@ impl StructDecoder {
             field_decoders,
             field_specification: message_info.field_specification,
             optional_and_required_fields,
-            flattened_field_name: parquet_schema_builder.get_flattened_field_name(&message_info.type_name),
+            flattened_field_name: parquet_schema_builder.get_flattened_field_name(field_name),
             oneof_group_tracker: OneofGroupTracker::new(message_info.oneof_groups)
         }
     }

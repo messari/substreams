@@ -19,10 +19,11 @@ impl Decoder {
     pub(in crate::streaming_fast::file_sinks) fn new(field_info: FieldInfo, parquet_schema_builder: &mut ParquetSchemaBuilder, track_definition_lvls: bool, track_repetition_lvls: bool) -> Decoder {
         if field_info.is_struct_field() {
             let repetition = field_info.field_specification.get_repetition();
-            let message_info = field_info.get_struct_info();
-            parquet_schema_builder.start_building_sub_group(message_info.type_name.clone());
+            parquet_schema_builder.start_building_sub_group(field_info.field_name.clone());
+            let (message_info, field_name) = field_info.get_struct_info();
 
-            let decoder = Decoder::StructDecoder(StructDecoder::new(message_info,
+            let decoder = Decoder::StructDecoder(StructDecoder::new(&field_name,
+                                                        message_info,
                                                       parquet_schema_builder,
                                                       track_definition_lvls,
                                                       track_repetition_lvls));

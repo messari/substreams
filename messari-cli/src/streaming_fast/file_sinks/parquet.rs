@@ -22,7 +22,7 @@ pub(crate) struct ParquetFileSink {
 impl FileSink for ParquetFileSink {
     fn new(output_type_info: MessageInfo) -> Self {
         let mut parquet_schema_builder = ParquetSchemaBuilder::new(output_type_info.type_name.clone());
-        let decoder = StructDecoder::new(output_type_info, &mut parquet_schema_builder, false, false);
+        let decoder = StructDecoder::new("", output_type_info, &mut parquet_schema_builder, false, false);
 
         let (parquet_schema, writer_properties) = parquet_schema_builder.compile();
 
@@ -83,27 +83,88 @@ mod tests {
 
     use crate::streaming_fast::streaming_fast_utils::assert_data_sinks_to_parquet_correctly;
 
-    #[derive(TestData)]
-    pub enum TestEnum {
-        Field1,
-        Field2,
-        Field3
+    #[test]
+    fn test_escrow_reward() {
+        #[derive(TestData)]
+        pub struct Timestamp {
+            timestamp: u64
+        }
+
+        #[derive(TestData)]
+        pub struct BigInt {
+            val: String
+        }
+
+        #[derive(TestData)]
+        pub enum BalanceType {
+            ESCROWED,
+            VESTED,
+        }
+
+        #[derive(TestData)]
+        pub enum EscrowContractVersion {
+            V1,
+            V2,
+        }
+
+        #[derive(TestData)]
+        pub struct EscrowReward {
+            #[proto_type(Enum)]
+            balance_type: BalanceType,
+            #[proto_type(Enum)]
+            escrow_contract_version: EscrowContractVersion,
+            balance: BigInt,
+            holder: String,
+            timestamp: Timestamp
+        }
+
+        assert_data_sinks_to_parquet_correctly::<EscrowReward>()
     }
 
-    #[derive(TestData)]
-    pub struct FlatSimple {
-        field1: u32,
-        field2: u64,
-        field3: i32,
-        field4: i64,
-        #[proto_type(Enum)]
-        field5: TestEnum,
-        field6: String
-        // TODO: Put all types here for testing
+    #[test]
+    fn test_token_balance() {
+        #[derive(TestData)]
+        pub struct Timestamp {
+            timestamp: u64
+        }
+
+        #[derive(TestData)]
+        pub struct BigInt {
+            val: String
+        }
+
+        #[derive(TestData)]
+        pub struct TokenBalance {
+            token: String,
+            holder: String,
+            balance: BigInt,
+            timestamp: Timestamp
+        }
+
+        assert_data_sinks_to_parquet_correctly::<TokenBalance>()
     }
 
     #[test]
     fn test_flat_simple() {
+        #[derive(TestData)]
+        pub enum TestEnum {
+            Field1,
+            Field2,
+            Field3
+        }
+
+        #[derive(TestData)]
+        pub struct FlatSimple {
+            field1: u32,
+            field2: u64,
+            field3: i32,
+            field4: i64,
+            #[proto_type(Enum)]
+            field5: TestEnum,
+            field6: String
+            // TODO: Put all types here for testing
+        }
+
         assert_data_sinks_to_parquet_correctly::<FlatSimple>()
     }
 }

@@ -16,7 +16,7 @@ impl SplitFilesSink {
     pub(crate) fn new(oneof_fields: Vec<FieldInfo>, encoding_type: EncodingType, location_type: LocationType, sink_output_path: PathBuf) -> Self {
         SplitFilesSink {
             file_sinks: oneof_fields.into_iter().map(|field| {
-                (field.field_number, SingleFileSink::new(field.get_struct_info(), encoding_type.clone(), location_type.clone(), sink_output_path.clone()))
+                (field.field_number, SingleFileSink::new(field.get_struct_info().0, encoding_type.clone(), location_type.clone(), sink_output_path.clone()))
             }).collect(),
         }
     }
