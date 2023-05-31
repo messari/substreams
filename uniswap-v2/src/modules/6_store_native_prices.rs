@@ -23,6 +23,10 @@ pub fn store_native_prices(
                 .token1_balance(ordinal, &balances_store)
                 .to_decimal(pool.token1_decimals());
 
+            if token0_native_tvl.is_zero() || token1_native_tvl.is_zero() {
+                continue;
+            }
+
             let token0_price = token1_native_tvl.clone() / token0_native_tvl.clone();
             let token1_price = token0_native_tvl.clone() / token1_native_tvl.clone();
 
