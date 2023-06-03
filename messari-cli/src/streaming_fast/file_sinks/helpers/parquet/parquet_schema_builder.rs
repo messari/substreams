@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use parquet::basic::{Compression, LogicalType, Repetition};
+use parquet::basic::{Compression, ConvertedType, LogicalType, Repetition};
 use parquet::file::properties::{WriterProperties, WriterPropertiesPtr};
 use parquet::schema::types::{GroupTypeBuilder, PrimitiveTypeBuilder, TypePtr};
 use derives::proto_structure_info::{FieldSpecification, FieldType};
@@ -28,9 +28,14 @@ impl ParquetSchemaBuilder {
 
     pub(in crate::streaming_fast::file_sinks) fn finish_building_sub_group(&mut self, repetition: Repetition) {
         let field_name = self.hierarchy_trace.pop().unwrap();
-        let group_builder = GroupTypeBuilder::new(&field_name);
         let mut group_fields = self.subgroup_fields.pop().unwrap();
-        let new_field = group_builder.with_fields(&mut group_fields).with_repetition(repetition).build().unwrap();
+        let new_field = if repetition == Repetition::REPEATED {
+            GroupTypeBuilder::new(&field_name).with_converted_type(ConvertedType::LIST).with_repetition(Repetition::REQUIRED)
+                .with_fields(&mut vec![Arc::new(GroupTypeBuilder::new(&field_name).with_fields(&mut group_fields).with_repetition(repetition).build().unwrap())])
+                .build().unwrap()
+        } else {
+            GroupTypeBuilder::new(&field_name).with_fields(&mut group_fields).with_repetition(repetition).build().unwrap()
+        };
 
         self.subgroup_fields.last_mut().unwrap().push(Arc::new(new_field));
     }
@@ -58,17 +63,31 @@ impl ParquetSchemaBuilder {
         }
     }
 
-    pub(in crate::streaming_fast::file_sinks) fn add_column_info(&mut self, field_name: &str, field_type: FieldType, field_specification: &FieldSpecification) {
+    pub(in crate::streaming_fast::file_sinks) fn add_column_info(&mut self, field_name: &str, field_type: FieldType, repetition: Repetition) {
         macro_rules! add_field {
             ($physical_type:ident @ $logical_type:expr) => {
-                self.subgroup_fields.last_mut().unwrap().push(Arc::new(PrimitiveTypeBuilder::new(field_name, parquet::basic::Type::$physical_type)
-                    .with_id(self.current_id).with_repetition(field_specification.get_repetition()).with_logical_type(Some($logical_type)).build().unwrap()))
+                if repetition == Repetition::REPEATED {
+                    self.subgroup_fields.last_mut().unwrap().push(Arc::new(GroupTypeBuilder::new(&field_name).with_converted_type(ConvertedType::LIST).with_repetition(Repetition::REQUIRED)
+                        .with_fields(&mut vec![Arc::new(PrimitiveTypeBuilder::new(field_name, parquet::basic::Type::$physical_type).with_id(self.current_id)
+                        .with_repetition(repetition).with_logical_type(Some($logical_type)).build().unwrap())]).build().unwrap()));
+                } else {
+                    self.subgroup_fields.last_mut().unwrap().push(Arc::new(PrimitiveTypeBuilder::new(field_name, parquet::basic::Type::$physical_type)
+                        .with_id(self.current_id).with_repetition(repetition).with_logical_type(Some($logical_type)).build().unwrap()));
+                }
             };
             ($physical_type:ident) => {
-                self.subgroup_fields.last_mut().unwrap().push(Arc::new(PrimitiveTypeBuilder::new(field_name, parquet::basic::Type::$physical_type)
-                    .with_id(self.current_id).with_repetition(field_specification.get_repetition()).build().unwrap()))
+                if repetition == Repetition::REPEATED {
+                    self.subgroup_fields.last_mut().unwrap().push(Arc::new(GroupTypeBuilder::new(&field_name).with_converted_type(ConvertedType::LIST).with_repetition(Repetition::REQUIRED)
+                        .with_fields(&mut vec![Arc::new(PrimitiveTypeBuilder::new(field_name, parquet::basic::Type::$physical_type)
+                        .with_id(self.current_id).with_repetition(repetition).build().unwrap())]).build().unwrap()));
+                } else {
+                    self.subgroup_fields.last_mut().unwrap().push(Arc::new(PrimitiveTypeBuilder::new(field_name, parquet::basic::Type::$physical_type)
+                        .with_id(self.current_id).with_repetition(repetition).build().unwrap()))
+                }
             };
         }
+
+        self.current_id += 1;
 
         match field_type {
             FieldType::Double => add_field!(DOUBLE),
@@ -89,7 +108,5 @@ impl ParquetSchemaBuilder {
             FieldType::Sint64 => add_field!(INT64),
             FieldType::Message(_) => unreachable!()
         }
-
-        self.current_id += 1;
     }
 }

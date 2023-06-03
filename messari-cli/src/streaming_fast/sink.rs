@@ -29,6 +29,11 @@ impl Sink {
                     multiple_files_sink: Box::new(SingleFileSink::new(inner_type_info, encoding_type, location_type, sink_output_path)),
                 }
             }
+        } else if output_type_info.is_oneof_type() {
+            Sink {
+                items_field_number: None,
+                multiple_files_sink: Box::new(SplitFilesSink::new(output_type_info.fields, encoding_type, location_type, sink_output_path)),
+            }
         } else {
             Sink {
                 items_field_number: None,

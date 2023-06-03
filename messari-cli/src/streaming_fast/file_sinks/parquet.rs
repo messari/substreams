@@ -2,17 +2,19 @@ use parquet::data_type::Int64Type;
 use parquet::file::properties::WriterPropertiesPtr;
 use parquet::file::writer::SerializedFileWriter;
 use parquet::schema::types::TypePtr;
-use derives::proto_structure_info::MessageInfo;
+use derives::proto_structure_info::{FieldSpecification, MessageInfo};
 
 use crate::streaming_fast::file_sinks::file_sink::FileSink;
 use crate::streaming_fast::file_sinks::helpers::parquet::file_buffer::FileBuffer;
 use crate::streaming_fast::file_sinks::helpers::parquet::parquet_schema_builder::ParquetSchemaBuilder;
+use crate::streaming_fast::file_sinks::helpers::parquet::repetition_and_definition::{RepetitionAndDefinitionLvls, RepetitionAndDefinitionLvlStoreBuilder};
 use crate::streaming_fast::file_sinks::helpers::parquet::struct_decoder::StructDecoder;
 
 const UNCOMPRESSED_FILE_SIZE_THRESHOLD: usize = 500 * 1024 * 1024; // 500MB
 
 pub(crate) struct ParquetFileSink {
     decoder: StructDecoder,
+    struct_is_required: bool,
     uncompressed_file_size: usize,
     block_numbers: Vec<i64>,
     parquet_schema: TypePtr,
@@ -22,12 +24,16 @@ pub(crate) struct ParquetFileSink {
 impl FileSink for ParquetFileSink {
     fn new(output_type_info: MessageInfo) -> Self {
         let mut parquet_schema_builder = ParquetSchemaBuilder::new(output_type_info.type_name.clone());
-        let decoder = StructDecoder::new("", output_type_info, &mut parquet_schema_builder, false, false);
+
+        let struct_is_required = output_type_info.field_specification == FieldSpecification::Required;
+
+        let decoder = StructDecoder::new("", output_type_info, &mut parquet_schema_builder, &mut RepetitionAndDefinitionLvlStoreBuilder::new());
 
         let (parquet_schema, writer_properties) = parquet_schema_builder.compile();
 
         ParquetFileSink {
             decoder,
+            struct_is_required,
             uncompressed_file_size: 0,
             block_numbers: vec![],
             parquet_schema,
@@ -37,11 +43,12 @@ impl FileSink for ParquetFileSink {
 
     fn process(&mut self, proto_data: &mut &[u8], block_number: i64) -> Result<Option<Vec<u8>>, String> {
         if proto_data.is_empty() {
-            if self.decoder.push_null_or_default_values(&mut self.uncompressed_file_size, 0, &mut 0)? {
+            if self.struct_is_required {
+                self.decoder.push_null_or_default_values(&mut self.uncompressed_file_size, RepetitionAndDefinitionLvls::new())?;
                 self.block_numbers.push(block_number);
             }
         } else {
-            self.decoder.decode(proto_data, 2, &mut self.uncompressed_file_size, 0, &mut 0)?;
+            self.decoder.decode(proto_data, 2, &mut self.uncompressed_file_size, RepetitionAndDefinitionLvls::new())?;
             self.block_numbers.push(block_number);
         }
 
@@ -80,8 +87,35 @@ impl FileSink for ParquetFileSink {
 #[cfg(test)]
 mod tests {
     use derives::TestData;
+    use parquet::file::footer;
+    use parquet::file::reader::{FileReader, SerializedFileReader};
+    use tonic::metadata;
+    use crate::streaming_fast::file_sinks::file_sink::FileSink;
+    use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
 
     use crate::streaming_fast::streaming_fast_utils::assert_data_sinks_to_parquet_correctly;
+
+    #[test]
+    fn test_optional_and_repeated_fields() {
+        #[derive(TestData)]
+        pub struct OptionalAndRepeatedFields {
+            field1: String,
+            field2: Option<u64>,
+            field3: Vec<String>,
+        }
+
+        #[derive(TestData)]
+        pub struct TwoLayeredOptionalAndRepeatedFields {
+            field1: String,
+            field2: Option<u64>,
+            field3: Vec<String>,
+            // field4: OptionalAndRepeatedFields,
+            field5: Option<OptionalAndRepeatedFields>,
+            field6: Vec<OptionalAndRepeatedFields>
+        }
+
+        assert_data_sinks_to_parquet_correctly::<TwoLayeredOptionalAndRepeatedFields>()
+    }
 
     #[test]
     fn test_escrow_reward() {

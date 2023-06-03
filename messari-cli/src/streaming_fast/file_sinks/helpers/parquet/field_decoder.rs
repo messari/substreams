@@ -2,27 +2,24 @@ use std::borrow::BorrowMut;
 use parquet::data_type::{BoolType, ByteArray, ByteArrayType, DoubleType, FloatType, Int32Type, Int64Type};
 use parquet::file::writer::SerializedRowGroupWriter;
 use derives::proto_structure_info::{FieldInfo, FieldSpecification, FieldType};
+use parquet::basic::Type::DOUBLE;
 
 use crate::streaming_fast::file_sinks::helpers::parquet::file_buffer::FileBuffer;
 use crate::streaming_fast::file_sinks::helpers::parquet::parquet_schema_builder::ParquetSchemaBuilder;
+use crate::streaming_fast::file_sinks::helpers::parquet::repetition_and_definition::{RepetitionAndDefinitionLvls, RepetitionAndDefinitionLvlStore, RepetitionAndDefinitionLvlStoreBuilder};
 use crate::streaming_fast::streaming_fast_utils::{FromSignedVarint, FromUnsignedVarint};
 
 pub(in crate::streaming_fast::file_sinks) struct FieldDecoder {
     value_store: ValueStore,
-    definition_lvls: Option<Vec<i16>>,
-    repetition_lvls: Option<Vec<i16>>,
+    repetition_and_definition_lvl_store: Option<RepetitionAndDefinitionLvlStore>,
     field_specification: FieldSpecification,
     flattened_field_name: String
 }
 
 impl FieldDecoder {
-    pub(in crate::streaming_fast::file_sinks) fn new(field_info: FieldInfo, parquet_schema_builder: &mut ParquetSchemaBuilder, mut track_definition_lvls: bool, mut track_repetition_lvls: bool) -> Self {
-        match field_info.field_specification {
-            FieldSpecification::Required => {}
-            FieldSpecification::Optional => track_definition_lvls = true,
-            FieldSpecification::Repeated => track_repetition_lvls = true,
-            FieldSpecification::Packed => track_repetition_lvls = true,
-        };
+    pub(in crate::streaming_fast::file_sinks) fn new(field_info: FieldInfo, parquet_schema_builder: &mut ParquetSchemaBuilder, lvls_store_builder: &RepetitionAndDefinitionLvlStoreBuilder) -> Self {
+        let repetition = field_info.field_specification.get_repetition();
+        let lvls_store = lvls_store_builder.get_store(&repetition);
 
         let value_store = match field_info.field_type {
             FieldType::Double => ValueStore::Double(Vec::new()),
@@ -43,13 +40,12 @@ impl FieldDecoder {
             _ => unreachable!()
         };
 
-        parquet_schema_builder.add_column_info(&field_info.field_name, field_info.field_type, &field_info.field_specification);
+        parquet_schema_builder.add_column_info(&field_info.field_name, field_info.field_type, repetition);
         let flattened_field_name = parquet_schema_builder.get_flattened_field_name(&field_info.field_name);
 
         FieldDecoder {
             value_store,
-            definition_lvls: if track_definition_lvls { Some(Vec::new()) } else { None },
-            repetition_lvls: if track_repetition_lvls { Some(Vec::new()) } else { None },
+            repetition_and_definition_lvl_store: lvls_store,
             field_specification: field_info.field_specification,
             flattened_field_name
         }
@@ -58,13 +54,22 @@ impl FieldDecoder {
     pub(in crate::streaming_fast::file_sinks) fn write_data_to_parquet(&mut self, row_group_writer: &mut SerializedRowGroupWriter<FileBuffer>) {
         let mut serialized_column_writer = row_group_writer.next_column().unwrap().unwrap();
 
+        let (repetition_lvls, definition_lvls) = if let Some(lvls_store) = self.repetition_and_definition_lvl_store.as_ref() {
+            (lvls_store.get_repetition_lvls(), lvls_store.get_definition_lvls())
+        } else {
+            (None, None)
+        };
+
         macro_rules! write_batch {
             ($values_ident:ident, $value_type:ident) => {
+                {
+                    // panic!("{:?}\n{:?}\n{:?}", $values_ident, definition_lvls, repetition_lvls);
+
                 serialized_column_writer.typed::<$value_type>().write_batch(
                     $values_ident,
-                    self.definition_lvls.as_ref().map(|lvls| lvls.as_slice()),
-                    self.repetition_lvls.as_ref().map(|lvls| lvls.as_slice())
-                ).unwrap()
+                    definition_lvls,
+                    repetition_lvls
+                ).unwrap()}
             }
         }
 
@@ -90,57 +95,45 @@ impl FieldDecoder {
     }
 
     /// This is triggered when the proto data does not contain a value for a given field.
-    pub(in crate::streaming_fast::file_sinks) fn push_null_or_default_value(&mut self, uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<(), String> {
+    pub(in crate::streaming_fast::file_sinks) fn push_null_or_default_value(&mut self, uncompressed_file_size: &mut usize, lvls: RepetitionAndDefinitionLvls) {
         match self.field_specification {
             FieldSpecification::Required => {
-                self.value_store.push_default_value();
-                // TODO: If tracking def and rep lvls these need to be updated here also
-                Ok(())
+                self.value_store.push_default_value(uncompressed_file_size);
+                if let Some(lvls_store) = self.repetition_and_definition_lvl_store.as_mut() {
+                    lvls_store.add_lvls(lvls);
+                    *uncompressed_file_size += 32;
+                }
             },
-            FieldSpecification::Optional => self.push_null(uncompressed_file_size, current_definition_lvl, last_repetition_lvl),
-            _ => Ok(())
+            _ => self.push_null(uncompressed_file_size, lvls),
         }
     }
 
-    pub(in crate::streaming_fast::file_sinks) fn push_null(&mut self, uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<(), String> {
-        todo!()
+    pub(in crate::streaming_fast::file_sinks) fn push_null(&mut self, uncompressed_file_size: &mut usize, lvls: RepetitionAndDefinitionLvls) {
+        self.repetition_and_definition_lvl_store.as_mut().unwrap().add_lvls(lvls);
+        *uncompressed_file_size += 32;
     }
 
-    pub(in crate::streaming_fast::file_sinks) fn decode(&mut self, data: &mut &[u8], wire_type: u8, uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<(), String> {
+    pub(in crate::streaming_fast::file_sinks) fn decode(&mut self, data: &mut &[u8], wire_type: u8, uncompressed_file_size: &mut usize, lvls: RepetitionAndDefinitionLvls) -> Result<(), String> {
         match self.field_specification {
             FieldSpecification::Required => {
                 self.decode_single_value(data, wire_type, uncompressed_file_size)?;
-                if let Some(repetition_lvls) = self.repetition_lvls.as_mut() {
-                    repetition_lvls.push(*last_repetition_lvl);
-                }
-
-                if let Some(definition_lvls) = self.definition_lvls.as_mut() {
-                    definition_lvls.push(current_definition_lvl);
+                if let Some(lvl_store) = self.repetition_and_definition_lvl_store.as_mut() {
+                    lvl_store.add_lvls(lvls);
+                    *uncompressed_file_size += 32;
                 }
             }
             FieldSpecification::Optional => {
                 self.decode_single_value(data, wire_type, uncompressed_file_size)?;
-                if let Some(repetition_lvls) = self.repetition_lvls.as_mut() {
-                    repetition_lvls.push(*last_repetition_lvl);
-                }
-
-                self.definition_lvls.as_mut().unwrap().push(current_definition_lvl+1);
+                self.repetition_and_definition_lvl_store.as_mut().unwrap().add_lvls_for_optional_field(lvls);
+                *uncompressed_file_size += 32;
             }
             FieldSpecification::Repeated => {
                 self.decode_single_value(data, wire_type, uncompressed_file_size)?;
-                self.repetition_lvls.as_mut().unwrap().push(*last_repetition_lvl);
-                *last_repetition_lvl += 1;
-
-                if let Some(definition_lvls) = self.definition_lvls.as_mut() {
-                    definition_lvls.push(current_definition_lvl);
-                }
+                self.repetition_and_definition_lvl_store.as_mut().unwrap().add_lvls(lvls);
+                *uncompressed_file_size += 32;
             }
             FieldSpecification::Packed => {
-                return if wire_type == 2 {
-                    self.decode_packed(data, uncompressed_file_size, current_definition_lvl, last_repetition_lvl)
-                } else {
-                    Err("TODO an error message here!!".to_string())
-                }
+                self.decode_packed(data, wire_type, uncompressed_file_size, lvls)?;
             }
         }
 
@@ -225,7 +218,11 @@ impl FieldDecoder {
         Ok(())
     }
 
-    fn decode_packed(&mut self, data: &mut &[u8], uncompressed_file_size: &mut usize, current_definition_lvl: i16, last_repetition_lvl: &mut i16) -> Result<(), String> {
+    fn decode_packed(&mut self, data: &mut &[u8], wire_type: u8, uncompressed_file_size: &mut usize, lvls: RepetitionAndDefinitionLvls) -> Result<(), String> {
+        if wire_type != 2 {
+            return Err("Wrong wire type!: TODO: Flesh out..".to_string());
+        }
+
         let packed_values_data_size = match usize::from_unsigned_varint(data) {
             Some(len) => len,
             None => {
@@ -251,12 +248,12 @@ impl FieldDecoder {
                     match $try_read {
                         Some($val) => {
                             $values_ident.push($insert);
-                            *uncompressed_file_size += $uncompressed_size_delta;
                             values_read += 1;
                         },
                         None => return Err(format!("Error reading proto data for column: {}! Field Type: {}, Packed value index: {}, data: {:?}", self.flattened_field_name, $field_type, values_read, packed_values_data)),
                     }
                 }
+                *uncompressed_file_size += $uncompressed_size_delta * values_read;
                 values_read
             };
         }
@@ -312,20 +309,11 @@ impl FieldDecoder {
             _ => panic!("Non-scalar type was handled as packed"),
         };
 
-        if values_read>0 {
-            if let Some(repetition_lvls) = self.repetition_lvls.as_mut() {
-                repetition_lvls.push(*last_repetition_lvl);
-                *last_repetition_lvl += 1;
-                repetition_lvls.extend(vec![*last_repetition_lvl; values_read-1]);
-            }
-
-            if let Some(definition_lvls) = self.definition_lvls.as_mut() {
-                definition_lvls.extend(vec![current_definition_lvl; values_read]);
-            }
+        if values_read > 0 {
+            self.repetition_and_definition_lvl_store.as_mut().unwrap().add_lvls_for_packed_field(values_read, lvls);
+            *uncompressed_file_size += 32 * values_read;
         } else {
-            if let Some(definition_lvls) = self.definition_lvls.as_mut() {
-                // TODO: Figure out what to add here..
-            }
+            self.push_null(uncompressed_file_size, lvls);
         }
 
         Ok(())
@@ -410,23 +398,32 @@ enum ValueStore
 }
 
 impl ValueStore {
-    fn push_default_value(&mut self) {
+    fn push_default_value(&mut self, uncompressed_file_size: &mut usize) {
+        macro_rules! push_value {
+            ($values_ident:ident, $value:expr, $uncompressed_size:literal) => {
+                {
+                    $values_ident.push($value);
+                    *uncompressed_file_size += $uncompressed_size;
+                }
+            }
+        }
+
         match self.borrow_mut() {
-            ValueStore::Double(values) => values.push(0_f64),
-            ValueStore::Float(values) => values.push(0_f32),
-            ValueStore::Int32(values) => values.push(0),
-            ValueStore::Int64(values) => values.push(0),
-            ValueStore::Uint32(values) => values.push(0),
-            ValueStore::Uint64(values) => values.push(0),
-            ValueStore::Sint32(values) => values.push(0),
-            ValueStore::Sint64(values) => values.push(0),
-            ValueStore::Fixed32(values) => values.push(0),
-            ValueStore::Fixed64(values) => values.push(0),
-            ValueStore::Sfixed32(values) => values.push(0),
-            ValueStore::Sfixed64(values) => values.push(0),
-            ValueStore::Bool(values) => values.push(false),
-            ValueStore::String(values) => values.push(ByteArray::from("")),
-            ValueStore::Bytes(values) => values.push(ByteArray::from("")),
+            ValueStore::Double(values) => push_value!(values, 0_f64, 64),
+            ValueStore::Float(values) => push_value!(values, 0_f32, 32),
+            ValueStore::Int32(values) => push_value!(values, 0, 32),
+            ValueStore::Int64(values) => push_value!(values, 0, 64),
+            ValueStore::Uint32(values) => push_value!(values, 0, 32),
+            ValueStore::Uint64(values) => push_value!(values, 0, 64),
+            ValueStore::Sint32(values) => push_value!(values, 0, 32),
+            ValueStore::Sint64(values) => push_value!(values, 0, 64),
+            ValueStore::Fixed32(values) => push_value!(values, 0, 32),
+            ValueStore::Fixed64(values) => push_value!(values, 0, 64),
+            ValueStore::Sfixed32(values) => push_value!(values, 0, 32),
+            ValueStore::Sfixed64(values) => push_value!(values, 0, 64),
+            ValueStore::Bool(values) => push_value!(values, false, 8),
+            ValueStore::String(values) => push_value!(values, ByteArray::from(""), 8),
+            ValueStore::Bytes(values) => push_value!(values, ByteArray::from(""), 8),
         }
     }
 }
