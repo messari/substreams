@@ -51,7 +51,7 @@ impl MultipleFilesSink for SplitFilesSink {
 
             let struct_data_length = usize::from_unsigned_varint(proto_data).unwrap();
             if proto_data.len() < struct_data_length {
-                return Err("TODO: Write error for this!3".to_string());
+                return Err("TODO: Write error for this!".to_string());
             }
             let (mut consumed, remainder) = proto_data.split_at(struct_data_length);
             *proto_data = remainder;

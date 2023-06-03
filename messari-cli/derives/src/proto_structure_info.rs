@@ -342,4 +342,12 @@ impl FieldSpecification {
             FieldSpecification::Packed => Repetition::REPEATED
         }
     }
+
+    pub fn is_optional_or_required(&self) -> bool {
+        match self {
+            FieldSpecification::Required => true,
+            FieldSpecification::Optional => true,
+            _ => false
+        }
+    }
 }

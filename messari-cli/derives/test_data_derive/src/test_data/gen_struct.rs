@@ -425,11 +425,11 @@ fn get_proto_field_type(type_string: &str, outer_type: &str, is_oneof_type: bool
     } else {
         type_string.to_string()
     };
-    proto_field_type = proto_field_type.replace("Vec", "::prost::alloc::vec::Vec");
-    proto_field_type = proto_field_type.replace("String", "::prost::alloc::string::String");
-    proto_field_type = proto_field_type.replace("Option", "::core::option::Option");
+    proto_field_type = proto_field_type.replace("Vec<", "::prost::alloc::vec::Vec<");
+    proto_field_type = proto_field_type.replace("Option<", "::core::option::Option<");
+    proto_field_type = proto_field_type.replace("String", "::prost::alloc::string::String"); // TODO: Make this safe like the above two replacements
 
-    let option_added = if is_oneof_type || (is_struct_type && outer_type!="Option") {
+    let option_added = if is_oneof_type || (is_struct_type && outer_type!="Option" && outer_type!="Vec") {
         proto_field_type = "::core::option::Option<".to_string() + &proto_field_type + ">";
         true
     } else {
@@ -529,8 +529,10 @@ impl BasicFieldInfo {
                                         parsed_values.push(field_val);\n            \
                                     }}\n        \
                                     parsed_values\n    \
+                                }} else if field_value == &parquet::record::Field::Null {{\n       \
+                                    Vec::new()
                                 }} else {{\n       \
-                                    panic!(\"Field is repeated although list type was not returned! field_value: {{:?}}\", field_value)\n    \
+                                    panic!(\"Field is repeated although list type or null type was not returned! field_value: {{:?}}\", field_value)\n    \
                                 }};",
                         self.field_type.get_unwrap_statement())
             },

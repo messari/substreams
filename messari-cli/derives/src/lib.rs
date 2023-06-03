@@ -60,7 +60,19 @@ impl<T: ProtoInfo> ProtoInfo for Option<T> {
 impl<T: ProtoInfo> ProtoInfo for Vec<T> {
     fn get_proto_field_info(field_name: String, field_number: u8) -> FieldInfo {
         let mut field_info = T::get_proto_field_info(field_name, field_number);
-        field_info.field_specification = FieldSpecification::Repeated;
+
+        match field_info.field_type {
+            FieldType::Double | FieldType::Float | FieldType::Int64 | FieldType::Uint64 |
+            FieldType::Int32 | FieldType::Fixed64 | FieldType::Fixed32 | FieldType::Bool |
+            FieldType::Uint32 | FieldType::Sfixed32 | FieldType::Sfixed64 | FieldType::Sint32 |
+            FieldType::Sint64 => {
+                field_info.field_specification = FieldSpecification::Packed;
+            },
+            _ => {
+                field_info.field_specification = FieldSpecification::Repeated;
+            }
+        }
+
         field_info
     }
 
