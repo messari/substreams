@@ -25,9 +25,13 @@ pub fn generate(name: &Ident, data_struct: DataStruct, starting_tag: u8) -> Toke
 
     let oneof_groups_initialisation = get_oneof_groups_initialisation(&field_info.field_associations, starting_tag);
 
-    let struct_and_oneof_match_statements = field_info.field_associations.into_iter().flat_map(|field_assocation| {
-        field_assocation.get_match_statements()
-    }).collect::<Vec<_>>();
+    let struct_and_oneof_match_statements = if field_info.field_associations.len() == 1 && field_info.field_associations.first().unwrap().is_not_oneof_field() {
+        field_info.field_associations.first().unwrap().get_match_statements_for_single_field_struct()
+    } else {
+        field_info.field_associations.into_iter().flat_map(|field_assocation| {
+            field_assocation.get_match_statements()
+        }).collect::<Vec<_>>()
+    };
 
     let field_numbers = (1..=field_names.len() as u8).into_iter().collect::<Vec<_>>();
 
@@ -59,11 +63,11 @@ pub fn generate(name: &Ident, data_struct: DataStruct, starting_tag: u8) -> Toke
                 }
             }
 
-            fn get_from_parquet_row(row: parquet::record::Row) -> (Self, Option<u64>) where Self: Sized {
+            fn get_from_parquet_row<'a, T: Iterator<Item=(&'a String, &'a parquet::record::Field)>>(row: T) -> (Self, Option<u64>) where Self: Sized {
                 #(let mut #field_names = None;
                 )*
                 let mut block_number = None;
-                for (field_name, field_value) in row.get_column_iter() {
+                for (field_name, field_value) in row {
                     match field_name.as_str() {
                         #(#struct_and_oneof_match_statements
                         )*
@@ -75,7 +79,7 @@ pub fn generate(name: &Ident, data_struct: DataStruct, starting_tag: u8) -> Toke
                             }
                         },
                         _ => {
-                            panic!("{} is not a valid field name for this struct.", field_name);
+                            panic!(concat!("{} is not a valid field name for this struct. Struct type: ", stringify!(#name)), field_name);
                         }
                     }
                 }
@@ -341,6 +345,7 @@ impl ParquetType {
             }
         }
 
+
         match self {
             ParquetType::Bool => val_unwrap!(Bool),
             ParquetType::Int => val_unwrap!(Int),
@@ -356,11 +361,25 @@ impl ParquetType {
                                                                 }} else {{\n        \
                                                                     unreachable!(\"Parquet type read does not match expected type. Expected: Str for deriving enum type: {0}, actual: {{:?}}\", field_value)\n    \
                                                                 }};", enum_type),
-            ParquetType::Struct(struct_type) => format!("let field_val = if let parquet::record::Field::Group(field_val) = field_value {{\n        \
-                                                                    {}::get_from_parquet_row(field_val.clone()).0\n    \
-                                                                }} else {{\n        \
-                                                                    unreachable!(\"Parquet type read does not match expected type. Expected: Group, actual: {{:?}}\", field_value)\n    \
-                                                                }};", struct_type),
+            ParquetType::Struct(struct_type) => format!("let field_val = if let parquet::record::Field::ListInternal(list_internal) = field_value {{\n        \
+                                                                    if list_internal.len() == 1 {{\n            \
+                                                                        let inner_unwrapped_list_element = list_internal.elements().iter().next().unwrap();
+                                                                        if let parquet::record::Field::Group(field_val) = inner_unwrapped_list_element {{\n        \
+                                                                            {0}::get_from_parquet_row(field_val.get_column_iter()).0\n    \
+                                                                        }} else {{\n        \
+                                                                            {0}::get_from_parquet_row(vec![(&\"single_field\".to_string(), inner_unwrapped_list_element)].into_iter()).0\n    \
+                                                                        }}
+                                                                    }}\n    \
+                                                                    else {{
+                                                                        {0}::get_from_parquet_row(vec![(&\"single_field\".to_string(), field_value)].into_iter()).0
+                                                                    }}
+                                                                 }} else {{
+                                                                    if let parquet::record::Field::Group(field_val) = field_value {{\n        \
+                                                                        {0}::get_from_parquet_row(field_val.get_column_iter()).0\n    \
+                                                                    }} else {{\n        \
+                                                                        {0}::get_from_parquet_row(vec![(&\"single_field\".to_string(), field_value)].into_iter()).0\n    \
+                                                                    }}
+                                                                 }};", struct_type),
         }
     }
 }
@@ -522,10 +541,16 @@ impl BasicFieldInfo {
                         self.field_type.get_unwrap_statement())
             },
             RepetitionType::Repeated => {
-                format!("let field_val = if let parquet::record::Field::ListInternal(list) = field_value {{\n            \
+                format!("let field_val = if let parquet::record::Field::ListInternal(list_internal) = field_value {{\n            \
                                     let mut parsed_values = Vec::new();
-                                    for field_value in list.elements() {{\n                \
-                                        {}\n                \
+                                    let mut list_unwrapped = list_internal;
+                                    if list_internal.len() == 1 {{\n            \
+                                        if let parquet::record::Field::ListInternal(double_list_internal) = list_internal.elements().iter().next().unwrap() {{
+                                            list_unwrapped = double_list_internal;
+                                        }}
+                                    }}\n    \
+                                    for field_value in list_unwrapped.elements() {{\n                \
+                                        {0}\n                \
                                         parsed_values.push(field_val);\n            \
                                     }}\n        \
                                     parsed_values\n    \
@@ -553,6 +578,13 @@ pub(crate) enum FieldAssociation {
 impl FieldAssociation {
     pub(crate) fn from_field_name(field_info: BasicFieldInfo) -> Self {
         FieldAssociation::FieldName(field_info)
+    }
+
+    pub(crate) fn is_not_oneof_field(&self) -> bool {
+        match self {
+            FieldAssociation::FieldName(_) => true,
+            _ => false
+        }
     }
 
     pub(crate) fn from_oneof_field_and_type_idents(field_name: String, field_type: String, oneof_field_and_type_info: Vec<(String, String)>) -> Self {
@@ -595,6 +627,28 @@ impl FieldAssociation {
                     repetition_type: RepetitionType::Required,
                 }
             }).collect(),
+        }
+    }
+
+    pub(crate) fn get_match_statements_for_single_field_struct(&self) -> Vec<TokenStream> {
+        if let FieldAssociation::FieldName(field_info) = self {
+            let match_block = format!("\"single_field\" => {{\n    \
+                                                                 {1}\n    \
+                                                                 {0} = Some(field_val);\n\
+                                                              }},", field_info.field_name, field_info.get_unwrap_statement());
+
+            if field_info.field_name != "single_field" {
+                let single_field_match_block = format!("\"{0}\" => {{\n    \
+                                                                 {1}\n    \
+                                                                 {0} = Some(field_val);\n\
+                                                              }},", field_info.field_name, field_info.get_unwrap_statement());
+
+                vec![match_block.parse().unwrap(), single_field_match_block.parse().unwrap()]
+            } else {
+                vec![match_block.parse().unwrap()]
+            }
+        } else {
+            unreachable!()
         }
     }
 

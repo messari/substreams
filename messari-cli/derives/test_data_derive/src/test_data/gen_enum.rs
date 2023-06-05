@@ -54,7 +54,7 @@ fn get_enum_derives(name: &Ident, unit_fields: Vec<Ident>) -> TokenStream {
                 }
             }
 
-            fn get_from_parquet_row(row: parquet::record::Row) -> (Self, Option<u64>) where Self: Sized {
+            fn get_from_parquet_row<'a, T: Iterator<Item=(&'a String, &'a parquet::record::Field)>>(row: T) -> (Self, Option<u64>) where Self: Sized {
                 unreachable!(concat!("fn \"get_from_parquet_row\" should never be called for an enum type! Enum type: ", stringify!(#name)));
             }
         }

@@ -13,13 +13,16 @@ pub(in crate::streaming_fast::file_sinks) struct StructDecoder {
     field_specification: FieldSpecification,
     non_oneof_fields: Vec<u64>,
     repeated_fields: Vec<u64>,
-    max_repetition_lvl_for_repeated_field: i16,
+    max_repetition_lvl_for_repeated_fields: i16,
     flattened_field_name: String,
     oneof_group_tracker: OneofGroupTracker
 }
 
 impl StructDecoder {
     pub(in crate::streaming_fast::file_sinks) fn new(field_name: &str, message_info: MessageInfo, parquet_schema_builder: &mut ParquetSchemaBuilder, lvls_store_builder: &mut RepetitionAndDefinitionLvlStoreBuilder) -> Self {
+        let repetition = message_info.field_specification.get_repetition();
+        lvls_store_builder.modify_lvls_for_struct_repetition(&repetition);
+
         let mut field_decoders = BTreeMap::new();
         let mut non_oneof_fields = Vec::new();
         let mut repeated_fields = Vec::new();
@@ -34,12 +37,15 @@ impl StructDecoder {
             field_decoders.insert(field_info.field_number, Decoder::new(field_info, parquet_schema_builder, lvls_store_builder));
         }
 
+        let max_repetition_lvl = lvls_store_builder.get_max_repetition_lvl();
+        lvls_store_builder.revert_lvls_for_struct_repetition(&repetition);
+
         StructDecoder {
             field_decoders,
             field_specification: message_info.field_specification,
             non_oneof_fields,
             repeated_fields,
-            max_repetition_lvl_for_repeated_field: lvls_store_builder.get_max_repetition_lvl_for_repeated_field(),
+            max_repetition_lvl_for_repeated_fields: max_repetition_lvl + 1,
             flattened_field_name: parquet_schema_builder.get_flattened_field_name(field_name),
             oneof_group_tracker: OneofGroupTracker::new(message_info.oneof_groups)
         }
@@ -79,7 +85,7 @@ impl StructDecoder {
                 Some(field) => {
                     if fields_seen.contains(&field_number) {
                         if self.repeated_fields.contains(&field_number) {
-                            field.decode(data, wire_type, uncompressed_file_size, lvls.repeated_item_previously_seen(self.max_repetition_lvl_for_repeated_field))?;
+                            field.decode(data, wire_type, uncompressed_file_size, lvls.repeated_item_previously_seen(self.max_repetition_lvl_for_repeated_fields))?;
                         } else {
                             panic!("Non repeated field seen more than once... TODO: flesh out error");
                         }

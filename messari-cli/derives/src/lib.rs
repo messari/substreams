@@ -6,6 +6,7 @@ use std::fmt::Debug;
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 use parquet::record::Row;
+use parquet::record::Field;
 use prost::Message;
 
 use crate::proto_structure_info::{FieldInfo, FieldSpecification, FieldType, MessageInfo};
@@ -15,7 +16,7 @@ pub trait TestData: ProtoInfo + GenRandSamples + PartialEq + Debug {
 
     fn to_proto_bytes(&self) -> Vec<u8>;
     fn get_proto_value(&self) -> Self::ProtoType;
-    fn get_from_parquet_row(row: Row) -> (Self, Option<u64>) where Self: Sized;
+    fn get_from_parquet_row<'a, T: Iterator<Item=(&'a String, &'a Field)>>(row: T) -> (Self, Option<u64>) where Self: Sized;
 }
 
 pub trait ProtoInfo {
@@ -49,6 +50,9 @@ impl<T: ProtoInfo> ProtoInfo for Option<T> {
     fn get_proto_field_info(field_name: String, field_number: u8) -> FieldInfo {
         let mut field_info = T::get_proto_field_info(field_name, field_number);
         field_info.field_specification = FieldSpecification::Optional;
+        if let FieldType::Message(ref mut message_info) = field_info.field_type {
+            message_info.field_specification = FieldSpecification::Optional;
+        }
         field_info
     }
 
@@ -68,6 +72,10 @@ impl<T: ProtoInfo> ProtoInfo for Vec<T> {
             FieldType::Sint64 => {
                 field_info.field_specification = FieldSpecification::Packed;
             },
+            FieldType::Message(ref mut message_info) => {
+                message_info.field_specification = FieldSpecification::Repeated;
+                field_info.field_specification = FieldSpecification::Repeated;
+            }
             _ => {
                 field_info.field_specification = FieldSpecification::Repeated;
             }
@@ -110,8 +118,8 @@ impl_proto_info!(f64, Double);
 impl_proto_info!(Vec<u8>, Bytes);
 impl_proto_info!(String, String);
 
-impl<T: TestData> TestData for Option<T> {
-    type ProtoType = Option<T::ProtoType>;
+impl<O: TestData> TestData for Option<O> {
+    type ProtoType = Option<O::ProtoType>;
 
     fn to_proto_bytes(&self) -> Vec<u8> {
         unreachable!()
@@ -121,13 +129,13 @@ impl<T: TestData> TestData for Option<T> {
         self.as_ref().map(|x| x.get_proto_value())
     }
 
-    fn get_from_parquet_row(row: Row) -> (Self, Option<u64>) where Self: Sized {
+    fn get_from_parquet_row<'a, T: Iterator<Item=(&'a String, &'a Field)>>(row: T) -> (Self, Option<u64>) where Self: Sized {
         unreachable!()
     }
 }
 
-impl<T: TestData> TestData for Vec<T> {
-    type ProtoType = Vec<T::ProtoType>;
+impl<V: TestData> TestData for Vec<V> {
+    type ProtoType = Vec<V::ProtoType>;
 
     fn to_proto_bytes(&self) -> Vec<u8> {
         unreachable!()
@@ -137,7 +145,7 @@ impl<T: TestData> TestData for Vec<T> {
         self.iter().map(|x| x.get_proto_value()).collect()
     }
 
-    fn get_from_parquet_row(row: Row) -> (Self, Option<u64>) where Self: Sized {
+    fn get_from_parquet_row<'a, T: Iterator<Item=(&'a String, &'a Field)>>(row: T) -> (Self, Option<u64>) where Self: Sized {
         unreachable!()
     }
 }
@@ -155,7 +163,7 @@ macro_rules! impl_test_data {
                 self.clone()
             }
 
-            fn get_from_parquet_row(row: Row) -> (Self, Option<u64>) where Self: Sized {
+            fn get_from_parquet_row<'a, T: Iterator<Item=(&'a String, &'a Field)>>(row: T) -> (Self, Option<u64>) where Self: Sized {
                 unreachable!()
             }
         }

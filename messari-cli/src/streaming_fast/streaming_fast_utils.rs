@@ -29,7 +29,7 @@ pub(crate) fn assert_data_sinks_to_parquet_correctly<T: TestData + Debug>() {
     let reader = SerializedFileReader::new(bytes::Bytes::from(parquet_file_data)).unwrap();
 
     for ((parquet_row, test_datum), test_block_number) in reader.get_row_iter(None).unwrap().zip(test_data).zip(test_block_numbers.into_iter()) {
-        let (parsed_data, block_number_result) = T::get_from_parquet_row(parquet_row);
+        let (parsed_data, block_number_result) = T::get_from_parquet_row(parquet_row.get_column_iter());
         assert!(block_number_result.is_some(), "Unable to parse block number from parquet row!\nParsed data: {:?}", parsed_data);
         assert_eq!(parsed_data, test_datum);
         assert_eq!(block_number_result.unwrap() as i64, test_block_number);

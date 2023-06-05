@@ -102,6 +102,7 @@ mod tests {
             field1: String,
             field2: Option<u64>,
             field3: Vec<String>,
+            field4: Vec<u64>,
         }
 
         #[derive(TestData)]
@@ -109,9 +110,10 @@ mod tests {
             field1: String,
             field2: Option<u64>,
             field3: Vec<String>,
-            // field4: OptionalAndRepeatedFields,
-            field5: Option<OptionalAndRepeatedFields>,
-            field6: Vec<OptionalAndRepeatedFields>
+            field4: Vec<u64>,
+            field5: OptionalAndRepeatedFields,
+            field6: Option<OptionalAndRepeatedFields>,
+            field7: Vec<OptionalAndRepeatedFields>
         }
 
         assert_data_sinks_to_parquet_correctly::<TwoLayeredOptionalAndRepeatedFields>()
