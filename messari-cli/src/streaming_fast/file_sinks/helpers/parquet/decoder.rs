@@ -23,8 +23,6 @@ impl Decoder {
             parquet_schema_builder.start_building_sub_group(field_info.field_name.clone());
             let (message_info, field_name) = field_info.get_struct_info();
 
-            lvls_store_builder.update_on_struct_repetition(&repetition);
-
             let decoder = Decoder::StructDecoder(StructDecoder::new(&field_name,
                                                         message_info,
                                                       parquet_schema_builder,

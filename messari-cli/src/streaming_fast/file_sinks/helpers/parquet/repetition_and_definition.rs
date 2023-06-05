@@ -18,8 +18,6 @@ impl RepetitionAndDefinitionLvls {
         RepetitionAndDefinitionLvls {
             definition_lvl: self.definition_lvl + 1,
             repetition_lvl: self.repetition_lvl,
-            // definition_lvl: 0,
-            // repetition_lvl: 0,
         }
     }
 
@@ -27,8 +25,6 @@ impl RepetitionAndDefinitionLvls {
         RepetitionAndDefinitionLvls {
             definition_lvl: self.definition_lvl + 1,
             repetition_lvl: max_repetition_lvl,
-            // definition_lvl: 1,
-            // repetition_lvl: 1,
         }
     }
 
@@ -59,7 +55,7 @@ impl RepetitionAndDefinitionLvlStore {
     }
 
     pub(in crate::streaming_fast::file_sinks) fn add_lvls_for_packed_field(&mut self, values_read: usize, mut lvls: RepetitionAndDefinitionLvls) {
-        lvls.repeated_item_newly_seen();
+        lvls = lvls.repeated_item_newly_seen();
         if values_read > 1 {
             let definition_lvl = lvls.get_definition_lvl();
             self.add_lvls(lvls);
@@ -93,7 +89,7 @@ impl RepetitionAndDefinitionLvlStoreBuilder {
         }
     }
 
-    pub(in crate::streaming_fast::file_sinks) fn update_on_struct_repetition(&mut self, repetition: &Repetition) {
+    pub(in crate::streaming_fast::file_sinks) fn modify_lvls_for_struct_repetition(&mut self, repetition: &Repetition) {
         match repetition {
             Repetition::REQUIRED => {}
             Repetition::OPTIONAL => {
@@ -106,8 +102,21 @@ impl RepetitionAndDefinitionLvlStoreBuilder {
         }
     }
 
-    pub(in crate::streaming_fast::file_sinks) fn get_max_repetition_lvl_for_repeated_field(&self) -> i16 {
-        self.max_repetition_lvl + 1
+    pub(in crate::streaming_fast::file_sinks) fn revert_lvls_for_struct_repetition(&mut self, repetition: &Repetition) {
+        match repetition {
+            Repetition::REQUIRED => {}
+            Repetition::OPTIONAL => {
+                self.max_definition_lvl -= 1;
+            }
+            Repetition::REPEATED => {
+                self.max_definition_lvl -= 1;
+                self.max_repetition_lvl -= 1;
+            }
+        }
+    }
+
+    pub(in crate::streaming_fast::file_sinks) fn get_max_repetition_lvl(&self) -> i16 {
+        self.max_repetition_lvl
     }
 
     pub(in crate::streaming_fast::file_sinks) fn get_store(&self, repetition: &Repetition) -> Option<RepetitionAndDefinitionLvlStore> {
