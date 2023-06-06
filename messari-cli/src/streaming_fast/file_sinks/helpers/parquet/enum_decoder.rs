@@ -47,6 +47,7 @@ impl EnumDecoder {
         };
 
         serialized_column_writer.typed::<ByteArrayType>().write_batch(self.values.as_slice(), definition_lvls, repetition_lvls).unwrap();
+        self.values.clear();
 
         serialized_column_writer.close().unwrap();
     }
