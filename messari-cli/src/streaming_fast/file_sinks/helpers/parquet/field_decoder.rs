@@ -63,13 +63,14 @@ impl FieldDecoder {
         macro_rules! write_batch {
             ($values_ident:ident, $value_type:ident) => {
                 {
-                    // panic!("{:?}\n{:?}\n{:?}", $values_ident, definition_lvls, repetition_lvls);
+                    serialized_column_writer.typed::<$value_type>().write_batch(
+                        $values_ident,
+                        definition_lvls,
+                        repetition_lvls
+                    ).unwrap();
 
-                serialized_column_writer.typed::<$value_type>().write_batch(
-                    $values_ident,
-                    definition_lvls,
-                    repetition_lvls
-                ).unwrap()}
+                    $values_ident.clear();
+                }
             }
         }
 

@@ -73,7 +73,7 @@ impl FileSink for ParquetFileSink {
         let mut serialized_column_writer = row_group_writer.next_column().unwrap().unwrap();
         serialized_column_writer.typed::<Int64Type>().write_batch(self.block_numbers.as_slice(), None, None).unwrap();
         serialized_column_writer.close().unwrap();
-        self.block_numbers = Vec::new();
+        self.block_numbers.clear();
 
         self.decoder.write_data_to_parquet(&mut row_group_writer);
 
