@@ -11,8 +11,8 @@ pub mod factory;
 
 #[rustfmt::skip]
 #[allow(unused_imports)]
-#[path = "../target/abi/nonFungiblePositionManager.rs"]
-pub mod nonFungiblePositionManager;
+#[path = "../target/abi/non_fungible_position_manager.rs"]
+pub mod non_fungible_position_manager;
 
 #[rustfmt::skip]
 #[allow(unused_imports)]

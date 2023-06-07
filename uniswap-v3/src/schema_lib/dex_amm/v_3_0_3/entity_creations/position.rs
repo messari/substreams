@@ -1,9 +1,6 @@
 use substreams::scalar::{BigInt};
-use substreams::Hex;
 
 use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, PositionEntityCreation};
-use crate::pb::entity;
-use crate::schema_lib::dex_amm::v_3_0_3::keys;
 use crate::tables::{Tables, Row};
 use crate::constants;
 
@@ -15,7 +12,7 @@ pub fn create_position_entity(
     pruned_transaction: &PrunedTransaction,
     position_creation: &PositionEntityCreation,
 ) {
-    let row: &mut Row = tables.create_row("Position", Hex(entity_id).to_string());
+    let row: &mut Row = tables.create_row("Position", std::str::from_utf8(entity_id).unwrap());
     row
         .set("account", &position_creation.account)
         .set("pool", &position_creation.pool)
@@ -25,9 +22,9 @@ pub fn create_position_entity(
         .set("liquidity", constants::BIGINT_ZERO.clone())
         .set("liquidityUSD", constants::BIGDECIMAL_ZERO.clone())
         .set("cumulativeDepositTokenAmounts", vec![constants::BIGINT_ZERO.clone(); position_creation.n_tokens as usize])
-        .set("cumulativeDepositUSD", vec![constants::BIGDECIMAL_ZERO.clone(); position_creation.n_tokens as usize])
+        .set("cumulativeDepositUSD", constants::BIGDECIMAL_ZERO.clone())
         .set("cumulativeWithdrawTokenAmounts", vec![constants::BIGINT_ZERO.clone(); position_creation.n_tokens as usize])
-        .set("cumulativeWithdrawUSD", vec![constants::BIGDECIMAL_ZERO.clone(); position_creation.n_tokens as usize])
+        .set("cumulativeWithdrawUSD", constants::BIGDECIMAL_ZERO.clone())
         .set("depositCount", 0)
         .set("withdrawCount", 0);
         

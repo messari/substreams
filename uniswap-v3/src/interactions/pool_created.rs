@@ -1,10 +1,7 @@
-use std::str::FromStr;
-
 use substreams::Hex;
 use substreams::scalar::{BigInt, BigDecimal};
 use substreams_ethereum::{pb::eth::v2::{self as eth}};
 
-use crate::dex_amm::v_3_0_3::entity_creations::{token, liquidity_pool};
 use crate::utils::UNISWAP_V3_FACTORY_SLICE;
 
 use crate::schema_lib::dex_amm::v_3_0_3::enums;
@@ -12,16 +9,12 @@ use crate::schema_lib::dex_amm::v_3_0_3::enums;
 use crate::abi::factory as FactoryContract;
 use crate::contract::erc20;
 use crate::constants;
-use crate::store::store_operations;
-use crate::pb::store::v1::{StoreOperation, StoreOperations};
 use crate::store::sdk;
 use crate::schema_lib::dex_amm::v_3_0_3::keys;
 
 pub fn create_store_operations_l1_pool_created(
     store_operation_factory: &mut sdk::StoreOperationFactory,
     pool_created_event: FactoryContract::events::PoolCreated, 
-    call: &eth::Call, 
-    log: &eth::Log
 ) {
     let liquidity_pool_id_string = Hex(&pool_created_event.pool).to_string();
     let liquidity_pool_supply_side_fee_id = keys::get_liquidity_pool_fee_key(&liquidity_pool_id_string, &enums::LiquidityPoolFeeType::FIXED_LP_FEE);
@@ -68,8 +61,6 @@ pub fn create_store_operations_l1_pool_created(
 pub fn prepare_pool_created_entity_changes(
     entity_update_factory: &mut sdk::EntityUpdateFactory, 
     transaction_trace: &eth::TransactionTrace,
-    call: &eth::Call, 
-    log: &eth::Log,
     pool_created_event: FactoryContract::events::PoolCreated, 
 ) {
     let protocol_entity_id = Hex(&UNISWAP_V3_FACTORY_SLICE.to_vec()).to_string();
@@ -129,7 +120,7 @@ pub fn prepare_pool_created_entity_changes(
         None,
     );
 
-    let (pool_lp_fee, pool_protocol_fee, pool_trading_fee) = create_pool_fees(&pool_created_event.pool, &pool_created_event.fee);
+    let (pool_lp_fee, pool_protocol_fee, pool_trading_fee) = create_pool_fees(&pool_created_event.fee);
     entity_update_factory.create_liquidity_pool_fee_entity_if_not_exists(
         &transaction_trace.clone(),
         &liquidity_pool_fee_supply_side,
@@ -181,23 +172,23 @@ pub fn convert_fee_to_percentage(fee: &BigInt) -> BigDecimal {
     percent
 }
 
-pub fn create_pool_fees(pool_address: &Vec<u8>, trading_fee: &BigInt) -> (LiquidityPoolFee, LiquidityPoolFee, LiquidityPoolFee) {
+pub fn create_pool_fees(trading_fee: &BigInt) -> (LiquidityPoolFee, LiquidityPoolFee, LiquidityPoolFee) {
     let trading_fee_percentage = convert_fee_to_percentage(trading_fee);
 
     // Trading Fee
-    let mut pool_trading_fee = LiquidityPoolFee::new(
+    let pool_trading_fee = LiquidityPoolFee::new(
         enums::LiquidityPoolFeeType::FIXED_TRADING_FEE, 
         trading_fee_percentage.clone(),
     );
 
     // LP Fee
-    let mut pool_lp_fee = LiquidityPoolFee::new(
+    let pool_lp_fee = LiquidityPoolFee::new(
         enums::LiquidityPoolFeeType::FIXED_LP_FEE,
         trading_fee_percentage.clone(),
     );
 
     // Protocol Fee
-    let mut pool_protocol_fee = LiquidityPoolFee::new(
+    let pool_protocol_fee = LiquidityPoolFee::new(
         enums::LiquidityPoolFeeType::FIXED_PROTOCOL_FEE,
         constants::BIGDECIMAL_ZERO.clone(),
     );

@@ -1,7 +1,6 @@
 use std::u8;
 
 use substreams::prelude::*;
-use substreams::Hex;
 use substreams::errors::Error;
 use substreams_ethereum::{pb::eth::v2::{self as eth}, Event};
 use substreams::store;
@@ -10,23 +9,17 @@ use substreams::pb::substreams::Clock;
 
 use substreams::scalar::{BigDecimal, BigInt};
 
-use crate::dex_amm::v_3_0_3::enums;
-use crate::dex_amm::v_3_0_3::map;
-
-use crate::{pb::dex_amm::v3_0_3::{
-    DataSource, EntityUpdates, PrunedTransaction, 
-    EntityCreation}
+use crate::pb::dex_amm::v3_0_3::{
+    DataSource, EntityUpdates
 };
-use crate::pb::store::v1::StoreOperation;
+
 use crate::pb::store::v1::store_operation;
 
 use crate::abi::pool as PoolContract;
 use crate::abi::factory as FactoryContract;
-use crate::abi::nonFungiblePositionManager as NonFungiblePositionManagerContract;
+use crate::abi::non_fungible_position_manager as NonFungiblePositionManagerContract;
 
 use crate::interactions;
-use crate::constants;
-use crate::utils;
 use crate::store::sdk;
 
 use crate::keyer::{get_data_source_key};
@@ -90,8 +83,6 @@ pub fn prepare_entity_changes(
                                 interactions::pool_created::prepare_pool_created_entity_changes(
                                     &mut entity_update_factory, 
                                     &transaction_trace, 
-                                    call_view.call, 
-                                    log,
                                     pool_created_event, 
                                 );
                             }
@@ -104,7 +95,6 @@ pub fn prepare_entity_changes(
                                     &mut entity_update_factory, 
                                     &transaction_trace, 
                                     call_view.call, 
-                                    log, 
                                     increase_liquidity_event, 
                                 );
                             } else if let Some(decrease_liquidity_event) = NonFungiblePositionManagerContract::events::DecreaseLiquidity::match_and_decode(&log) {
@@ -112,7 +102,6 @@ pub fn prepare_entity_changes(
                                     &mut entity_update_factory, 
                                     &transaction_trace, 
                                     call_view.call, 
-                                    log, 
                                     decrease_liquidity_event, 
                                 );
                             } else if let Some(transfer_event) = NonFungiblePositionManagerContract::events::Transfer::match_and_decode(&log) {
@@ -120,7 +109,6 @@ pub fn prepare_entity_changes(
                                     &mut entity_update_factory, 
                                     &transaction_trace, 
                                     call_view.call, 
-                                    log, 
                                     transfer_event, 
                                 );
                             }

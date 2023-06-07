@@ -1,12 +1,11 @@
+use core::panic;
 use std::collections::{HashMap, HashSet};
 
 use substreams::pb::substreams::Clock;
 use substreams::scalar::{BigDecimal, BigInt, self};
 use substreams_ethereum::pb::eth::v2::{self as eth};
-use substreams::Hex;
 use substreams::log;
 
-use crate::abi::pool;
 use crate::constants;
 use crate::pb::common;
 use crate::pb::dex_amm::v3_0_3::PositionEntityCreation;
@@ -15,7 +14,7 @@ use crate::store::store_operations;
 use substreams::store;
 use crate::pb::dex_amm::v3_0_3::{EntityUpdates, PrunedTransaction, EntityCreation, SwapEntityCreation, DepositEntityCreation, WithdrawEntityCreation, TokenEntityCreation, LiquidityPoolFeeEntityCreation};
 use crate::pb::dex_amm::v3_0_3::entity_creation::Type;
-use crate::pb::store::v1::{StoreOperation, StoreOperations};
+use crate::pb::store::v1::{StoreOperation};
 use crate::schema_lib::dex_amm::v_3_0_3::enums;
 use crate::schema_lib::dex_amm::v_3_0_3::keys;
 
@@ -76,11 +75,14 @@ impl EntityUpdateFactory {
         let mut entity_accounting_table: HashMap<String, EntityAccount> = HashMap::new();
         for delta in &int64_store_deltas.deltas {
             let key_list = delta.key.split(":").collect::<Vec<_>>();
-            if key_list[0] == "entity-mutation-count" {
-                entity_accounting_table.insert(
-                    key_list[1..].join(":"),
-                    EntityAccount::new(delta.old_value),
-                );
+            if key_list[0] == "entity-mutation-count" && delta.ordinal == 0 {
+                if !entity_accounting_table.contains_key(&key_list[1..].join(":")) {
+                    entity_accounting_table.insert(
+                        key_list[1..].join(":"),
+                        EntityAccount::new(delta.old_value),
+                    );
+                }
+                // log::println(format!("{}: {}: {}", key_list[1..].join(":"), delta.old_value, delta.ordinal));
             }
         }
         entity_accounting_table
@@ -102,8 +104,7 @@ impl EntityUpdateFactory {
             }
             None => {
                 let key_list = entity_id.split(":").collect::<Vec<_>>();
-                return false;
-                // panic!("Creation of mutable entity {} not accounted for in entity_accounting_table. Please add to int64_store, before prepare_entity_changes module if you would like to create this entity. ID: {}", key_list[0], key_list[1])
+                panic!("Creation of mutable entity {} not accounted for in entity_accounting_table. Please add to int64_store, before prepare_entity_changes module if you would like to create this entity. ID: {}", key_list[0], key_list[1])
             }
         }
     }
@@ -114,7 +115,7 @@ impl EntityUpdateFactory {
                 for (key, value) in self.entity_accounting_table.iter() {
                     log::println(format!("{}: {}", key, value));
                 }
-                // panic!("Mutable entity {} was not seen. Please add to byte_store, before prepare_entity_changes module if you would like to create this entity. {}", entity_id, entity_account);
+                panic!("Mutable entity {} was not seen. Please add to byte_store, before prepare_entity_changes module if you would like to create this entity. {}", entity_id, entity_account);
             }
         }
 
@@ -371,7 +372,6 @@ impl EntityUpdateFactory {
     pub fn create_swap_entity(
         &mut self,
         transaction_trace: &eth::TransactionTrace,
-        entity_id: &str,
         pool: &Vec<u8>,
         protocol: &Vec<u8>,
         account: &Vec<u8>,

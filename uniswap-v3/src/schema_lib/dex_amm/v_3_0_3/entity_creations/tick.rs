@@ -1,9 +1,7 @@
 use substreams::scalar::{BigInt};
-use substreams::Hex;
 
-use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, TickEntityCreation};
-use crate::pb::entity;
-use crate::schema_lib::dex_amm::v_3_0_3::keys;
+use crate::pb::dex_amm::v3_0_3::TickEntityCreation;
+
 use crate::tables::{Tables, Row};
 use crate::constants;
 
@@ -14,7 +12,7 @@ pub fn create_tick_entity(
     timestamp: &i64,
     tick_creation: &TickEntityCreation,
 ) {
-    let row: &mut Row = tables.create_row("Tick", Hex(entity_id).to_string());
+    let row: &mut Row = tables.create_row("Tick", std::str::from_utf8(entity_id).unwrap());
     row
         .set("index", &tick_creation.index.clone().unwrap())
         .set("pool", &tick_creation.pool)

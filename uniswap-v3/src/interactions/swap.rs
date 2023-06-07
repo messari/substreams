@@ -1,16 +1,12 @@
 use std::ops::Mul;
-use substreams::log;
 use substreams::{Hex, store::StoreGet};
 use substreams_ethereum::{pb::eth::v2::{self as eth}};
-use substreams_ethereum::NULL_ADDRESS;
 use substreams::store;
 use substreams::scalar::{BigDecimal, BigInt};
 
-use crate::pb::store::v1::StoreOperation;
 use crate::utils::UNISWAP_V3_FACTORY_SLICE; 
 use crate::constants;
 
-use crate::store::store_operations;
 
 use crate::abi::pool as PoolContract;
 use crate::sdk;
@@ -41,7 +37,6 @@ pub fn prepare_swap_entity_changes(
     let amounts = vec![swap_event.amount0.clone(), swap_event.amount1.clone()];
     entity_update_factory.create_swap_entity(
         transaction_trace,
-        &liquidity_pool_id,
         &call.address, 
         &UNISWAP_V3_FACTORY_SLICE.to_vec(), 
         &transaction_trace.from.clone(), 
@@ -128,10 +123,3 @@ pub fn calculate_fee(
     let fee = fee_percentage.clone().mul(amount_bd.clone()) / constants::BIGDECIMAL_100.clone();
     utils::bigdecimal_to_bigint(&fee)
 }
-
-pub fn create_store_operations_l1_swap(
-    store_operations: &mut Vec<StoreOperation>,
-    swap_event: PoolContract::events::Swap, 
-    call: &eth::Call, 
-    log: &eth::Log
-) {}

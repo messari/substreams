@@ -1,6 +1,5 @@
 use substreams::{Hex, scalar};
 use crate::schema_lib::dex_amm::v_3_0_3::enums;
-use crate::pb;
 
 pub fn get_event_key(hash: &Vec<u8>, log_index: u32) -> Vec<u8> {
     format!("{}-{}", Hex(hash).to_string(), log_index.to_string()).as_bytes().to_vec()

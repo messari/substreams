@@ -1,24 +1,18 @@
-use substreams::{Hex, store::StoreGet};
+use substreams::Hex;
 use substreams_ethereum::{pb::eth::v2::{self as eth}};
-use substreams::store;
-use substreams::log;
 
 use crate::dex_amm::v_3_0_3::enums;
 use crate::store::sdk;
 
-use crate::store::store_operations;
-use crate::pb::store::v1::{StoreOperation, StoreOperations};
 use crate::schema_lib::dex_amm::v_3_0_3::keys;
 
-use crate::abi::nonFungiblePositionManager as NonFungiblePositionManagerContract;
+use crate::abi::non_fungible_position_manager as NonFungiblePositionManagerContract;
 use substreams_ethereum::NULL_ADDRESS;
 
 
 pub fn create_store_operations_l1_decrease_liquidity(
     store_operation_factory: &mut sdk::StoreOperationFactory,
     decrease_liquidity_event: NonFungiblePositionManagerContract::events::DecreaseLiquidity, 
-    call: &eth::Call, 
-    log: &eth::Log,
 ) {
     store_operation_factory.track_position_mutation(
         keys::get_position_key(&Hex(&NULL_ADDRESS).to_string(), &decrease_liquidity_event.token_id.to_string())
@@ -29,7 +23,6 @@ pub fn prepare_decrease_liquidity_entity_changes(
     entity_update_factory: &mut sdk::EntityUpdateFactory, 
     transaction_trace: &eth::TransactionTrace,
     call: &eth::Call, 
-    log: &eth::Log,
     decrease_liquidity_event: NonFungiblePositionManagerContract::events::DecreaseLiquidity, 
 ) {
     let position_id = &keys::get_position_key(&Hex(&NULL_ADDRESS).to_string(), &decrease_liquidity_event.token_id.to_string());

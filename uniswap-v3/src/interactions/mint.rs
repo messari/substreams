@@ -1,22 +1,16 @@
 use substreams::{Hex, store::StoreGet};
 use substreams_ethereum::{pb::eth::v2::{self as eth}};
-use substreams_ethereum::NULL_ADDRESS;
 use substreams::store;
-use substreams::log;
 
 use crate::utils::UNISWAP_V3_FACTORY_SLICE;
 use crate::abi::pool as PoolContract;
 use crate::store::sdk;
 use crate::schema_lib::dex_amm::v_3_0_3::keys;
 
-use crate::store::store_operations;
-use crate::pb::store::v1::{StoreOperation, StoreOperations};
-
 pub fn create_store_operations_l1_mint(
     store_operation_factory: &mut sdk::StoreOperationFactory,
     mint_event: PoolContract::events::Mint, 
     call: &eth::Call, 
-    log: &eth::Log,
 ) {
     let pool_address = Hex(&call.address).to_string();
     store_operation_factory.track_tick_mutation(
@@ -38,7 +32,7 @@ pub fn prepare_mint_entity_changes(
 ) {
     let liquidity_pool_id: String = Hex(&call.address).to_string(); 
     let tick_lower_id = keys::get_tick_key(&liquidity_pool_id, &mint_event.tick_lower);
-    let tick_upper_id = keys::get_tick_key(&liquidity_pool_id, &mint_event.tick_lower);
+    let tick_upper_id = keys::get_tick_key(&liquidity_pool_id, &mint_event.tick_upper);
 
     let input_tokens = match append_string_l1_store.get_last(["raw", "LiquidityPool", liquidity_pool_id.as_str(), "inputTokens"].join(":")) {
         Some(input_tokens) => input_tokens.into_iter().map(|s| s.into_bytes()).collect(),

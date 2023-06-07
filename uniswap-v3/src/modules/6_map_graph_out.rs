@@ -1,15 +1,11 @@
-use ethabi::{Hash};
 use substreams::prelude::*;
 use substreams::pb::substreams::Clock;
 use substreams::store::{StoreGetBigDecimal, DeltaBigDecimal, StoreGetInt64, DeltaInt64, StoreGetBigInt, DeltaBigInt, StoreGetArray, DeltaArray};
 use substreams_entity_change::pb::entity::{EntityChanges};
 
 use core::panic;
-use std::collections::HashMap;
-use std::fmt::Debug;
 
-
-use crate::tables::{Tables, Row};
+use crate::tables::Tables;
 use crate::pb::dex_amm::v3_0_3::{EntityUpdates};
 use crate::schema_lib::dex_amm::v_3_0_3::map::map_dex_amm_v_3_0_3_entity_creation;
 use crate::constants; 
@@ -24,8 +20,8 @@ pub fn map_graph_out(
     add_bigint_store_deltas: Deltas<DeltaBigInt>,
     set_bigint_store: StoreGetBigInt,
     set_bigint_store_deltas: Deltas<DeltaBigInt>,
-    set_bytes_store: StoreGetRaw,
-    set_bytes_store_deltas: Deltas<DeltaBytes>,
+    _set_bytes_store: StoreGetRaw,
+    _set_bytes_store_deltas: Deltas<DeltaBytes>,
     add_int64_store: StoreGetInt64,
     add_int64_store_deltas: Deltas<DeltaInt64>,
     append_string_store: StoreGetArray<String>,
@@ -74,9 +70,9 @@ pub fn map_store_values(
     set_bigint_store_deltas: &Deltas<DeltaBigInt>,
     add_bigdecimal_store: &StoreGetBigDecimal,
     add_bigdecimal_store_deltas: &Deltas<DeltaBigDecimal>,
-    add_int64_store: &StoreGetInt64,
+    _add_int64_store: &StoreGetInt64,
     add_int64_store_deltas: &Deltas<DeltaInt64>,
-    append_string_store: &StoreGetArray<String>,
+    _append_string_store: &StoreGetArray<String>,
     append_string_store_deltas: &Deltas<DeltaArray<String>>,
 ) {
     fn split_key(key: &str) -> (Vec<&str>, Option<usize>, Option<usize>) {
@@ -190,7 +186,7 @@ pub fn map_store_values(
                 tables.update_row(key_list[1], key_list[2]).set(key_list[3], &delta.new_value.iter().map(|v| v.clone().into_bytes()).collect::<Vec<_>>());
 
             },
-            (Some(_), Some(array_size)) => {
+            (Some(_), Some(_array_size)) => {
                 panic!("Not implemented");
             },
             _ => {
@@ -210,7 +206,7 @@ pub fn map_store_values(
                 tables.update_row(key_list[1], key_list[2]).set(key_list[3], delta.new_value as i32);
 
             },
-            (Some(_), Some(array_size)) => {
+            (Some(_), Some(_array_size)) => {
                 panic!("Not implemented");
             },
             _ => {

@@ -1,7 +1,3 @@
-use substreams::prelude::*;
-
-use substreams::store::{DeltaBigDecimal, DeltaInt64, DeltaBigInt, StoreGetArray};
-
 use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, EntityCreation};
 use crate::pb::dex_amm::v3_0_3::entity_creation::Type;
 
@@ -74,9 +70,6 @@ pub fn map_dex_amm_v_3_0_3_entity_creation(
             create_dex_amm_protocol_entity(
                 tables,
                 &entity_creation.entity_id,
-                block_number,
-                timestamp,
-                pruned_transaction,
                 &dex_amm_protocol_entity_creation
             );
         },
@@ -86,7 +79,6 @@ pub fn map_dex_amm_v_3_0_3_entity_creation(
                 &entity_creation.entity_id,
                 block_number,
                 timestamp,
-                pruned_transaction,
                 &liquidity_pool_entity_creation,
             );
         },
@@ -94,9 +86,6 @@ pub fn map_dex_amm_v_3_0_3_entity_creation(
             create_token_entity(
                 tables,
                 &entity_creation.entity_id,
-                block_number,
-                timestamp,
-                pruned_transaction,
                 &token_entity_creation,
             );
         },
@@ -104,9 +93,6 @@ pub fn map_dex_amm_v_3_0_3_entity_creation(
             create_liquidity_pool_fee_entity(
                 tables,
                 &entity_creation.entity_id,
-                block_number,
-                timestamp,
-                pruned_transaction,
                 &liquidity_pool_fee_entity_creation,
             );
         },

@@ -11,7 +11,7 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_graph_out -s 12369620 
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml map_graph_out -s 12369620 --debug-modules-output prepare_entity_changes
 
 .PHONY: pack
 pack:

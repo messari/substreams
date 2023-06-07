@@ -1,7 +1,8 @@
 
-use strum_macros::{EnumString, ToString};
+use strum_macros::{EnumString, Display};
 
-#[derive(EnumString, ToString)]
+#[allow(non_camel_case_types)]
+#[derive(EnumString, Display)]
 pub enum LiquidityPoolFeeType {
     FIXED_TRADING_FEE,
     FIXED_LP_FEE,
@@ -11,7 +12,8 @@ pub enum LiquidityPoolFeeType {
     CUSTOM_PROTOCOL_FEE,
 }
 
-#[derive(EnumString, ToString)]
+#[allow(non_camel_case_types)]
+#[derive(EnumString, Display)]
 pub enum TokenType {
     MULTIPLE,
     UNKNOWN,
@@ -23,7 +25,8 @@ pub enum TokenType {
     BEP1155,
 }
 
-#[derive(EnumString, ToString)]
+#[allow(non_camel_case_types)]
+#[derive(EnumString, Display)]
 pub enum ProtocolType {
     EXCHANGE,
     LENDING,
@@ -32,7 +35,8 @@ pub enum ProtocolType {
     GENERIC,
 }
 
-#[derive(EnumString, ToString)]
+#[allow(non_camel_case_types)]
+#[derive(EnumString, Display)]
 pub enum Network {
     ARBITRUM_ONE,
     ARWEAVE_MAINNET,

@@ -136,7 +136,7 @@ type LiquidityPoolFee @entity {
 
 interface Protocol {
   " Smart contract address of the protocol's main contract (Factory, Registry, etc) "
-  id: Bytes!
+  id: ID!
 
   " Name of the protocol, including version. e.g. Uniswap v3 "
   name: String!
@@ -185,7 +185,7 @@ interface Protocol {
 
 type DexAmmProtocol implements Protocol @entity {
   " Smart contract address of the protocol's main contract (Factory, Registry, etc) "
-  id: Bytes!
+  id: ID!
 
   " Name of the protocol, including version. e.g. Uniswap v3 "
   name: String!
@@ -257,15 +257,6 @@ type DexAmmProtocol implements Protocol @entity {
 
   " Total number of positions (open and closed) "
   cumulativePositionCount: Int!
-
-  " Day ID of the most recent daily snapshot "
-  lastSnapshotDayID: Int!
-
-  " Timestamp of the last time this entity was updated "
-  lastUpdateTimestamp: BigInt!
-
-  " Block number of the last time this entity was updated "
-  lastUpdateBlockNumber: BigInt!
 }
 
 ###############################
@@ -823,7 +814,7 @@ type LiquidityPoolHourlySnapshot @entity(immutable: true) {
 
 type Tick @entity {
   " { pool address }-{ tick index } "
-  id: Bytes!
+  id: ID!
 
   " tick index "
   index: BigInt!
@@ -950,7 +941,7 @@ type Account @entity {
 
 type Position @entity {
   " { Account address }-{ Market address }-{ Count } "
-  id: Bytes!
+  id: ID!
 
   " Account that owns this position "
   account: Bytes!
@@ -1007,7 +998,7 @@ type Position @entity {
   cumulativeWithdrawUSD: BigDecimal!
 
   " Total reward token accumulated under this position, in USD "
-  cumulativeRewardUSD: [BigInt!]
+  cumulativeRewardUSD: [BigDecimal!]
 
   " Number of deposits related to this position "
   depositCount: Int!

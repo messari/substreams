@@ -1,12 +1,9 @@
 use ethabi::Bytes;
-use substreams::store::{StoreGetArray};
 use substreams::scalar::{BigInt};
-use substreams_ethereum::NULL_ADDRESS;
 use substreams::Hex;
 
 use crate::pb;
 use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, SwapEntityCreation, DepositEntityCreation, WithdrawEntityCreation};
-use crate::schema_lib::dex_amm::v_3_0_3::keys;
 use crate::tables::{Tables, Row};
 use crate::constants;
 
@@ -20,7 +17,7 @@ pub fn create_swap_entity(
     swap_entity_creation: &SwapEntityCreation,
 ) {
     let swap_tokens: SwapTokens = get_swap_tokens(&swap_entity_creation.input_tokens, &swap_entity_creation.amounts);
-    tables.create_row("Swap", Hex(entity_id).to_string())
+    tables.create_row("Swap", std::str::from_utf8(entity_id).unwrap())
         .set("hash", &pruned_transaction.hash)
         .set("nonce", &pruned_transaction.nonce.clone().unwrap())
         .set("gasLimit", &pruned_transaction.gas_limit.clone().unwrap())

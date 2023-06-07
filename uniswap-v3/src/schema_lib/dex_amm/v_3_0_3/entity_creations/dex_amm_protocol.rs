@@ -1,19 +1,14 @@
-use substreams::Hex;
-
 use crate::tables::Tables;
 
-use crate::pb::dex_amm::v3_0_3::{PrunedTransaction, DexAmmProtocolEntityCreation};
+use crate::pb::dex_amm::v3_0_3::DexAmmProtocolEntityCreation;
 use crate::constants;
 
 pub fn create_dex_amm_protocol_entity(
     tables: &mut Tables,
     entity_id: &Vec<u8>,
-    block_number: &u64,
-    timestamp: &i64,
-    pruned_transaction: &PrunedTransaction,
     dex_amm_protocol_entity_creation: &DexAmmProtocolEntityCreation,
 ) {
-    tables.create_row("DexAmmProtocol", Hex(entity_id).to_string())
+    tables.create_row("DexAmmProtocol", std::str::from_utf8(entity_id).unwrap())
         .set("name", &dex_amm_protocol_entity_creation.name)
         .set("slug", &dex_amm_protocol_entity_creation.slug)
         .set("schemaVersion", &dex_amm_protocol_entity_creation.schema_version)

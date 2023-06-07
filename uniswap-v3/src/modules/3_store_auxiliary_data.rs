@@ -2,28 +2,21 @@ use substreams::prelude::*;
 use substreams::errors::Error;
 use substreams_ethereum::{pb::eth::v2::{self as eth}, Event};
 use substreams::store;
-use substreams::Hex;
 use substreams::pb::substreams::Clock;
 
-use crate::{pb::dex_amm::v3_0_3::{
-    DataSource, PrunedTransaction, 
-    EntityCreation}
-};
-use crate::pb::store::v1::{StoreOperation, StoreOperations};
+use crate::pb::dex_amm::v3_0_3::DataSource;
+
+use crate::pb::store::v1::StoreOperations;
 use crate::pb::store::v1::store_operation;
 
 use crate::abi::pool as PoolContract;
 use crate::abi::factory as FactoryContract;
-use crate::abi::nonFungiblePositionManager as NonFungiblePositionManagerContract;
+use crate::abi::non_fungible_position_manager as NonFungiblePositionManagerContract;
 
 use crate::interactions;
-use crate::constants;
 use crate::store::sdk;
 
 use crate::keyer::{get_data_source_key};
-
-use crate::store::store_operations;
-use crate::utils;
 
 
 #[substreams::handlers::map]
@@ -41,27 +34,27 @@ pub fn create_store_operations_l1(
                     0 => {
                         for log in &call_view.call.logs {
                             if let Some(mint_event) = PoolContract::events::Mint::match_and_decode(&log) {
-                                interactions::mint::create_store_operations_l1_mint(&mut store_operation_factory, mint_event, call_view.call, log);
+                                interactions::mint::create_store_operations_l1_mint(&mut store_operation_factory, mint_event, call_view.call);
                             } else if let Some(burn_event) = PoolContract::events::Burn::match_and_decode(&log) {
-                                interactions::burn::create_store_operations_l1_burn(&mut store_operation_factory, burn_event, call_view.call, log);
+                                interactions::burn::create_store_operations_l1_burn(&mut store_operation_factory, burn_event, call_view.call);
                             }
                         }
                     }
                     1 => {
                         for log in &call_view.call.logs {
                             if let Some(pool_created_event) = FactoryContract::events::PoolCreated::match_and_decode(&log) {
-                                interactions::pool_created::create_store_operations_l1_pool_created(&mut store_operation_factory, pool_created_event, call_view.call, log);
+                                interactions::pool_created::create_store_operations_l1_pool_created(&mut store_operation_factory, pool_created_event);
                             }
                         }
                     }
                     2 => {
                         for log in &call_view.call.logs {
                             if let Some(increase_liquidity_event) = NonFungiblePositionManagerContract::events::IncreaseLiquidity::match_and_decode(&log) {
-                                interactions::increase_liquidity::create_store_operations_l1_increase_liquidity(&mut store_operation_factory, increase_liquidity_event, call_view.call, log);
+                                interactions::increase_liquidity::create_store_operations_l1_increase_liquidity(&mut store_operation_factory, increase_liquidity_event);
                             } else if let Some(decrease_liquidity_event) = NonFungiblePositionManagerContract::events::DecreaseLiquidity::match_and_decode(&log) {
-                                interactions::decrease_liquidity::create_store_operations_l1_decrease_liquidity(&mut store_operation_factory, decrease_liquidity_event, call_view.call, log);
+                                interactions::decrease_liquidity::create_store_operations_l1_decrease_liquidity(&mut store_operation_factory, decrease_liquidity_event);
                             } else if let Some(transfer_event) = NonFungiblePositionManagerContract::events::Transfer::match_and_decode(&log) {
-                                interactions::transfer::create_store_operations_l1_transfer(&mut store_operation_factory, transfer_event, call_view.call, log);
+                                interactions::transfer::create_store_operations_l1_transfer(&mut store_operation_factory, transfer_event);
                             }
                         }
                     }
