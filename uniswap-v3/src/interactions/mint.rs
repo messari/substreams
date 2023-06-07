@@ -5,7 +5,7 @@ use substreams_ethereum::pb::eth::v2::{self as eth};
 use crate::abi::pool as PoolContract;
 use crate::schema_lib::dex_amm::v_3_0_3::keys;
 use crate::store::sdk;
-use crate::utils::UNISWAP_V3_FACTORY_SLICE;
+use crate::constants;
 
 pub fn create_store_operations_l1_mint(
     store_operation_factory: &mut sdk::StoreOperationFactory,
@@ -51,7 +51,7 @@ pub fn prepare_mint_entity_changes(
     entity_update_factory.create_deposit_entity(
         transaction_trace,
         &call.address,
-        &UNISWAP_V3_FACTORY_SLICE.to_vec(),
+        &constants::UNISWAP_V3_FACTORY_SLICE.to_vec(),
         &transaction_trace.from.clone(),
         &mint_event.amount,
         &input_tokens,

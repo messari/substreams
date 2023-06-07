@@ -2,8 +2,6 @@ use substreams::scalar::{BigDecimal, BigInt};
 use substreams::Hex;
 use substreams_ethereum::pb::eth::v2::{self as eth};
 
-use crate::utils::UNISWAP_V3_FACTORY_SLICE;
-
 use crate::schema_lib::dex_amm::v_3_0_3::enums;
 
 use crate::abi::factory as FactoryContract;
@@ -84,7 +82,7 @@ pub fn create_store_operations_l1_pool_created(
     );
 
     store_operation_factory
-        .track_dex_amm_protocol_mutation(Hex(&UNISWAP_V3_FACTORY_SLICE).to_string());
+        .track_dex_amm_protocol_mutation(Hex(&constants::UNISWAP_V3_FACTORY_SLICE.clone()).to_string());
     store_operation_factory.track_liquidity_pool_mutation(liquidity_pool_id_string);
     store_operation_factory.track_liquidity_pool_fee_mutation(liquidity_pool_supply_side_fee_id);
     store_operation_factory.track_liquidity_pool_fee_mutation(liquidity_pool_protocol_side_fee_id);
@@ -98,7 +96,7 @@ pub fn prepare_pool_created_entity_changes(
     transaction_trace: &eth::TransactionTrace,
     pool_created_event: FactoryContract::events::PoolCreated,
 ) {
-    let protocol_entity_id = Hex(&UNISWAP_V3_FACTORY_SLICE.to_vec()).to_string();
+    let protocol_entity_id = Hex(&constants::UNISWAP_V3_FACTORY_SLICE.to_vec()).to_string();
     let liquidity_pool_id = Hex(&pool_created_event.pool).to_string();
     let liquidity_pool_fee_supply_side = keys::get_liquidity_pool_fee_key(
         &liquidity_pool_id,
@@ -118,7 +116,7 @@ pub fn prepare_pool_created_entity_changes(
     entity_update_factory.create_dex_amm_protocol_entity_if_not_exists(
         &transaction_trace,
         &protocol_entity_id,
-        &UNISWAP_V3_FACTORY_SLICE.to_vec(),
+        &constants::UNISWAP_V3_FACTORY_SLICE.to_vec(),
         "Uniswap V3",
         "uniswap-v3",
         "3.0.3",
@@ -153,7 +151,7 @@ pub fn prepare_pool_created_entity_changes(
     entity_update_factory.create_liquidity_pool_entity_if_not_exists(
         &transaction_trace.clone(),
         &liquidity_pool_id,
-        &UNISWAP_V3_FACTORY_SLICE.to_vec(),
+        &constants::UNISWAP_V3_FACTORY_SLICE.to_vec(),
         &pool_created_event.pool,
         &input_tokens,
         &vec![token0.symbol.clone(), token1.symbol.clone()],

@@ -6,7 +6,7 @@ use substreams_ethereum::Event;
 
 use crate::abi::factory as FactoryContract;
 use crate::pb::dex_amm::v3_0_3::{DataSource, DataSourceType, DataSources};
-use crate::utils::{NFT_POSITION_MANAGER_SLICE, UNISWAP_V3_FACTORY_SLICE};
+use crate::constants;
 
 use crate::keyer::get_data_source_key;
 
@@ -17,17 +17,17 @@ pub fn map_data_sources(block: eth::Block) -> Result<DataSources, Error> {
     // Fix so does not store multiple times.
     data_sources.push(DataSource {
         data_source_type: DataSourceType::UniswapV3Factory as i32,
-        address: UNISWAP_V3_FACTORY_SLICE.to_vec(),
+        address: constants::UNISWAP_V3_FACTORY_SLICE.to_vec(),
     });
 
     data_sources.push(DataSource {
         data_source_type: DataSourceType::NftPositionManager as i32,
-        address: NFT_POSITION_MANAGER_SLICE.to_vec(),
+        address: constants::NFT_POSITION_MANAGER_SLICE.to_vec(),
     });
 
     for log in block.logs() {
         if let Some(event) = FactoryContract::events::PoolCreated::match_and_decode(log) {
-            if log.address().ne(&UNISWAP_V3_FACTORY_SLICE) {
+            if log.address().ne(&constants::UNISWAP_V3_FACTORY_SLICE.clone()) {
                 continue;
             }
             data_sources.push(DataSource {

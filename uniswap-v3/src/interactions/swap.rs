@@ -5,7 +5,6 @@ use substreams::{store::StoreGet, Hex};
 use substreams_ethereum::pb::eth::v2::{self as eth};
 
 use crate::constants;
-use crate::utils::UNISWAP_V3_FACTORY_SLICE;
 
 use crate::abi::pool as PoolContract;
 use crate::schema_lib::dex_amm::v_3_0_3::{enums, keys};
@@ -57,7 +56,7 @@ pub fn prepare_swap_entity_changes(
     entity_update_factory.create_swap_entity(
         transaction_trace,
         &call.address,
-        &UNISWAP_V3_FACTORY_SLICE.to_vec(),
+        &constants::UNISWAP_V3_FACTORY_SLICE.to_vec(),
         &transaction_trace.from.clone(),
         &input_tokens,
         &amounts,

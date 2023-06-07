@@ -1,8 +1,4 @@
-use substreams::hex;
 use substreams::scalar::{BigDecimal, BigInt};
-
-pub const UNISWAP_V3_FACTORY_SLICE: [u8; 20] = hex!("1f98431c8ad98523631ae4a59f267346ea31f984");
-pub const NFT_POSITION_MANAGER_SLICE: [u8; 20] = hex!("c36442b4a4522e871399cd717abdd847ab11fe88");
 
 // pub fn get_day_id(timestamp: i64) -> BigInt {
 //     const SECONDS_IN_DAY: i64 = 86400_i64;
