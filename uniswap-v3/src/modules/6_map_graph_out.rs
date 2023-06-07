@@ -1,14 +1,17 @@
-use substreams::prelude::*;
 use substreams::pb::substreams::Clock;
-use substreams::store::{StoreGetBigDecimal, DeltaBigDecimal, StoreGetInt64, DeltaInt64, StoreGetBigInt, DeltaBigInt, StoreGetArray, DeltaArray};
-use substreams_entity_change::pb::entity::{EntityChanges};
+use substreams::prelude::*;
+use substreams::store::{
+    DeltaArray, DeltaBigDecimal, DeltaBigInt, DeltaInt64, StoreGetArray, StoreGetBigDecimal,
+    StoreGetBigInt, StoreGetInt64,
+};
+use substreams_entity_change::pb::entity::EntityChanges;
 
 use core::panic;
 
-use crate::tables::Tables;
-use crate::pb::dex_amm::v3_0_3::{EntityUpdates};
+use crate::constants;
+use crate::pb::dex_amm::v3_0_3::EntityUpdates;
 use crate::schema_lib::dex_amm::v_3_0_3::map::map_dex_amm_v_3_0_3_entity_creation;
-use crate::constants; 
+use crate::tables::Tables;
 
 #[substreams::handlers::map]
 pub fn map_graph_out(
@@ -31,7 +34,7 @@ pub fn map_graph_out(
 
     let block_number = clock.number;
     let timestamp = clock.timestamp.unwrap().seconds;
-    
+
     for pruned_transaction in entity_updates.pruned_transactions {
         for entity_creation in &pruned_transaction.entity_creations {
             map_dex_amm_v_3_0_3_entity_creation(
@@ -39,7 +42,7 @@ pub fn map_graph_out(
                 &block_number,
                 &timestamp,
                 &pruned_transaction,
-                &entity_creation, 
+                &entity_creation,
             );
         }
     }
@@ -60,7 +63,6 @@ pub fn map_graph_out(
 
     Ok(tables.to_entity_changes())
 }
-
 
 pub fn map_store_values(
     tables: &mut Tables,
@@ -90,13 +92,22 @@ pub fn map_store_values(
 
         match (index, array_size) {
             (None, None) => {
-                tables.update_row(key_list[1], key_list[2]).set(key_list[3], delta.new_value.clone());
-
-            },
+                tables
+                    .update_row(key_list[1], key_list[2])
+                    .set(key_list[3], delta.new_value.clone());
+            }
             (Some(_), Some(array_size)) => {
                 let mut value_list = vec![constants::BIGINT_ZERO.clone(); array_size];
                 for i in 0..array_size {
-                    let key = [key_list[0], key_list[1], key_list[2], key_list[3], i.to_string().as_str(), array_size.to_string().as_str()].join(":");
+                    let key = [
+                        key_list[0],
+                        key_list[1],
+                        key_list[2],
+                        key_list[3],
+                        i.to_string().as_str(),
+                        array_size.to_string().as_str(),
+                    ]
+                    .join(":");
                     if let Some(value) = add_bigint_store.get_last(key.as_str()) {
                         value_list[i] = value.clone();
                     } else {
@@ -104,9 +115,10 @@ pub fn map_store_values(
                     }
                 }
 
-                tables.update_row(key_list[1], key_list[2]).set(key_list[3], value_list.clone());
-
-            },
+                tables
+                    .update_row(key_list[1], key_list[2])
+                    .set(key_list[3], value_list.clone());
+            }
             _ => {
                 panic!("Invalid key: {}", delta.key);
             }
@@ -121,13 +133,22 @@ pub fn map_store_values(
 
         match (index, array_size) {
             (None, None) => {
-                tables.update_row(key_list[1], key_list[2]).set(key_list[3], delta.new_value.clone());
-
-            },
+                tables
+                    .update_row(key_list[1], key_list[2])
+                    .set(key_list[3], delta.new_value.clone());
+            }
             (Some(_), Some(array_size)) => {
                 let mut value_list = vec![constants::BIGINT_ZERO.clone(); array_size];
                 for i in 0..array_size {
-                    let key = [key_list[0], key_list[1], key_list[2], key_list[3], i.to_string().as_str(), array_size.to_string().as_str()].join(":");
+                    let key = [
+                        key_list[0],
+                        key_list[1],
+                        key_list[2],
+                        key_list[3],
+                        i.to_string().as_str(),
+                        array_size.to_string().as_str(),
+                    ]
+                    .join(":");
                     if let Some(value) = set_bigint_store.get_last(key.as_str()) {
                         value_list[i] = value.clone();
                     } else {
@@ -135,9 +156,10 @@ pub fn map_store_values(
                     }
                 }
 
-                tables.update_row(key_list[1], key_list[2]).set(key_list[3], value_list.clone());
-
-            },
+                tables
+                    .update_row(key_list[1], key_list[2])
+                    .set(key_list[3], value_list.clone());
+            }
             _ => {
                 panic!("Invalid key: {}", delta.key);
             }
@@ -152,13 +174,22 @@ pub fn map_store_values(
 
         match (index, array_size) {
             (None, None) => {
-                tables.update_row(key_list[1], key_list[2]).set(key_list[3], delta.new_value.clone());
-
-            },
+                tables
+                    .update_row(key_list[1], key_list[2])
+                    .set(key_list[3], delta.new_value.clone());
+            }
             (Some(_), Some(array_size)) => {
                 let mut value_list = vec![constants::BIGDECIMAL_ZERO.clone(); array_size];
                 for i in 0..array_size {
-                    let key = [key_list[0], key_list[1], key_list[2], key_list[3], i.to_string().as_str(), array_size.to_string().as_str()].join(":");
+                    let key = [
+                        key_list[0],
+                        key_list[1],
+                        key_list[2],
+                        key_list[3],
+                        i.to_string().as_str(),
+                        array_size.to_string().as_str(),
+                    ]
+                    .join(":");
                     if let Some(value) = add_bigdecimal_store.get_last(key.as_str()) {
                         value_list[i] = value.clone();
                     } else {
@@ -166,9 +197,10 @@ pub fn map_store_values(
                     }
                 }
 
-                tables.update_row(key_list[1], key_list[2]).set(key_list[3], value_list.clone());
-
-            },
+                tables
+                    .update_row(key_list[1], key_list[2])
+                    .set(key_list[3], value_list.clone());
+            }
             _ => {
                 panic!("Invalid key: {}", delta.key);
             }
@@ -183,12 +215,18 @@ pub fn map_store_values(
 
         match (index, array_size) {
             (None, None) => {
-                tables.update_row(key_list[1], key_list[2]).set(key_list[3], &delta.new_value.iter().map(|v| v.clone().into_bytes()).collect::<Vec<_>>());
-
-            },
+                tables.update_row(key_list[1], key_list[2]).set(
+                    key_list[3],
+                    &delta
+                        .new_value
+                        .iter()
+                        .map(|v| v.clone().into_bytes())
+                        .collect::<Vec<_>>(),
+                );
+            }
             (Some(_), Some(_array_size)) => {
                 panic!("Not implemented");
-            },
+            }
             _ => {
                 panic!("Invalid key: {}", delta.key);
             }
@@ -203,12 +241,13 @@ pub fn map_store_values(
 
         match (index, array_size) {
             (None, None) => {
-                tables.update_row(key_list[1], key_list[2]).set(key_list[3], delta.new_value as i32);
-
-            },
+                tables
+                    .update_row(key_list[1], key_list[2])
+                    .set(key_list[3], delta.new_value as i32);
+            }
             (Some(_), Some(_array_size)) => {
                 panic!("Not implemented");
-            },
+            }
             _ => {
                 panic!("Invalid key: {}", delta.key);
             }

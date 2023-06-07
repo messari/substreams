@@ -1,11 +1,16 @@
-use substreams::{Hex, scalar};
 use crate::schema_lib::dex_amm::v_3_0_3::enums;
+use substreams::{scalar, Hex};
 
 pub fn get_event_key(hash: &Vec<u8>, log_index: u32) -> Vec<u8> {
-    format!("{}-{}", Hex(hash).to_string(), log_index.to_string()).as_bytes().to_vec()
+    format!("{}-{}", Hex(hash).to_string(), log_index.to_string())
+        .as_bytes()
+        .to_vec()
 }
 
-pub fn get_liquidity_pool_fee_key(pool_address: &str, fee_type: &enums::LiquidityPoolFeeType) -> String {
+pub fn get_liquidity_pool_fee_key(
+    pool_address: &str,
+    fee_type: &enums::LiquidityPoolFeeType,
+) -> String {
     format!("{}-{}", pool_address, fee_type.to_string())
 }
 

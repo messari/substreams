@@ -1,28 +1,29 @@
 use std::u8;
 
-use substreams::prelude::*;
 use substreams::errors::Error;
-use substreams_ethereum::{pb::eth::v2::{self as eth}, Event};
+use substreams::pb::substreams::Clock;
+use substreams::prelude::*;
 use substreams::store;
 use substreams::store::*;
-use substreams::pb::substreams::Clock;
+use substreams_ethereum::{
+    pb::eth::v2::{self as eth},
+    Event,
+};
 
 use substreams::scalar::{BigDecimal, BigInt};
 
-use crate::pb::dex_amm::v3_0_3::{
-    DataSource, EntityUpdates
-};
+use crate::pb::dex_amm::v3_0_3::{DataSource, EntityUpdates};
 
 use crate::pb::store::v1::store_operation;
 
-use crate::abi::pool as PoolContract;
 use crate::abi::factory as FactoryContract;
 use crate::abi::non_fungible_position_manager as NonFungiblePositionManagerContract;
+use crate::abi::pool as PoolContract;
 
 use crate::interactions;
 use crate::store::sdk;
 
-use crate::keyer::{get_data_source_key};
+use crate::keyer::get_data_source_key;
 
 #[substreams::handlers::map]
 pub fn prepare_entity_changes(
@@ -32,58 +33,64 @@ pub fn prepare_entity_changes(
     add_int64_l1_store_deltas: store::Deltas<store::DeltaInt64>,
     set_bigdecimal_l1_store: store::StoreGetBigDecimal,
     append_string_l1_store: store::StoreGetArray<String>,
-) -> Result<EntityUpdates, Error>{
-    let mut entity_update_factory = sdk::EntityUpdateFactory::new(
-        clock,
-        &add_int64_l1_store_deltas
-    );
+) -> Result<EntityUpdates, Error> {
+    let mut entity_update_factory =
+        sdk::EntityUpdateFactory::new(clock, &add_int64_l1_store_deltas);
 
     for transaction_trace in block.transaction_traces {
         for call_view in transaction_trace.calls() {
-            if let Some(data_source) = data_sources_store.get_last(get_data_source_key(&call_view.call.address)) {
+            if let Some(data_source) =
+                data_sources_store.get_last(get_data_source_key(&call_view.call.address))
+            {
                 match data_source.data_source_type {
                     0 => {
                         for log in &call_view.call.logs {
-                            if let Some(swap_event) = PoolContract::events::Swap::match_and_decode(&log) {
+                            if let Some(swap_event) =
+                                PoolContract::events::Swap::match_and_decode(&log)
+                            {
                                 interactions::swap::prepare_swap_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    call_view.call, 
-                                    log, 
-                                    swap_event, 
-                                    &set_bigdecimal_l1_store, 
-                                    &append_string_l1_store
+                                    &mut entity_update_factory,
+                                    &transaction_trace,
+                                    call_view.call,
+                                    log,
+                                    swap_event,
+                                    &set_bigdecimal_l1_store,
+                                    &append_string_l1_store,
                                 );
-                            } 
-                            else if let Some(mint_event) = PoolContract::events::Mint::match_and_decode(&log) {
+                            } else if let Some(mint_event) =
+                                PoolContract::events::Mint::match_and_decode(&log)
+                            {
                                 interactions::mint::prepare_mint_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    call_view.call, 
-                                    log, 
-                                    mint_event, 
-                                    &append_string_l1_store
+                                    &mut entity_update_factory,
+                                    &transaction_trace,
+                                    call_view.call,
+                                    log,
+                                    mint_event,
+                                    &append_string_l1_store,
                                 );
-                            } 
-                            else if let Some(burn_event) = PoolContract::events::Burn::match_and_decode(&log) {
+                            } else if let Some(burn_event) =
+                                PoolContract::events::Burn::match_and_decode(&log)
+                            {
                                 interactions::burn::prepare_burn_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    call_view.call, 
-                                    log, 
-                                    burn_event, 
-                                    &append_string_l1_store
+                                    &mut entity_update_factory,
+                                    &transaction_trace,
+                                    call_view.call,
+                                    log,
+                                    burn_event,
+                                    &append_string_l1_store,
                                 );
                             }
                         }
                     }
                     1 => {
                         for log in &call_view.call.logs {
-                            if let Some(pool_created_event) = FactoryContract::events::PoolCreated::match_and_decode(&log) {
+                            if let Some(pool_created_event) =
+                                FactoryContract::events::PoolCreated::match_and_decode(&log)
+                            {
                                 interactions::pool_created::prepare_pool_created_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    pool_created_event, 
+                                    &mut entity_update_factory,
+                                    &transaction_trace,
+                                    pool_created_event,
                                 );
                             }
                         }
@@ -92,24 +99,24 @@ pub fn prepare_entity_changes(
                         for log in &call_view.call.logs {
                             if let Some(increase_liquidity_event) = NonFungiblePositionManagerContract::events::IncreaseLiquidity::match_and_decode(&log) {
                                 interactions::increase_liquidity::prepare_increase_liquidity_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    call_view.call, 
-                                    increase_liquidity_event, 
+                                    &mut entity_update_factory,
+                                    &transaction_trace,
+                                    call_view.call,
+                                    increase_liquidity_event,
                                 );
                             } else if let Some(decrease_liquidity_event) = NonFungiblePositionManagerContract::events::DecreaseLiquidity::match_and_decode(&log) {
                                 interactions::decrease_liquidity::prepare_decrease_liquidity_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    call_view.call, 
-                                    decrease_liquidity_event, 
+                                    &mut entity_update_factory,
+                                    &transaction_trace,
+                                    call_view.call,
+                                    decrease_liquidity_event,
                                 );
                             } else if let Some(transfer_event) = NonFungiblePositionManagerContract::events::Transfer::match_and_decode(&log) {
                                 interactions::transfer::prepare_transfer_entity_changes(
-                                    &mut entity_update_factory, 
-                                    &transaction_trace, 
-                                    call_view.call, 
-                                    transfer_event, 
+                                    &mut entity_update_factory,
+                                    &transaction_trace,
+                                    call_view.call,
+                                    transfer_event,
                                 );
                             }
                         }
@@ -130,13 +137,15 @@ pub fn add_bigdecimal_entity_changes(
     for store_operation in entity_updates.store_operations {
         match store_operation.r#type.unwrap() {
             store_operation::Type::AddBigDecimal(item) => {
-                let item_value: BigDecimal = BigDecimal::try_from(item.value.unwrap().value).unwrap();
+                let item_value: BigDecimal =
+                    BigDecimal::try_from(item.value.unwrap().value).unwrap();
                 add_bigdecimal_store.add(item.ordinal, item.key, item_value);
-            }, 
+            }
             store_operation::Type::AddManyBigDecimal(item) => {
-                let item_value: BigDecimal = BigDecimal::try_from(item.value.unwrap().value).unwrap();
+                let item_value: BigDecimal =
+                    BigDecimal::try_from(item.value.unwrap().value).unwrap();
                 add_bigdecimal_store.add_many(item.ordinal, &item.key, item_value);
-            },
+            }
             _ => continue,
         }
     }
@@ -152,11 +161,11 @@ pub fn add_bigint_entity_changes(
             store_operation::Type::AddBigInt(item) => {
                 let item_value: BigInt = BigInt::try_from(item.value.unwrap().value).unwrap();
                 add_bigint_store.add(item.ordinal, item.key, item_value);
-            }, 
+            }
             store_operation::Type::AddManyBigInt(item) => {
                 let item_value: BigInt = BigInt::try_from(item.value.unwrap().value).unwrap();
                 add_bigint_store.add_many(item.ordinal, &item.key, item_value);
-            },
+            }
             _ => continue,
         }
     }
@@ -171,10 +180,10 @@ pub fn add_int64_entity_changes(
         match store_operation.r#type.unwrap() {
             store_operation::Type::AddInt64(item) => {
                 add_int64_store.add(item.ordinal, item.key, item.value);
-            }, 
+            }
             store_operation::Type::AddManyInt64(item) => {
                 add_int64_store.add_many(item.ordinal, &item.key, item.value);
-            },
+            }
             _ => continue,
         }
     }
@@ -189,9 +198,9 @@ pub fn append_string_entity_changes(
         match store_operation.r#type.unwrap() {
             store_operation::Type::AppendString(item) => {
                 append_string_store.append(item.ordinal, item.key, item.value);
-            }, 
+            }
             _ => continue,
-        } 
+        }
     }
 }
 
@@ -205,11 +214,11 @@ pub fn set_bigint_entity_changes(
             store_operation::Type::SetBigInt(item) => {
                 let item_value: BigInt = BigInt::try_from(item.value.unwrap().value).unwrap();
                 set_bigint_store.set(item.ordinal, item.key, &item_value);
-            }, 
+            }
             store_operation::Type::SetManyBigInt(item) => {
                 let item_value: BigInt = BigInt::try_from(item.value.unwrap().value).unwrap();
                 set_bigint_store.set_many(item.ordinal, &item.key, &item_value);
-            },
+            }
             _ => continue,
         }
     }
@@ -224,7 +233,7 @@ pub fn set_bytes_entity_changes(
         match store_operation.r#type.unwrap() {
             store_operation::Type::SetBytes(item) => {
                 set_bytes_store.set(item.ordinal, item.key, &item.value);
-            }, 
+            }
             _ => continue,
         }
     }

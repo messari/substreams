@@ -6,7 +6,7 @@ use crate::pb::erc20::v1::Erc20Token;
 
 pub struct Erc20(Vec<u8>);
 
-impl Erc20{
+impl Erc20 {
     pub fn new(address: Vec<u8>) -> Self {
         Erc20(address)
     }

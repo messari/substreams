@@ -1,5 +1,5 @@
 #[path = "1_store_data_sources.rs"]
-pub mod store_data_sources; 
+pub mod store_data_sources;
 
 #[path = "2_filter_and_extract_raw_data.rs"]
 pub mod filter_and_extract_raw_data;
@@ -16,8 +16,8 @@ pub mod prepare_entity_snapshots;
 #[path = "6_map_graph_out.rs"]
 pub mod map_graph_out;
 
-pub use store_data_sources::*;
 pub use filter_and_extract_raw_data::*;
-pub use store_auxiliary_data::*;
-pub use prepare_entity_changes::*;
 pub use map_graph_out::map_graph_out;
+pub use prepare_entity_changes::*;
+pub use store_auxiliary_data::*;
+pub use store_data_sources::*;

@@ -15,7 +15,6 @@ impl From<pb::common::v1::BigInt> for BigInt {
     }
 }
 
-
 impl From<u32> for pb::common::v1::BigInt {
     fn from(u32: u32) -> Self {
         pb::common::v1::BigInt {
@@ -46,7 +45,6 @@ impl From<pb::common::v1::BigDecimal> for BigDecimal {
     }
 }
 
-
 impl From<u32> for pb::common::v1::BigDecimal {
     fn from(u32: u32) -> Self {
         pb::common::v1::BigDecimal {
@@ -63,10 +61,9 @@ impl From<u64> for pb::common::v1::BigDecimal {
     }
 }
 
-
+use crate::tables::ToValue;
 use substreams_entity_change::pb::entity::value::Typed;
 use substreams_entity_change::pb::entity::{Array, Value};
-use crate::tables::ToValue;
 
 impl ToValue for &pb::common::v1::BigDecimal {
     fn to_value(&self) -> Value {
@@ -91,7 +88,6 @@ impl ToValue for &Vec<pb::common::v1::BigDecimal> {
     }
 }
 
-
 impl ToValue for &pb::common::v1::BigInt {
     fn to_value(&self) -> Value {
         Value {
@@ -99,7 +95,6 @@ impl ToValue for &pb::common::v1::BigInt {
         }
     }
 }
-
 
 impl ToValue for &Vec<pb::common::v1::BigInt> {
     fn to_value(&self) -> Value {
@@ -115,4 +110,3 @@ impl ToValue for &Vec<pb::common::v1::BigInt> {
         }
     }
 }
-

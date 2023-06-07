@@ -1,43 +1,51 @@
-use substreams::{Hex, store::StoreGet};
-use substreams_ethereum::{pb::eth::v2::{self as eth}};
 use substreams::store;
+use substreams::{store::StoreGet, Hex};
+use substreams_ethereum::pb::eth::v2::{self as eth};
 
-use crate::utils::UNISWAP_V3_FACTORY_SLICE;
 use crate::abi::pool as PoolContract;
-use crate::store::sdk;
 use crate::schema_lib::dex_amm::v_3_0_3::keys;
+use crate::store::sdk;
+use crate::utils::UNISWAP_V3_FACTORY_SLICE;
 
 pub fn create_store_operations_l1_mint(
     store_operation_factory: &mut sdk::StoreOperationFactory,
-    mint_event: PoolContract::events::Mint, 
-    call: &eth::Call, 
+    mint_event: PoolContract::events::Mint,
+    call: &eth::Call,
 ) {
     let pool_address = Hex(&call.address).to_string();
-    store_operation_factory.track_tick_mutation(
-        keys::get_tick_key(&pool_address, &mint_event.tick_lower)
-    );
-    store_operation_factory.track_tick_mutation(
-        keys::get_tick_key(&pool_address, &mint_event.tick_upper)
-    );
+    store_operation_factory
+        .track_tick_mutation(keys::get_tick_key(&pool_address, &mint_event.tick_lower));
+    store_operation_factory
+        .track_tick_mutation(keys::get_tick_key(&pool_address, &mint_event.tick_upper));
 }
 
-
 pub fn prepare_mint_entity_changes(
-    entity_update_factory: &mut sdk::EntityUpdateFactory, 
+    entity_update_factory: &mut sdk::EntityUpdateFactory,
     transaction_trace: &eth::TransactionTrace,
-    call: &eth::Call, 
+    call: &eth::Call,
     log: &eth::Log,
-    mint_event: PoolContract::events::Mint, 
+    mint_event: PoolContract::events::Mint,
     append_string_l1_store: &store::StoreGetArray<String>,
 ) {
-    let liquidity_pool_id: String = Hex(&call.address).to_string(); 
+    let liquidity_pool_id: String = Hex(&call.address).to_string();
     let tick_lower_id = keys::get_tick_key(&liquidity_pool_id, &mint_event.tick_lower);
     let tick_upper_id = keys::get_tick_key(&liquidity_pool_id, &mint_event.tick_upper);
 
-    let input_tokens = match append_string_l1_store.get_last(["raw", "LiquidityPool", liquidity_pool_id.as_str(), "inputTokens"].join(":")) {
+    let input_tokens = match append_string_l1_store.get_last(
+        [
+            "raw",
+            "LiquidityPool",
+            liquidity_pool_id.as_str(),
+            "inputTokens",
+        ]
+        .join(":"),
+    ) {
         Some(input_tokens) => input_tokens.into_iter().map(|s| s.into_bytes()).collect(),
         None => {
-            panic!("No input tokens found for pool address: {}", liquidity_pool_id)
+            panic!(
+                "No input tokens found for pool address: {}",
+                liquidity_pool_id
+            )
         }
     };
     entity_update_factory.create_deposit_entity(
@@ -70,40 +78,31 @@ pub fn prepare_mint_entity_changes(
         &mint_event.tick_upper,
     );
 
-    entity_update_factory.store_operations.add_liquidity_pool_input_token_balances(
-        0,
-        &liquidity_pool_id, 
-        vec![mint_event.amount0.clone(), mint_event.amount1.clone()]
-    );
-    entity_update_factory.store_operations.add_liquidity_pool_total_liquidity(
-        0,
-        &liquidity_pool_id, 
-        mint_event.amount.clone()
-    );
-    entity_update_factory.store_operations.increment_liquidity_pool_cumulative_deposit_count(
-        0,
-        &liquidity_pool_id, 
-    );
+    entity_update_factory
+        .store_operations
+        .add_liquidity_pool_input_token_balances(
+            0,
+            &liquidity_pool_id,
+            vec![mint_event.amount0.clone(), mint_event.amount1.clone()],
+        );
+    entity_update_factory
+        .store_operations
+        .add_liquidity_pool_total_liquidity(0, &liquidity_pool_id, mint_event.amount.clone());
+    entity_update_factory
+        .store_operations
+        .increment_liquidity_pool_cumulative_deposit_count(0, &liquidity_pool_id);
 
-    entity_update_factory.store_operations.add_tick_liquidity_gross(
-        0,
-        &tick_lower_id, 
-        mint_event.amount.clone(),
-    );
-    entity_update_factory.store_operations.add_tick_liquidity_net(
-        0,
-        &tick_lower_id, 
-        mint_event.amount.clone(),
-    );
+    entity_update_factory
+        .store_operations
+        .add_tick_liquidity_gross(0, &tick_lower_id, mint_event.amount.clone());
+    entity_update_factory
+        .store_operations
+        .add_tick_liquidity_net(0, &tick_lower_id, mint_event.amount.clone());
 
-    entity_update_factory.store_operations.add_tick_liquidity_gross(
-        0,
-        &tick_upper_id, 
-        mint_event.amount.clone(),
-    );
-    entity_update_factory.store_operations.add_tick_liquidity_net(
-        0,
-        &tick_upper_id, 
-        mint_event.amount.neg(),
-    );
+    entity_update_factory
+        .store_operations
+        .add_tick_liquidity_gross(0, &tick_upper_id, mint_event.amount.clone());
+    entity_update_factory
+        .store_operations
+        .add_tick_liquidity_net(0, &tick_upper_id, mint_event.amount.neg());
 }

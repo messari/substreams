@@ -12,12 +12,17 @@ pub struct Tables {
 
 impl Tables {
     pub fn new() -> Self {
-        Tables { tables: HashMap::new() }
+        Tables {
+            tables: HashMap::new(),
+        }
     }
 
     pub fn create_row<K: AsRef<str>>(&mut self, table: &str, key: K) -> &mut Row {
         let rows = self.tables.entry(table.to_string()).or_insert(Rows::new());
-        let row = rows.pks.entry(key.as_ref().to_string()).or_insert(Row::new());
+        let row = rows
+            .pks
+            .entry(key.as_ref().to_string())
+            .or_insert(Row::new());
         match row.operation {
             Operation::Unset => {
                 row.operation = Operation::Create;
@@ -40,7 +45,10 @@ impl Tables {
 
     pub fn update_row<K: AsRef<str>>(&mut self, table: &str, key: K) -> &mut Row {
         let rows = self.tables.entry(table.to_string()).or_insert(Rows::new());
-        let row = rows.pks.entry(key.as_ref().to_string()).or_insert(Row::new());
+        let row = rows
+            .pks
+            .entry(key.as_ref().to_string())
+            .or_insert(Row::new());
         match row.operation {
             Operation::Unset => {
                 row.operation = Operation::Update;
@@ -63,7 +71,10 @@ impl Tables {
 
     pub fn delete_row<K: AsRef<str>>(&mut self, table: &str, key: K) -> &mut Row {
         let rows = self.tables.entry(table.to_string()).or_insert(Rows::new());
-        let row = rows.pks.entry(key.as_ref().to_string()).or_insert(Row::new());
+        let row = rows
+            .pks
+            .entry(key.as_ref().to_string())
+            .or_insert(Row::new());
         match row.operation {
             Operation::Unset => {
                 row.operation = Operation::Delete;
@@ -123,7 +134,9 @@ pub struct Rows {
 
 impl Rows {
     pub fn new() -> Self {
-        Rows { pks: HashMap::new() }
+        Rows {
+            pks: HashMap::new(),
+        }
     }
 }
 
