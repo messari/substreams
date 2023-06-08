@@ -1,6 +1,17 @@
 # Uniswap V3 Substream
 This substream uses a modified version of the DEX AMM subgraph schema to index Uniswap V3 data. It is currently in an intermediate state, and is not yet ready for production use. This project might be a good starting point for anyone interested in building a substream as many of the patterns used are applicable to other substreams. The inspiration for the substream can be found at this [here](https://engineering.messari.io/blog/parallel-indexing-of-blockchain-data-with-substreams).
 
+## How to Run
+First navigate to the uniswap-v3 substream directory. Then, you can run the following commands:
+- Executing locally
+    1. `make build`
+    2. `make run`
+- Deploying to graph node
+    1. `make build`
+    2. `substreams pack`
+    3. `graph build`
+    4. `graph deploy *subgraph name*`
+
 ## How it works
 The current implementation and plan for this substream can be broken down into 6 steps, each corresponding to a file in the **modules/** folder.
 
@@ -41,21 +52,8 @@ The substream has a schema lib implemented for DEX subgraphs, and should be appl
 - **Pricing Library:** There needs to be a pricing library that for deriving token prices from the protocol using the sqrtX96Price. This pricing library is intended to be usable across different substreams. Yet to be worked out if this will be a module or a library, but at this time, a library seems more appropriate. Once this pricing library is implemented, it could be used to derive all of fields dependent on obtaining the USD value of tokens.
 
 #### What fields are missing?
+- Account Entity still needs to be indexed.
 - All fields that are to be derived from USD values of tokens
 - Unique users fields
 - Tick prices on the tick entity
 - All positions metrics like count of open and closed positions, and also position status (hash closed).
-
-## Bugs
-- There is current some error when deploying to graph node. Deploying to graph node was working fine before adding the Tick, Position, and DexAmmProtocol entities. The error is as follows:
-    - A non-deterministic fatal error occured at block 12369739: failed to process trigger: Failed to process substreams block: Odd number of digits.
-
-## How to Run
-First navigate to the uniswap-v3 substream directory. Then, you can run the following commands:
-- Executing locally
-    1. `make build`
-    2. `make run`
-- Deploying to graph node
-    1. `make build`
-    2. `substreams pack`
-    3. `graph deploy *subgraph name*`
