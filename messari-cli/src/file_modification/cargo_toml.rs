@@ -97,7 +97,7 @@ impl CargoToml {
     }
 
     pub(crate) fn get_local_dependencies(&self) -> Vec<PathBuf> {
-        let mut item = if let Some(item) = self.manifest.data.get("dependencies") {
+        let item = if let Some(item) = self.manifest.data.get("dependencies") {
             item
         } else {
             return Vec::new()

@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use regex::Regex;
 use yaml_rust::yaml::Hash;
 use yaml_rust::{Yaml, YamlEmitter, YamlLoader};
-use clap::{Parser, ValueEnum};
+use clap::ValueEnum;
 
 #[derive(Clone, ValueEnum, PartialEq)]
 pub(crate) enum VersionType {

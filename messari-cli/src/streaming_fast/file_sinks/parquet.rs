@@ -86,14 +86,8 @@ impl FileSink for ParquetFileSink {
 
 #[cfg(test)]
 mod tests {
-    use derives::{ProtoInfo, TestData};
-    use parquet::file::footer;
-    use parquet::file::reader::{FileReader, SerializedFileReader};
-    use tonic::metadata;
-    use crate::streaming_fast::file_sinks::file_sink::FileSink;
-    use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
-
     use crate::streaming_fast::streaming_fast_utils::assert_data_sinks_to_parquet_correctly;
+    use derives::TestData;
 
     #[test]
     fn test_oneof() {

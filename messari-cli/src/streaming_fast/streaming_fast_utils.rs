@@ -1,21 +1,21 @@
 use std::fmt::Debug;
-use futures::StreamExt;
-use parquet::file::reader::{FileReader, SerializedFileReader};
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+#[cfg(test)]
 use derives::TestData;
 
-use crate::streaming_fast::file_sinks::file_sink::FileSink;
 use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
-
-const DUMMY_BLOCK_NUMBER: i64 = 1;
 
 #[cfg(test)]
 pub(crate) fn assert_data_sinks_to_parquet_correctly<T: TestData + Debug>() {
+    use crate::streaming_fast::file_sinks::file_sink::FileSink;
+    use parquet::file::reader::{FileReader, SerializedFileReader};
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
+    use rand::Rng;
+
     const NUM_SAMPLES: usize = 50;
 
     let mut rng = StdRng::seed_from_u64(42);
-    let mut test_data = T::get_samples(NUM_SAMPLES, &mut rng);
+    let test_data = T::get_samples(NUM_SAMPLES, &mut rng);
     let test_block_numbers = (0..NUM_SAMPLES).into_iter().map(|_| rng.gen()).collect::<Vec<i64>>();
 
     let mut sink = ParquetFileSink::new(T::get_proto_structure_info());

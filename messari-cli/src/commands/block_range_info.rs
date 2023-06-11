@@ -1,13 +1,10 @@
 use clap::{Parser, ValueEnum};
 use std::fs;
 use std::path::PathBuf;
-use prost::Message;
 
-use crate::streaming_fast::process_substream::{EncodingType, get_block_range_info, process_substream};
+use crate::streaming_fast::process_substream::get_block_range_info;
 use crate::streaming_fast::file::LocationType as Location;
-use crate::streaming_fast::proto_structure_info::get_output_type_info;
-use crate::streaming_fast::streaming_config::{ConfigArg, StreamingConfig};
-use crate::streaming_fast::streamingfast_dtos::Package;
+use crate::streaming_fast::streaming_config::ConfigArg;
 
 #[derive(Parser)]
 pub(crate) struct BlockRangeInfo {

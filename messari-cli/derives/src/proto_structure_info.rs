@@ -66,8 +66,10 @@ impl MessageInfo {
         }
     }
 
-    pub(crate) fn assert_block_number_field_not_manually_specified(&self) {
-        todo!()
+    pub fn assert_block_number_field_not_manually_specified(&self) {
+        for field in self.fields.iter() {
+            assert_ne!(field.field_name, "block_number", "Can't specify \"block_number\" for a top hierachy field as we are already manually adding this in field in the sink - please remove this!");
+        }
     }
 
     pub fn is_collection_of_items(&self) -> bool {

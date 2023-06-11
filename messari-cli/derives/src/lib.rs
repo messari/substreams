@@ -3,11 +3,8 @@ pub mod proto_structure_info;
 pub use derive_macros::TestData;
 
 use std::fmt::Debug;
-use rand::distributions::{Distribution, Standard};
 use rand::Rng;
-use parquet::record::Row;
 use parquet::record::Field;
-use prost::Message;
 
 use crate::proto_structure_info::{FieldInfo, FieldSpecification, FieldType, MessageInfo};
 
@@ -137,7 +134,7 @@ impl<O: TestData> TestData for Option<O> {
         self.as_ref().map(|x| x.get_proto_value())
     }
 
-    fn get_from_parquet_row<'a, T: Iterator<Item=(&'a String, &'a Field)>>(row: T) -> (Self, Option<u64>) where Self: Sized {
+    fn get_from_parquet_row<'a, T: Iterator<Item=(&'a String, &'a Field)>>(_row: T) -> (Self, Option<u64>) where Self: Sized {
         unreachable!()
     }
 }
@@ -153,7 +150,7 @@ impl<V: TestData> TestData for Vec<V> {
         self.iter().map(|x| x.get_proto_value()).collect()
     }
 
-    fn get_from_parquet_row<'a, T: Iterator<Item=(&'a String, &'a Field)>>(row: T) -> (Self, Option<u64>) where Self: Sized {
+    fn get_from_parquet_row<'a, T: Iterator<Item=(&'a String, &'a Field)>>(_row: T) -> (Self, Option<u64>) where Self: Sized {
         unreachable!()
     }
 }
@@ -171,7 +168,7 @@ macro_rules! impl_test_data {
                 self.clone()
             }
 
-            fn get_from_parquet_row<'a, T: Iterator<Item=(&'a String, &'a Field)>>(row: T) -> (Self, Option<u64>) where Self: Sized {
+            fn get_from_parquet_row<'a, T: Iterator<Item=(&'a String, &'a Field)>>(_row: T) -> (Self, Option<u64>) where Self: Sized {
                 unreachable!()
             }
         }

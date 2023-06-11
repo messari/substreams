@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use parquet::data_type::{BoolType, ByteArray, ByteArrayType, Int32Type};
+use parquet::data_type::{ByteArray, ByteArrayType};
 use parquet::file::writer::SerializedRowGroupWriter;
 use derives::proto_structure_info::{FieldInfo, FieldSpecification};
 

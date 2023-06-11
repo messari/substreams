@@ -21,7 +21,7 @@ use crate::streaming_fast::proto_structure_info::get_output_type_info;
 use crate::streaming_fast::streaming_config::{Chain, StreamingConfig};
 use crate::streaming_fast::streamingfast_dtos::module::input::Input;
 
-pub(crate) async fn process_substream(spkg: Vec<u8>, config: StreamingConfig, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, mut start_block_arg: Option<i64>, stop_block_arg: Option<u64>) {
+pub(crate) async fn process_substream(spkg: Vec<u8>, config: StreamingConfig, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, start_block_arg: Option<i64>, stop_block_arg: Option<u64>) {
     let mut package = Package::decode(spkg.as_slice()).unwrap();
 
     let chain = if let Some(chain_override) = config.chain_override {
