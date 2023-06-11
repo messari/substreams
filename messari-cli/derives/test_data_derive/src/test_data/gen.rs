@@ -1,4 +1,5 @@
 use proc_macro2::TokenStream;
+use quote::ToTokens;
 use syn::{Attribute, Data, DeriveInput, LitInt};
 use syn::parse::Parse;
 use syn::parse::ParseBuffer;
@@ -22,7 +23,7 @@ fn get_starting_tag(attributes: &Vec<Attribute>) -> u8 {
             return None;
         }
 
-        let starting_tag = syn::parse2::<StartingTag>(attribute.tokens.clone()).expect("treat_as_type value given is incorrect!");
+        let starting_tag = syn::parse2::<StartingTag>(attribute.to_token_stream()).expect("treat_as_type value given is incorrect!");
 
         Some(starting_tag.0)
     }).collect::<Vec<_>>();

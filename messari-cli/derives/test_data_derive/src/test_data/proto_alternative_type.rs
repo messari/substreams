@@ -9,11 +9,13 @@ use crate::test_data::gen_struct::{FieldAssociation, ParquetType};
 
 pub(crate) fn parse_proto_alternate_type(field: &syn::Field) -> Option<ProtoAlternativeType> {
     let mut proto_alternative_types = field.attrs.iter().filter_map(|attribute| {
-        if !proc_macro2_helper::attribute_contains(attribute, "proto_type") {
-            return None;
+        if let Some(attribute_ident) = attribute.path().get_ident() {
+            if attribute_ident == "proto_type" {
+                return Some(attribute.parse_args::<ProtoTypeInfo>().expect(&format!("Unable to parse attribute info for proto_type! Attribute: {}", attribute.to_token_stream().to_string())).0);
+            }
         }
 
-        Some(syn::parse2::<ProtoAlternativeType>(attribute.tokens.clone()).expect("treat_as_type value given is incorrect!"))
+        None
     }).collect::<Vec<_>>();
 
     match proto_alternative_types.len() {
@@ -91,17 +93,11 @@ impl ProtoAlternativeType {
     }
 }
 
-impl Parse for ProtoAlternativeType {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let group = proc_macro2::Group::parse(input).unwrap();
-        Ok(syn::parse2::<ProtoTypeInfo>(group.stream()).unwrap().0)
-    }
-}
-
 struct ProtoTypeInfo(ProtoAlternativeType);
 
 impl Parse for ProtoTypeInfo {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+
         let ident: Ident = input.parse()?;
 
         let ident_string = ident.to_string();
