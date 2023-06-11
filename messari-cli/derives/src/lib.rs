@@ -20,7 +20,7 @@ pub trait TestData: ProtoInfo + GenRandSamples + PartialEq + Debug {
 }
 
 pub trait ProtoInfo {
-    fn get_proto_field_info(field_name: String, field_number: u8) -> FieldInfo;
+    fn add_proto_field_info(field_name: String, field_number: &mut u8, fields: &mut Vec<FieldInfo>);
     fn get_proto_structure_info() -> MessageInfo;
 }
 
@@ -47,13 +47,16 @@ pub trait GenRandSamples: Default + Clone {
 }
 
 impl<T: ProtoInfo> ProtoInfo for Option<T> {
-    fn get_proto_field_info(field_name: String, field_number: u8) -> FieldInfo {
-        let mut field_info = T::get_proto_field_info(field_name, field_number);
+    fn add_proto_field_info(field_name: String, field_number: &mut u8, fields: &mut Vec<FieldInfo>) {
+        let mut field_infos = Vec::new();
+        T::add_proto_field_info(field_name, field_number, &mut field_infos);
+        assert_eq!(field_infos.len(), 1, "Option<Enum> not supported!");
+        let mut field_info: FieldInfo = field_infos.into_iter().next().unwrap();
         field_info.field_specification = FieldSpecification::Optional;
         if let FieldType::Message(ref mut message_info) = field_info.field_type {
             message_info.field_specification = FieldSpecification::Optional;
         }
-        field_info
+        fields.push(field_info);
     }
 
     fn get_proto_structure_info() -> MessageInfo {
@@ -62,8 +65,11 @@ impl<T: ProtoInfo> ProtoInfo for Option<T> {
 }
 
 impl<T: ProtoInfo> ProtoInfo for Vec<T> {
-    fn get_proto_field_info(field_name: String, field_number: u8) -> FieldInfo {
-        let mut field_info = T::get_proto_field_info(field_name, field_number);
+    fn add_proto_field_info(field_name: String, field_number: &mut u8, fields: &mut Vec<FieldInfo>) {
+        let mut field_infos = Vec::new();
+        T::add_proto_field_info(field_name, field_number, &mut field_infos);
+        assert_eq!(field_infos.len(), 1, "Vec<Enum> not supported!");
+        let mut field_info: FieldInfo = field_infos.into_iter().next().unwrap();
 
         match field_info.field_type {
             FieldType::Double | FieldType::Float | FieldType::Int64 | FieldType::Uint64 |
@@ -81,7 +87,7 @@ impl<T: ProtoInfo> ProtoInfo for Vec<T> {
             }
         }
 
-        field_info
+        fields.push(field_info);
     }
 
     fn get_proto_structure_info() -> MessageInfo {
@@ -92,13 +98,15 @@ impl<T: ProtoInfo> ProtoInfo for Vec<T> {
 macro_rules! impl_proto_info {
     ($type_ident:ty, $field_type_ident:ident) => {
         impl ProtoInfo for $type_ident {
-            fn get_proto_field_info(field_name: String, field_number: u8) -> FieldInfo {
-                FieldInfo {
+            fn add_proto_field_info(field_name: String, field_number: &mut u8, fields: &mut Vec<FieldInfo>) {
+                fields.push(FieldInfo {
                     field_name,
                     field_type: FieldType::$field_type_ident,
                     field_specification: FieldSpecification::Required,
-                    field_number: field_number as u64,
-                }
+                    field_number: *field_number as u64,
+                });
+
+                *field_number += 1;
             }
 
             fn get_proto_structure_info() -> MessageInfo {

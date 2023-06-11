@@ -92,18 +92,21 @@ pub fn generate(name: &Ident, data_struct: DataStruct, starting_tag: u8) -> Toke
         }
 
         impl derives::ProtoInfo for #name {
-            fn get_proto_field_info(field_name: String, field_number: u8) -> derives::proto_structure_info::FieldInfo {
-                derives::proto_structure_info::FieldInfo {
+            fn add_proto_field_info(field_name: String, field_number: &mut u8, fields: &mut Vec<derives::proto_structure_info::FieldInfo>) {
+                fields.push(derives::proto_structure_info::FieldInfo {
                     field_name,
                     field_type: derives::proto_structure_info::FieldType::Message(Self::get_proto_structure_info()),
                     field_specification: derives::proto_structure_info::FieldSpecification::Required,
-                    field_number: field_number as u64,
-                }
+                    field_number: *field_number as u64,
+                });
+
+                *field_number += 1;
             }
 
             fn get_proto_structure_info() -> derives::proto_structure_info::MessageInfo {
                 let mut fields = Vec::new();
-                #(fields.push(#field_types::get_proto_field_info(stringify!(#field_names).to_string(), #field_numbers));
+                let mut field_number = 1;
+                #(#field_types::add_proto_field_info(stringify!(#field_names).to_string(), &mut field_number, &mut fields);
                 )*
 
                 derives::proto_structure_info::MessageInfo {
@@ -169,10 +172,10 @@ fn get_oneof_groups_initialisation(field_associations: &Vec<FieldAssociation>, m
         match field_association {
             FieldAssociation::OneofField { oneof_fields, .. } => {
                 let mut field_nums = Vec::new();
-                let first_field_number = tag_number.clone();
+                let first_field_number = tag_number as u64;
                 tag_number += 1;
-                for oneof_field in 0..oneof_fields.len() {
-                    field_nums.push(tag_number);
+                for oneof_field in 0..oneof_fields.len()-1 {
+                    field_nums.push(tag_number as u64);
                     tag_number += 1;
                 }
                 oneof_group_array_initialisations.push(quote!(vec![#first_field_number#(, #field_nums)*]));
@@ -268,7 +271,7 @@ fn parse_field_info(data_struct: DataStruct, mut tag_number: u8) -> FieldInfo {
             } else {
                 let parquet_type = get_parquet_type(&type_string, &proto_alternative_type, is_struct_type);
 
-                FieldAssociation::from_field_name(BasicFieldInfo {
+                FieldAssociation::from_field_info(BasicFieldInfo {
                     field_name: field_ident.to_string(),
                     field_type: parquet_type,
                     repetition_type
@@ -277,7 +280,7 @@ fn parse_field_info(data_struct: DataStruct, mut tag_number: u8) -> FieldInfo {
         } else {
             let parquet_type = get_parquet_type(&type_string, &proto_alternative_type, is_struct_type);
 
-            FieldAssociation::from_field_name(BasicFieldInfo {
+            FieldAssociation::from_field_info(BasicFieldInfo {
                 field_name: field_ident.to_string(),
                 field_type: parquet_type,
                 repetition_type
@@ -576,7 +579,7 @@ pub(crate) enum FieldAssociation {
 }
 
 impl FieldAssociation {
-    pub(crate) fn from_field_name(field_info: BasicFieldInfo) -> Self {
+    pub(crate) fn from_field_info(field_info: BasicFieldInfo) -> Self {
         FieldAssociation::FieldName(field_info)
     }
 
@@ -589,7 +592,6 @@ impl FieldAssociation {
 
     pub(crate) fn from_oneof_field_and_type_idents(field_name: String, field_type: String, oneof_field_and_type_info: Vec<(String, String)>) -> Self {
         fn parse_parquet_type(type_ident: &str) -> ParquetType {
-            // TODO: Add support for optional and repeated types
             match type_ident {
                 "bool" => ParquetType::Bool,
                 "i32" => ParquetType::Int,
@@ -624,7 +626,7 @@ impl FieldAssociation {
                 BasicFieldInfo {
                     field_name: field_ident,
                     field_type: parse_parquet_type(&type_ident),
-                    repetition_type: RepetitionType::Required,
+                    repetition_type: RepetitionType::Optional,
                 }
             }).collect(),
         }
@@ -666,12 +668,14 @@ impl FieldAssociation {
             },
             FieldAssociation::OneofField {field_name, field_type, oneof_fields} => {
                 oneof_fields.into_iter().map(|field_info| {
-                    let match_block = format!("{0} => {{\n    \
+                    let match_block = format!("\"{3}\" => {{\n    \
                                                                 {1}\n    \
-                                                                if {0}.is_some() {{\n    \
-                                                                    panic!(\"There is more than one value set for oneof field: {0}!\");\n     \
-                                                                }} else {{\n        \
-                                                                    {0} = Some({2}::{3}(field_val));\n    \
+                                                                if let Some(field_val) = field_val {{
+                                                                    if {0}.is_some() {{\n    \
+                                                                        panic!(\"There is more than one value set for oneof field: {0}!\");\n     \
+                                                                    }} else {{\n        \
+                                                                        {0} = Some({2}::{3}(field_val));\n    \
+                                                                    }}
                                                                 }}
                                                             }},", field_name, field_info.get_unwrap_statement(), field_type, field_info.field_name);
 
