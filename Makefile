@@ -33,7 +33,7 @@ install-cli:
 	cargo install --path ./messari-cli
 
 .PHONY: upload-cli-for-dagster
-install-cli:
+upload-cli-for-dagster:
 	$(MAKE) -C messari-cli build-dagster
 	messari upload-file-to-spkg-bucket ./messari-cli/dagster-cli/messari
 
