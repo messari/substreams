@@ -86,7 +86,7 @@ impl ProtoAlternativeType {
             ProtoAlternativeType::Sint32 => "sint32".to_string(),
             ProtoAlternativeType::Sint64 => "sint64".to_string(),
             ProtoAlternativeType::Enum => format!("enumeration=\"{}\"", inner_type),
-            ProtoAlternativeType::Oneof(_) => format!("oneof=\"{}\"", inner_type),
+            ProtoAlternativeType::Oneof(_) => format!("oneof=\"{}Dto\"", inner_type),
         }
     }
 }

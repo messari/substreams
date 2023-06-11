@@ -11,7 +11,7 @@ use crate::streaming_fast::streaming_fast_utils::FromUnsignedVarint;
 pub(in crate::streaming_fast::file_sinks) struct StructDecoder {
     field_decoders: BTreeMap<u64, Decoder>,
     field_specification: FieldSpecification,
-    non_oneof_fields: Vec<u64>,
+    fields: Vec<u64>,
     repeated_fields: Vec<u64>,
     max_repetition_lvl_for_repeated_fields: i16,
     flattened_field_name: String,
@@ -24,15 +24,12 @@ impl StructDecoder {
         lvls_store_builder.modify_lvls_for_struct_repetition(&repetition);
 
         let mut field_decoders = BTreeMap::new();
-        let mut non_oneof_fields = Vec::new();
+        let mut fields = Vec::new();
         let mut repeated_fields = Vec::new();
-        let oneof_field_numbers = message_info.oneof_groups.clone().into_iter().flat_map(|x| x).collect::<HashSet<_>>().into_iter().collect::<Vec<_>>();
         for field_info in message_info.fields {
-            if !oneof_field_numbers.contains(&field_info.field_number) {
-                non_oneof_fields.push(field_info.field_number);
-                if field_info.field_specification == FieldSpecification::Repeated {
-                    repeated_fields.push(field_info.field_number);
-                }
+            fields.push(field_info.field_number);
+            if field_info.field_specification == FieldSpecification::Repeated {
+                repeated_fields.push(field_info.field_number);
             }
             field_decoders.insert(field_info.field_number, Decoder::new(field_info, parquet_schema_builder, lvls_store_builder));
         }
@@ -43,7 +40,7 @@ impl StructDecoder {
         StructDecoder {
             field_decoders,
             field_specification: message_info.field_specification,
-            non_oneof_fields,
+            fields,
             repeated_fields,
             max_repetition_lvl_for_repeated_fields: max_repetition_lvl + 1,
             flattened_field_name: parquet_schema_builder.get_flattened_field_name(field_name),
@@ -107,7 +104,7 @@ impl StructDecoder {
             };
         }
 
-        for field in self.non_oneof_fields.iter() {
+        for field in self.fields.iter() {
             if !fields_seen.contains(field) {
                 self.field_decoders.get_mut(field).unwrap().push_null_or_default_values(uncompressed_file_size, lvls.clone())?;
             }
@@ -123,7 +120,7 @@ impl StructDecoder {
     pub(in crate::streaming_fast::file_sinks) fn push_null_or_default_values(&mut self, uncompressed_file_size: &mut usize, lvls: RepetitionAndDefinitionLvls) -> Result<(), String> {
         if self.field_specification == FieldSpecification::Required {
             assert!(self.oneof_group_tracker.is_unpopulated(), "Null response given for struct with oneOf fields. This can't happen! TODO: Flesh out error");
-            for field_number in self.non_oneof_fields.iter() {
+            for field_number in self.fields.iter() {
                 self.field_decoders.get_mut(field_number).unwrap().push_null_or_default_values(uncompressed_file_size, lvls.clone())?;
             }
             Ok(())
@@ -134,7 +131,7 @@ impl StructDecoder {
     }
 
     pub(in crate::streaming_fast::file_sinks) fn push_nulls(&mut self, uncompressed_file_size: &mut usize, lvls: RepetitionAndDefinitionLvls) {
-        for field_number in self.non_oneof_fields.iter() {
+        for field_number in self.fields.iter() {
             self.field_decoders.get_mut(field_number).unwrap().push_nulls(uncompressed_file_size, lvls.clone());
         }
     }
@@ -158,7 +155,7 @@ impl OneofGroupTracker {
         }
 
         OneofGroupTracker {
-            field_to_oneof_group_mappings: Default::default(),
+            field_to_oneof_group_mappings,
             oneof_group_tracker,
         }
     }
@@ -183,7 +180,6 @@ impl OneofGroupTracker {
                 *field = Some(field_number);
             }
         }
-
         Ok(())
     }
 

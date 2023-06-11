@@ -86,7 +86,7 @@ impl FileSink for ParquetFileSink {
 
 #[cfg(test)]
 mod tests {
-    use derives::TestData;
+    use derives::{ProtoInfo, TestData};
     use parquet::file::footer;
     use parquet::file::reader::{FileReader, SerializedFileReader};
     use tonic::metadata;
@@ -94,6 +94,32 @@ mod tests {
     use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
 
     use crate::streaming_fast::streaming_fast_utils::assert_data_sinks_to_parquet_correctly;
+
+    #[test]
+    fn test_oneof() {
+        #[derive(TestData)]
+        pub struct AnotherStruct {
+            field1: Vec<u64>,
+            field2: Option<String>,
+            field3: u32
+        }
+
+        #[derive(TestData)]
+        pub enum ExampleEnum {
+            Variant1(u64),
+            Variant2(String),
+            Variant3(AnotherStruct)
+        }
+
+        #[derive(TestData)]
+        pub struct EnumTest {
+            #[proto_type(Oneof[(Variant1,u64), (Variant2,String), (Variant3,AnotherStruct)])]
+            field1: ExampleEnum,
+            field2: Vec<String>
+        }
+
+        assert_data_sinks_to_parquet_correctly::<EnumTest>();
+    }
 
     #[test]
     fn test_optional_and_repeated_fields() {
@@ -116,7 +142,7 @@ mod tests {
             field7: Vec<OptionalAndRepeatedFields>
         }
 
-        assert_data_sinks_to_parquet_correctly::<TwoLayeredOptionalAndRepeatedFields>()
+        assert_data_sinks_to_parquet_correctly::<TwoLayeredOptionalAndRepeatedFields>();
     }
 
     #[test]
@@ -154,7 +180,7 @@ mod tests {
             timestamp: Timestamp
         }
 
-        assert_data_sinks_to_parquet_correctly::<EscrowReward>()
+        assert_data_sinks_to_parquet_correctly::<EscrowReward>();
     }
 
     #[test]
@@ -177,7 +203,7 @@ mod tests {
             timestamp: Timestamp
         }
 
-        assert_data_sinks_to_parquet_correctly::<TokenBalance>()
+        assert_data_sinks_to_parquet_correctly::<TokenBalance>();
     }
 
     #[test]
@@ -201,6 +227,6 @@ mod tests {
             // TODO: Put all types here for testing
         }
 
-        assert_data_sinks_to_parquet_correctly::<FlatSimple>()
+        assert_data_sinks_to_parquet_correctly::<FlatSimple>();
     }
 }
