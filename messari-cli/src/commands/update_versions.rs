@@ -1,22 +1,13 @@
-use std::{env, fs};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
-use std::process::Command;
-use s3::Bucket;
-use s3::creds::Credentials;
 use clap::Parser;
 use dialoguer::Editor;
-use prost::Message;
 use reqwest::StatusCode;
 
 use crate::file_modification::cargo_toml::CargoToml;
 use crate::file_modification::file_contents_modifier::{File, FileContentsModification, safely_modify_file_contents};
 use crate::file_modification::substreams_yaml::{SubstreamsYaml, VersionType};
 
-use crate::streaming_fast::streaming_config::{StreamingConfig, ToJsonL};
-use crate::streaming_fast::streaming_fast_utils::get_file_size_string;
-use crate::streaming_fast::streamingfast_dtos::{Module, Package};
-use crate::streaming_fast::streamingfast_dtos::module::input::Input;
 use crate::utils::{get_files_changed_from_master_branch, get_relative_path_from_root_folder, get_repo_root_folder};
 
 #[derive(Parser)]

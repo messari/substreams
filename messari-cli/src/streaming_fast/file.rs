@@ -1,4 +1,3 @@
-use std::fmt::Display;
 use std::fs;
 use std::path::PathBuf;
 use s3::Bucket;

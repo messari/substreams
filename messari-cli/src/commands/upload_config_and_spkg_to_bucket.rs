@@ -1,6 +1,5 @@
 use std::{env, fs};
 use std::path::PathBuf;
-use std::process::Command;
 use s3::Bucket;
 use s3::creds::Credentials;
 use clap::Parser;

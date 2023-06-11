@@ -1,16 +1,8 @@
-use std::any::type_name;
 use std::fmt::Debug;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, format_ident};
-use syn::{DataStruct, Fields, parse::{Parse, ParseBuffer}, Type};
+use syn::{DataStruct, Fields, Type};
 use quote::ToTokens;
-use syn::{
-    parse::{ParseStream},
-    token::Comma,
-    Expr,
-};
-use syn::Token;
-use syn::punctuated::Punctuated;
 use crate::test_data::proto_alternative_type::{parse_proto_alternate_type, ProtoAlternativeType};
 
 pub fn generate(name: &Ident, data_struct: DataStruct, starting_tag: u8) -> TokenStream {
@@ -32,8 +24,6 @@ pub fn generate(name: &Ident, data_struct: DataStruct, starting_tag: u8) -> Toke
             field_assocation.get_match_statements()
         }).collect::<Vec<_>>()
     };
-
-    let field_numbers = (1..=field_names.len() as u8).into_iter().collect::<Vec<_>>();
 
     quote! {
         #[derive(Clone, PartialEq, ::prost::Message)]
@@ -174,7 +164,7 @@ fn get_oneof_groups_initialisation(field_associations: &Vec<FieldAssociation>, m
                 let mut field_nums = Vec::new();
                 let first_field_number = tag_number as u64;
                 tag_number += 1;
-                for oneof_field in 0..oneof_fields.len()-1 {
+                for _ in 0..oneof_fields.len()-1 {
                     field_nums.push(tag_number as u64);
                     tag_number += 1;
                 }
@@ -219,7 +209,7 @@ fn parse_field_info(data_struct: DataStruct, mut tag_number: u8) -> FieldInfo {
         Fields::Named(fields_named) => {
             fields_named
         }
-        Fields::Unnamed(u) => {
+        Fields::Unnamed(_) => {
             panic!("Struct tuples are not allowed when creating test data!!!");
         }
         Fields::Unit => {
@@ -244,12 +234,12 @@ fn parse_field_info(data_struct: DataStruct, mut tag_number: u8) -> FieldInfo {
         let is_struct_type = if is_oneof_type || is_enum_type {
             false
         } else {
-            is_struct_type(&type_string, &outer_type)
+            is_struct_type(&type_string)
         };
 
         let (proto_field_type, option_added) = get_proto_field_type(&type_string, &outer_type, is_oneof_type, is_struct_type, is_enum_type);
 
-        let repetition_type = get_repetition_type(&type_string, is_struct_type);
+        let repetition_type = get_repetition_type(&type_string);
 
         let field_ident = field.ident.unwrap();
 
@@ -461,7 +451,7 @@ fn get_proto_field_type(type_string: &str, outer_type: &str, is_oneof_type: bool
     (proto_field_type, option_added)
 }
 
-fn get_repetition_type(type_string: &str, is_struct_type: bool) -> RepetitionType {
+fn get_repetition_type(type_string: &str) -> RepetitionType {
     if type_string.starts_with("Option<") {
         return RepetitionType::Optional;
     }
@@ -475,10 +465,10 @@ fn get_repetition_type(type_string: &str, is_struct_type: bool) -> RepetitionTyp
     RepetitionType::Required
 }
 
-fn is_struct_type(type_string: &str, outer_type: &str) -> bool {
-    const NonStructTypes: [&str; 9] = ["Vec<u8>", "f32", "f64", "i32", "i64", "u32", "u64", "bool", "String"];
+fn is_struct_type(type_string: &str) -> bool {
+    const NON_STRUCT_TYPES: [&str; 9] = ["Vec<u8>", "f32", "f64", "i32", "i64", "u32", "u64", "bool", "String"];
     let inner_type = get_inner_type(type_string);
-    !NonStructTypes.contains(&inner_type.as_str())
+    !NON_STRUCT_TYPES.contains(&inner_type.as_str())
 }
 
 /// Assumes type is either of form OuterType<InnerType> or InnerType.
@@ -610,19 +600,6 @@ impl FieldAssociation {
             field_name,
             field_type,
             oneof_fields: oneof_field_and_type_info.into_iter().map(|(field_ident, type_ident)| {
-                let field_type = match type_ident.as_str() {
-                    "bool" => ParquetType::Bool,
-                    "i32" => ParquetType::Int,
-                    "i64" => ParquetType::Long,
-                    "u32" => ParquetType::UInt,
-                    "u64" => ParquetType::ULong,
-                    "f32" => ParquetType::Float,
-                    "f64" => ParquetType::Double,
-                    "Vec<u8>" => ParquetType::Bytes,
-                    "String" => ParquetType::String,
-                    _ => ParquetType::Struct(type_ident.to_string()) // TODO: Here we should really do a check just before to make sure type is not repeated or optional
-                };
-
                 BasicFieldInfo {
                     field_name: field_ident,
                     field_type: parse_parquet_type(&type_ident),
@@ -743,10 +720,6 @@ fn check_type(type_string: &String, proto_alternative_type: &Option<ProtoAlterna
                 panic!("Multiple uses of Vec type when declaring field! You should only being\
                  using just one occurrence of either of Option or Vec max!!\nType: {}", type_string)
             },
-            (true, true) => {
-                panic!("Both multiple uses of Option and Vec types when declaring field! You should only being\
-                 using just one occurrence of either of Option or Vec max!!\nType: {}", type_string)
-            }
             (false, false) => panic!("Both Option and Vec types were used when declaring field! You should only being\
                  using just one occurrence of either of Option or Vec max!!\nType: {}", type_string)
         }

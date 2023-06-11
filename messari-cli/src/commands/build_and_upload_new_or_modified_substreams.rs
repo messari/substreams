@@ -1,11 +1,9 @@
-use std::process::{Command, Stdio};
+use std::process::Command;
 use clap::Parser;
 
 use crate::commands::update_versions::get_modified_substream_projects;
 use crate::commands::upload_config_and_spkg_to_bucket::upload_config_and_spkg_file;
-use crate::file_modification::cargo_toml::CargoToml;
 use crate::file_modification::makefile::MakeFile;
-use crate::file_modification::substreams_yaml::SubstreamsYaml;
 use crate::utils::get_relative_path_from_root_folder;
 
 #[derive(Parser)]

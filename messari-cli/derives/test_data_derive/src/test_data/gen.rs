@@ -1,8 +1,5 @@
-use proc_macro2::{Ident, Literal, TokenStream};
-use quote::{quote, ToTokens};
-use syn::{Attribute, Data, DeriveInput, Field, FieldsNamed, FieldsUnnamed, LitInt, Type, TypePath};
-use std::collections::HashMap;
-use quote::format_ident;
+use proc_macro2::TokenStream;
+use syn::{Attribute, Data, DeriveInput, LitInt};
 use syn::parse::Parse;
 use syn::parse::ParseBuffer;
 
@@ -21,7 +18,7 @@ pub(crate) fn transform(input: DeriveInput) -> TokenStream {
 
 fn get_starting_tag(attributes: &Vec<Attribute>) -> u8 {
     let mut starting_tags = attributes.iter().filter_map(|attribute| {
-        if !proc_macro2_helper::attribute_contains(&attribute, "starting_tag") {
+        if !proc_macro2_helper::attribute_contains(attribute, "starting_tag") {
             return None;
         }
 

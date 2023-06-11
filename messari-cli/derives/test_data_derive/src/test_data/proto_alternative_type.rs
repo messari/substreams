@@ -1,5 +1,5 @@
-use syn::{Token, TypeArray, TypeTuple};
-use proc_macro2::{Ident, TokenStream};
+use syn::{Token, TypeTuple};
+use proc_macro2::Ident;
 use quote::ToTokens;
 use syn::parse::Parse;
 use syn::parse::ParseStream;
@@ -9,7 +9,7 @@ use crate::test_data::gen_struct::{FieldAssociation, ParquetType};
 
 pub(crate) fn parse_proto_alternate_type(field: &syn::Field) -> Option<ProtoAlternativeType> {
     let mut proto_alternative_types = field.attrs.iter().filter_map(|attribute| {
-        if !proc_macro2_helper::attribute_contains(&attribute, "proto_type") {
+        if !proc_macro2_helper::attribute_contains(attribute, "proto_type") {
             return None;
         }
 

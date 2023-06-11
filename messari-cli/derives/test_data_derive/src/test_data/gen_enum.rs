@@ -7,7 +7,7 @@ pub fn generate(name: &Ident, de: DataEnum, starting_tag: u8) -> TokenStream {
     let mut unnamed_fields = Vec::new();
     for variant in de.variants.into_iter() {
         match variant.fields {
-            Fields::Named(fields_named) => {
+            Fields::Named(_) => {
                 panic!("Named fields are not allowed for enum variants when creating test data!!!\nNamed field: {}", variant.ident.to_string());
             }
             Fields::Unnamed(fields_unnamed) => {

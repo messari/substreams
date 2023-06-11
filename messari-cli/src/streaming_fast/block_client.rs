@@ -1,8 +1,6 @@
-use std::{env, fs};
+use std::env;
 use prost::Message;
-use tonic::codegen::InterceptedService;
 use tonic::metadata::MetadataValue;
-use tonic::Status;
 use tonic::transport::Channel;
 
 use crate::streaming_fast::block_client::fetch_client::FetchClient;
