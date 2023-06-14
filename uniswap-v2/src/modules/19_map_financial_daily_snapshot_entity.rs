@@ -24,12 +24,10 @@ pub fn map_financial_daily_snapshot_entity(
     for delta in input_token_balances_deltas.deltas.iter() {
         match &delta.key {
             key if key.starts_with(StoreKey::LatestTimestamp.unique_id().as_str()) => {
-                if delta.operation != store_delta::Operation::Create {
-                    continue;
-                }
+                let is_initialized = delta.operation != store_delta::Operation::Create;
 
                 let delta_timestamp = delta.new_value.to_u64() as i64;
-                let day_id = utils::get_day_id(delta_timestamp) - BigInt::one();
+                let day_id = utils::get_day_id(delta_timestamp);
 
                 let block_number = input_token_balances_store
                     .get_at(delta.ordinal, StoreKey::LatestBlockNumber.unique_id())
@@ -43,6 +41,7 @@ pub fn map_financial_daily_snapshot_entity(
                     &protocol_daily_fields_store,
                     &block_number,
                     &timestamp,
+                    is_initialized,
                 ));
             }
             _ => {}
@@ -54,25 +53,26 @@ pub fn map_financial_daily_snapshot_entity(
 
 fn create_financial_daily_snapshot(
     ordinal: u64,
-    day_id: BigInt,
+    day_id: i64,
     protocol_tvl_store: &StoreGetBigDecimal,
     protocol_cumulative_fields_store: &StoreGetBigDecimal,
     protocol_daily_fields_store: &StoreGetBigDecimal,
     block_number: &BigInt,
     timestamp: &BigInt,
+    is_initialized: bool,
 ) -> EntityChange {
-    let id = [
-        constants::UNISWAP_V2_FACTORY.to_string(),
-        day_id.clone().to_string(),
-    ]
-    .join("-");
+    let id = [constants::UNISWAP_V2_FACTORY, day_id.to_string().as_str()].join("-");
 
     let mut financial_daily_snapshot: EntityChange = EntityChange::new(
         "FinancialsDailySnapshot",
         id.as_str(),
         ordinal,
-        Operation::Create,
+        Operation::Update,
     );
+
+    if !is_initialized {
+        financial_daily_snapshot.operation = Operation::Create as i32;
+    }
 
     financial_daily_snapshot
         .change("id", id)
@@ -91,7 +91,7 @@ fn create_financial_daily_snapshot(
             protocol_daily_fields_store
                 .get_at(
                     ordinal,
-                    StoreKey::DailyVolumeUSD.get_unique_daily_protocol_key(day_id.clone()),
+                    StoreKey::DailyVolumeUSD.get_unique_daily_protocol_key(day_id),
                 )
                 .unwrap_or(BigDecimal::zero()),
         )
@@ -109,8 +109,7 @@ fn create_financial_daily_snapshot(
             protocol_daily_fields_store
                 .get_at(
                     ordinal,
-                    StoreKey::DailySupplySideRevenueUSD
-                        .get_unique_daily_protocol_key(day_id.clone()),
+                    StoreKey::DailySupplySideRevenueUSD.get_unique_daily_protocol_key(day_id),
                 )
                 .unwrap_or(BigDecimal::zero()),
         )
@@ -128,8 +127,7 @@ fn create_financial_daily_snapshot(
             protocol_daily_fields_store
                 .get_at(
                     ordinal,
-                    StoreKey::DailyProtocolSideRevenueUSD
-                        .get_unique_daily_protocol_key(day_id.clone()),
+                    StoreKey::DailyProtocolSideRevenueUSD.get_unique_daily_protocol_key(day_id),
                 )
                 .unwrap_or(BigDecimal::zero()),
         )
@@ -147,7 +145,7 @@ fn create_financial_daily_snapshot(
             protocol_daily_fields_store
                 .get_at(
                     ordinal,
-                    StoreKey::DailyTotalRevenueUSD.get_unique_daily_protocol_key(day_id.clone()),
+                    StoreKey::DailyTotalRevenueUSD.get_unique_daily_protocol_key(day_id),
                 )
                 .unwrap_or(BigDecimal::zero()),
         )

@@ -21,7 +21,7 @@ pub fn map_events_entity(
     let mut entity_changes: Vec<EntityChange> = vec![];
 
     for event in pool_events_map.events {
-        let ordinal = event.clone().log_ordinal as u64;
+        let ordinal = event.log_ordinal as u64;
 
         let pool =
             pool_store.must_get_last(StoreKey::Pool.get_unique_pool_key(&event.clone().pool));
@@ -88,10 +88,10 @@ fn create_deposit_transaction(
     let mut deposit_entity_change =
         EntityChange::new("Deposit", id.as_str(), ordinal, Operation::Create);
 
-    let input_tokens = pool.input_tokens.clone().unwrap().items;
+    let input_tokens = pool.input_tokens.as_ref().unwrap().items.clone();
     let input_token_amounts = deposit.input_token_amounts.clone();
     let output_token_amount =
-        BigInt::try_from(deposit.output_token_amount.clone().unwrap()).unwrap();
+        BigInt::try_from(deposit.output_token_amount.as_ref().unwrap().clone()).unwrap();
 
     let amount_usd = calculate_event_amount_usd(
         ordinal,
@@ -102,11 +102,11 @@ fn create_deposit_transaction(
 
     deposit_entity_change
         .change("id", id)
-        .change("hash", event.clone().hash)
+        .change("hash", event.hash.clone())
         .change("logIndex", event.log_index as i32)
         .change("protocol", constants::UNISWAP_V2_FACTORY.to_string())
-        .change("to", event.clone().to)
-        .change("from", event.clone().from)
+        .change("to", event.to.clone())
+        .change("from", event.from.clone())
         .change("blockNumber", BigInt::from(event.block_number))
         .change("timestamp", BigInt::from(event.timestamp))
         .change("inputTokens", pool.input_tokens())
@@ -131,10 +131,10 @@ fn create_withdraw_transaction(
     let mut withdraw_entity_change: EntityChange =
         EntityChange::new("Withdraw", id.as_str(), ordinal, Operation::Create);
 
-    let input_tokens = pool.input_tokens.clone().unwrap().items;
+    let input_tokens = pool.input_tokens.as_ref().unwrap().items.clone();
     let input_token_amounts = withdraw.input_token_amounts.clone();
     let output_token_amount =
-        BigInt::try_from(withdraw.output_token_amount.clone().unwrap()).unwrap();
+        BigInt::try_from(withdraw.output_token_amount.as_ref().unwrap().clone()).unwrap();
 
     let amount_usd = calculate_event_amount_usd(
         ordinal,
@@ -145,11 +145,11 @@ fn create_withdraw_transaction(
 
     withdraw_entity_change
         .change("id", id)
-        .change("hash", event.clone().hash)
+        .change("hash", event.hash.clone())
         .change("logIndex", event.log_index as i32)
         .change("protocol", constants::UNISWAP_V2_FACTORY.to_string())
-        .change("to", event.clone().to)
-        .change("from", event.clone().from)
+        .change("to", event.to.clone())
+        .change("from", event.from.clone())
         .change("blockNumber", BigInt::from(event.block_number))
         .change("timestamp", BigInt::from(event.timestamp))
         .change("inputTokens", pool.input_tokens())
@@ -173,8 +173,8 @@ fn create_swap_transaction(
     let mut swap_entity_change: EntityChange =
         EntityChange::new("Swap", id.as_str(), ordinal, Operation::Create);
 
-    let token_in = swap.clone().token_in.unwrap();
-    let token_out = swap.clone().token_out.unwrap();
+    let token_in = swap.token_in.clone().unwrap();
+    let token_out = swap.token_out.clone().unwrap();
 
     let token_in_price = utils::get_token_price(ordinal, prices_store, &token_in.address);
     let token_out_price = utils::get_token_price(ordinal, prices_store, &token_out.address);
@@ -187,11 +187,11 @@ fn create_swap_transaction(
 
     swap_entity_change
         .change("id", id)
-        .change("hash", event.clone().hash)
+        .change("hash", event.hash.clone())
         .change("logIndex", event.log_index as i32)
         .change("protocol", constants::UNISWAP_V2_FACTORY.to_string())
-        .change("to", event.clone().to)
-        .change("from", event.clone().from)
+        .change("to", event.to.clone())
+        .change("from", event.from.clone())
         .change("blockNumber", BigInt::from(event.block_number))
         .change("timestamp", BigInt::from(event.timestamp))
         .change("tokenIn", token_in.address)
@@ -200,7 +200,7 @@ fn create_swap_transaction(
         .change("tokenOut", token_out.address)
         .change("amountOut", amount_out)
         .change("amountOutUSD", amount_out_usd)
-        .change("pool", event.clone().pool);
+        .change("pool", event.pool.clone());
 
     swap_entity_change
 }

@@ -22,11 +22,7 @@ pub fn map_liquidity_pool_entity(
 
     for delta in balances_deltas.deltas.iter() {
         if let Some(pool_address) = StoreKey::TotalBalance.get_pool(&delta.key) {
-            let mut is_initialized: bool = true;
-
-            if delta.operation == store_delta::Operation::Create {
-                is_initialized = false;
-            }
+            let is_initialized = delta.operation != store_delta::Operation::Create;
 
             let pool: Pool =
                 pools_store.must_get_last(StoreKey::Pool.get_unique_pool_key(&pool_address));

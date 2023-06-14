@@ -1,7 +1,5 @@
-use substreams::scalar::BigInt;
-
 #[derive(Clone)]
-pub(crate) enum StoreKey {
+pub enum StoreKey {
     Pool,
     TotalBalance,
     LatestTimestamp,
@@ -33,11 +31,11 @@ pub(crate) enum StoreKey {
 }
 
 impl StoreKey {
-    pub fn get_unique_pool_key(&self, key: &String) -> String {
+    pub fn get_unique_pool_key(&self, key: &str) -> String {
         format!("{}:{}", self.unique_id(), key)
     }
 
-    pub fn get_unique_pair_key(&self, key1: &String, key2: &String) -> String {
+    pub fn get_unique_pair_key(&self, key1: &str, key2: &str) -> String {
         format!("{}:{}:{}", self.unique_id(), key1, key2)
     }
 
@@ -45,53 +43,19 @@ impl StoreKey {
         format!("[Protocol]:{}", self.unique_id())
     }
 
-    pub fn get_unique_daily_pool_key(&self, day_id: BigInt, key: &String) -> String {
-        format!("{}:{}:{}", self.unique_id(), day_id.to_string(), key)
+    pub fn get_unique_snapshot_key(&self, id: i64, keys: Vec<&str>) -> String {
+        format!("{}:{}:{}", self.unique_id(), id, keys.join(":"))
     }
 
-    pub fn get_unique_hourly_pool_key(&self, hour_id: BigInt, key: &String) -> String {
-        format!("{}:{}:{}", self.unique_id(), hour_id.to_string(), key)
+    pub fn get_unique_daily_protocol_key(&self, day_id: i64) -> String {
+        format!("[Protocol]:{}:{}", self.unique_id(), day_id)
     }
 
-    pub fn get_unique_daily_pool_and_token_key(
-        &self,
-        day_id: BigInt,
-        key1: &String,
-        key2: &String,
-    ) -> String {
-        format!(
-            "{}:{}:{}:{}",
-            self.unique_id(),
-            day_id.to_string(),
-            key1,
-            key2
-        )
-    }
-
-    pub fn get_unique_hourly_pool_and_token_key(
-        &self,
-        hour_id: BigInt,
-        key1: &String,
-        key2: &String,
-    ) -> String {
-        format!(
-            "{}:{}:{}:{}",
-            self.unique_id(),
-            hour_id.to_string(),
-            key1,
-            key2
-        )
-    }
-
-    pub fn get_unique_daily_protocol_key(&self, day_id: BigInt) -> String {
-        format!("[Protocol]:{}:{}", self.unique_id(), day_id.to_string())
-    }
-
-    pub fn get_unique_snapshot_tracking_key(&self, key1: &String, key2: &String) -> String {
+    pub fn get_unique_snapshot_tracking_key(&self, key1: &str, key2: &str) -> String {
         format!("{}:{}:{}", self.unique_id(), key1, key2)
     }
 
-    pub fn get_pool(&self, key: &String) -> Option<String> {
+    pub fn get_pool(&self, key: &str) -> Option<String> {
         let chunks: Vec<&str> = key.split(":").collect();
 
         if chunks[0] != self.unique_id() {
@@ -100,7 +64,7 @@ impl StoreKey {
         return Some(chunks[1].to_string());
     }
 
-    pub fn get_pool_and_token(&self, key: &String) -> Option<(String, String)> {
+    pub fn get_pool_and_token(&self, key: &str) -> Option<(String, String)> {
         let chunks: Vec<&str> = key.split(":").collect();
 
         if chunks[0] != self.unique_id() {

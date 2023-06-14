@@ -103,12 +103,12 @@ fn get_price_from_native_store(
     }
 
     for address in constants::PAIR_COINS.into_iter() {
-        let whitelisted_token = address.to_string();
+        let whitelisted_token = address;
 
         let mut token_price = native_prices_store
             .get_at(
                 ordinal,
-                StoreKey::TokenPrice.get_unique_pair_key(token_address, &whitelisted_token),
+                StoreKey::TokenPrice.get_unique_pair_key(token_address, whitelisted_token),
             )
             .unwrap_or(BigDecimal::zero());
 
@@ -135,8 +135,8 @@ fn get_price_from_native_store(
 
 fn min_pool_liquidity_check(
     ordinal: u64,
-    address1: &String,
-    address2: &String,
+    address1: &str,
+    address2: &str,
     native_prices_store: &StoreGetBigDecimal,
 ) -> bool {
     let mut amount_locked_usd = native_prices_store
@@ -150,21 +150,15 @@ fn min_pool_liquidity_check(
         amount_locked_usd = amount_locked_usd * get_weth_price_in_usd(ordinal, native_prices_store);
     }
 
-    if amount_locked_usd.ge(&BigDecimal::from_str("5000").unwrap()) {
-        return true;
-    }
-
-    return false;
+    amount_locked_usd.ge(&BigDecimal::from_str("5000").unwrap())
 }
 
 fn get_weth_price_in_usd(ordinal: u64, native_prices_store: &StoreGetBigDecimal) -> BigDecimal {
     native_prices_store
         .get_at(
             ordinal,
-            StoreKey::TokenPrice.get_unique_pair_key(
-                &constants::WETH_ADDRESS.to_string(),
-                &constants::USDC_ADDRESS.to_string(),
-            ),
+            StoreKey::TokenPrice
+                .get_unique_pair_key(constants::WETH_ADDRESS, constants::USDC_ADDRESS),
         )
         .unwrap_or(BigDecimal::zero())
 }

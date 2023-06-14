@@ -24,7 +24,7 @@ protobuf:
 modules:
   - name: map_pool_created
     kind: map
-    initialBlock: 10008300
+    initialBlock: 2638438
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
@@ -47,7 +47,7 @@ modules:
 
   - name: map_pool_events
     kind: map
-    initialBlock: 10008300
+    initialBlock: 2638438
     inputs:
       - source: sf.ethereum.type.v2.Block
       - store: store_pools
@@ -118,7 +118,7 @@ modules:
 
   - name: map_liquidity_pool_entity
     kind: map
-    initialBlock: 10008300
+    initialBlock: 2638438
     inputs:
       - store: store_pools
       - store: store_output_token_supply
@@ -141,7 +141,7 @@ modules:
 
   - name: map_liquidity_pool_snapshots_entity
     kind: map
-    initialBlock: 10008300
+    initialBlock: 2638438
     inputs:
       - source: sf.substreams.v1.Clock
       - store: store_pools
@@ -179,12 +179,12 @@ modules:
     valueType: bigdecimal
     inputs:
       - source: sf.substreams.v1.Clock
-      - store: store_daily_and_hourly_fields
+      - store: store_volume
         mode: deltas
 
   - name: map_protocol_entity
     kind: map
-    initialBlock: 10008300
+    initialBlock: 2638438
     inputs:
       - store: store_input_token_balances
         mode: deltas
@@ -195,7 +195,7 @@ modules:
 
   - name: map_financial_daily_snapshot_entity
     kind: map
-    initialBlock: 10008300
+    initialBlock: 2638438
     inputs:
       - source: sf.substreams.v1.Clock
       - store: store_input_token_balances
@@ -209,7 +209,7 @@ modules:
 
   - name: map_token_entity
     kind: map
-    initialBlock: 10008300
+    initialBlock: 2638438
     inputs:
       - map: map_pool_created
       - store: store_usd_prices
@@ -219,7 +219,7 @@ modules:
 
   - name: map_events_entity
     kind: map
-    initialBlock: 10008300
+    initialBlock: 2638438
     inputs:
       - map: map_pool_events
       - store: store_pools
@@ -229,7 +229,7 @@ modules:
 
   - name: graph_out
     kind: map
-    initialBlock: 10008300
+    initialBlock: 2638438
     inputs:
       - map: map_liquidity_pool_entity
       - map: map_liquidity_pool_snapshots_entity

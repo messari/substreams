@@ -26,9 +26,9 @@ fn get_pools(block: &eth::Block, pools: &mut Vec<Pool>) {
         let token1 = TokenContract::new(Address::from_slice(event.token1.as_slice())).as_struct();
 
         pools.push(Pool {
-            name: token0.clone().symbol + "/" + token1.symbol.as_str(),
+            name: format! {"{}/{}", token0.symbol, token1.symbol},
             symbol: String::new(),
-            address: pool.clone().address,
+            address: pool.address.clone(),
             input_tokens: Some(Erc20Tokens {
                 items: vec![token0, token1],
             }),

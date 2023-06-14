@@ -27,14 +27,12 @@ pub fn map_liquidity_pool_snapshots_entity(
 
     for delta in balances_deltas.deltas.iter() {
         if let Some(pool_address) = StoreKey::LatestTimestamp.get_pool(&delta.key) {
-            if delta.operation != store_delta::Operation::Create {
-                continue;
-            }
+            let is_initialized = delta.operation != store_delta::Operation::Create;
 
-            let delta_timestamp = delta.new_value.to_u64() as i64;
+            let delta_timestamp: i64 = delta.new_value.to_u64() as i64;
 
-            let day_id = utils::get_day_id(delta_timestamp) - BigInt::one();
-            let hour_id = utils::get_hour_id(delta_timestamp) - BigInt::one();
+            let day_id = utils::get_day_id(delta_timestamp);
+            let hour_id = utils::get_hour_id(delta_timestamp);
 
             let block_number = balances_store
                 .get_at(delta.ordinal, StoreKey::LatestBlockNumber.unique_id())
@@ -56,6 +54,7 @@ pub fn map_liquidity_pool_snapshots_entity(
                 &prices_store,
                 &block_number,
                 &timestamp,
+                is_initialized,
             ));
 
             entity_changes.push(create_liquidity_pool_hourly_snapshot(
@@ -70,6 +69,7 @@ pub fn map_liquidity_pool_snapshots_entity(
                 &volume_by_token_amount_store,
                 &block_number,
                 &timestamp,
+                is_initialized,
             ));
         }
     }
@@ -80,7 +80,7 @@ pub fn map_liquidity_pool_snapshots_entity(
 fn create_liquidity_pool_daily_snapshot(
     ordinal: u64,
     pool: &Pool,
-    day_id: BigInt,
+    day_id: i64,
     pool_supply_store: &StoreGetBigInt,
     balances_store: &StoreGetBigInt,
     pool_tvl_store: &StoreGetBigDecimal,
@@ -90,16 +90,21 @@ fn create_liquidity_pool_daily_snapshot(
     prices_store: &StoreGetBigDecimal,
     block_number: &BigInt,
     timestamp: &BigInt,
+    is_initialized: bool,
 ) -> EntityChange {
-    let id = [pool.clone().address, day_id.clone().to_string()].join("-");
     let pool_address = &pool.address;
+    let id = [pool_address, day_id.to_string().as_str()].join("-");
 
     let mut pool_entity_change: EntityChange = EntityChange::new(
         "LiquidityPoolDailySnapshot",
         id.as_str(),
         ordinal,
-        Operation::Create,
+        Operation::Update,
     );
+
+    if !is_initialized {
+        pool_entity_change.operation = Operation::Create as i32;
+    }
 
     pool_entity_change
         .change("id", id)
@@ -120,7 +125,7 @@ fn create_liquidity_pool_daily_snapshot(
                 .get_at(
                     ordinal,
                     StoreKey::DailySupplySideRevenueUSD
-                        .get_unique_daily_pool_key(day_id.clone(), &pool_address),
+                        .get_unique_snapshot_key(day_id, vec![&pool_address]),
                 )
                 .unwrap_or(BigDecimal::zero()),
         )
@@ -139,7 +144,7 @@ fn create_liquidity_pool_daily_snapshot(
                 .get_at(
                     ordinal,
                     StoreKey::DailyProtocolSideRevenueUSD
-                        .get_unique_daily_pool_key(day_id.clone(), &pool_address),
+                        .get_unique_snapshot_key(day_id, vec![&pool_address]),
                 )
                 .unwrap_or(BigDecimal::zero()),
         )
@@ -158,7 +163,7 @@ fn create_liquidity_pool_daily_snapshot(
                 .get_at(
                     ordinal,
                     StoreKey::DailyTotalRevenueUSD
-                        .get_unique_daily_pool_key(day_id.clone(), &pool_address),
+                        .get_unique_snapshot_key(day_id, vec![&pool_address]),
                 )
                 .unwrap_or(BigDecimal::zero()),
         )
@@ -176,8 +181,7 @@ fn create_liquidity_pool_daily_snapshot(
             daily_and_hourly_fields_store
                 .get_at(
                     ordinal,
-                    StoreKey::DailyVolumeUSD
-                        .get_unique_daily_pool_key(day_id.clone(), &pool_address),
+                    StoreKey::DailyVolumeUSD.get_unique_snapshot_key(day_id, vec![&pool_address]),
                 )
                 .unwrap_or(BigDecimal::zero()),
         )
@@ -187,10 +191,9 @@ fn create_liquidity_pool_daily_snapshot(
                 volume_by_token_amount_store
                     .get_at(
                         ordinal,
-                        StoreKey::DailyVolumeByTokenAmount.get_unique_daily_pool_and_token_key(
-                            day_id.clone(),
-                            &pool_address,
-                            &pool.token0_address(),
+                        StoreKey::DailyVolumeByTokenAmount.get_unique_snapshot_key(
+                            day_id,
+                            vec![&pool_address, &pool.token0_address()],
                         ),
                     )
                     .unwrap_or(BigInt::zero())
@@ -198,10 +201,9 @@ fn create_liquidity_pool_daily_snapshot(
                 volume_by_token_amount_store
                     .get_at(
                         ordinal,
-                        StoreKey::DailyVolumeByTokenAmount.get_unique_daily_pool_and_token_key(
-                            day_id.clone(),
-                            &pool_address,
-                            &pool.token1_address(),
+                        StoreKey::DailyVolumeByTokenAmount.get_unique_snapshot_key(
+                            day_id,
+                            vec![&pool_address, &pool.token1_address()],
                         ),
                     )
                     .unwrap_or(BigInt::zero())
@@ -214,10 +216,9 @@ fn create_liquidity_pool_daily_snapshot(
                 daily_and_hourly_fields_store
                     .get_at(
                         ordinal,
-                        StoreKey::DailyVolumeByTokenUSD.get_unique_daily_pool_and_token_key(
-                            day_id.clone(),
-                            &pool_address,
-                            &pool.token0_address(),
+                        StoreKey::DailyVolumeByTokenUSD.get_unique_snapshot_key(
+                            day_id,
+                            vec![&pool_address, &pool.token0_address()],
                         ),
                     )
                     .unwrap_or(BigDecimal::zero())
@@ -225,10 +226,9 @@ fn create_liquidity_pool_daily_snapshot(
                 daily_and_hourly_fields_store
                     .get_at(
                         ordinal,
-                        StoreKey::DailyVolumeByTokenUSD.get_unique_daily_pool_and_token_key(
-                            day_id.clone(),
-                            &pool_address,
-                            &pool.token1_address(),
+                        StoreKey::DailyVolumeByTokenUSD.get_unique_snapshot_key(
+                            day_id,
+                            vec![&pool_address, &pool.token1_address()],
                         ),
                     )
                     .unwrap_or(BigDecimal::zero())
@@ -301,7 +301,7 @@ fn create_liquidity_pool_daily_snapshot(
 fn create_liquidity_pool_hourly_snapshot(
     ordinal: u64,
     pool: &Pool,
-    hour_id: BigInt,
+    hour_id: i64,
     pool_supply_store: &StoreGetBigInt,
     balances_store: &StoreGetBigInt,
     pool_tvl_store: &StoreGetBigDecimal,
@@ -310,6 +310,7 @@ fn create_liquidity_pool_hourly_snapshot(
     volume_by_token_amount_store: &StoreGetBigInt,
     block_number: &BigInt,
     timestamp: &BigInt,
+    is_initialized: bool,
 ) -> EntityChange {
     let id = [pool.clone().address, hour_id.clone().to_string()].join("-");
     let pool_address = &pool.address;
@@ -318,8 +319,12 @@ fn create_liquidity_pool_hourly_snapshot(
         "LiquidityPoolHourlySnapshot",
         id.as_str(),
         ordinal,
-        Operation::Create,
+        Operation::Update,
     );
+
+    if !is_initialized {
+        pool_entity_change.operation = Operation::Create as i32;
+    }
 
     pool_entity_change
         .change("id", id)
@@ -340,7 +345,7 @@ fn create_liquidity_pool_hourly_snapshot(
                 .get_at(
                     ordinal,
                     StoreKey::HourlySupplySideRevenueUSD
-                        .get_unique_hourly_pool_key(hour_id.clone(), &pool_address),
+                        .get_unique_snapshot_key(hour_id, vec![&pool_address]),
                 )
                 .unwrap_or(BigDecimal::zero()),
         )
@@ -359,7 +364,7 @@ fn create_liquidity_pool_hourly_snapshot(
                 .get_at(
                     ordinal,
                     StoreKey::HourlyProtocolSideRevenueUSD
-                        .get_unique_hourly_pool_key(hour_id.clone(), &pool_address),
+                        .get_unique_snapshot_key(hour_id, vec![&pool_address]),
                 )
                 .unwrap_or(BigDecimal::zero()),
         )
@@ -378,7 +383,7 @@ fn create_liquidity_pool_hourly_snapshot(
                 .get_at(
                     ordinal,
                     StoreKey::HourlyTotalRevenueUSD
-                        .get_unique_hourly_pool_key(hour_id.clone(), &pool_address),
+                        .get_unique_snapshot_key(hour_id, vec![&pool_address]),
                 )
                 .unwrap_or(BigDecimal::zero()),
         )
@@ -396,8 +401,7 @@ fn create_liquidity_pool_hourly_snapshot(
             daily_and_hourly_fields_store
                 .get_at(
                     ordinal,
-                    StoreKey::HourlyVolumeUSD
-                        .get_unique_hourly_pool_key(hour_id.clone(), &pool_address),
+                    StoreKey::HourlyVolumeUSD.get_unique_snapshot_key(hour_id, vec![&pool_address]),
                 )
                 .unwrap_or(BigDecimal::zero()),
         )
@@ -407,10 +411,9 @@ fn create_liquidity_pool_hourly_snapshot(
                 volume_by_token_amount_store
                     .get_at(
                         ordinal,
-                        StoreKey::HourlyVolumeByTokenAmount.get_unique_hourly_pool_and_token_key(
-                            hour_id.clone(),
-                            &pool_address,
-                            &pool.token0_address(),
+                        StoreKey::HourlyVolumeByTokenAmount.get_unique_snapshot_key(
+                            hour_id,
+                            vec![&pool_address, &pool.token0_address()],
                         ),
                     )
                     .unwrap_or(BigInt::zero())
@@ -418,10 +421,9 @@ fn create_liquidity_pool_hourly_snapshot(
                 volume_by_token_amount_store
                     .get_at(
                         ordinal,
-                        StoreKey::HourlyVolumeByTokenAmount.get_unique_hourly_pool_and_token_key(
-                            hour_id.clone(),
-                            &pool_address,
-                            &pool.token1_address(),
+                        StoreKey::HourlyVolumeByTokenAmount.get_unique_snapshot_key(
+                            hour_id,
+                            vec![&pool_address, &pool.token1_address()],
                         ),
                     )
                     .unwrap_or(BigInt::zero())
@@ -434,10 +436,9 @@ fn create_liquidity_pool_hourly_snapshot(
                 daily_and_hourly_fields_store
                     .get_at(
                         ordinal,
-                        StoreKey::HourlyVolumeByTokenUSD.get_unique_hourly_pool_and_token_key(
-                            hour_id.clone(),
-                            &pool_address,
-                            &pool.token0_address(),
+                        StoreKey::HourlyVolumeByTokenUSD.get_unique_snapshot_key(
+                            hour_id,
+                            vec![&pool_address, &pool.token0_address()],
                         ),
                     )
                     .unwrap_or(BigDecimal::zero())
@@ -445,10 +446,9 @@ fn create_liquidity_pool_hourly_snapshot(
                 daily_and_hourly_fields_store
                     .get_at(
                         ordinal,
-                        StoreKey::HourlyVolumeByTokenUSD.get_unique_hourly_pool_and_token_key(
-                            hour_id.clone(),
-                            &pool_address,
-                            &pool.token1_address(),
+                        StoreKey::HourlyVolumeByTokenUSD.get_unique_snapshot_key(
+                            hour_id,
+                            vec![&pool_address, &pool.token1_address()],
                         ),
                     )
                     .unwrap_or(BigDecimal::zero())

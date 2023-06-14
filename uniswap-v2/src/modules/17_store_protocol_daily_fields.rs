@@ -1,54 +1,47 @@
 use substreams::pb::substreams::Clock;
-use substreams::store::{DeltaBigDecimal, Deltas, StoreAdd};
+use substreams::store::{DeltaBigDecimal, Deltas};
 use substreams::store::{StoreAddBigDecimal, StoreNew};
 
+use crate::common::traits::StoreAddSnapshot;
 use crate::store_key::StoreKey;
-use crate::utils::{delta_value, get_day_id};
+use crate::utils;
 
 #[substreams::handlers::store]
 pub fn store_protocol_daily_fields(
     clock: Clock,
-    pool_daily_fields_deltas: Deltas<DeltaBigDecimal>,
+    volume_deltas: Deltas<DeltaBigDecimal>,
     output_store: StoreAddBigDecimal,
 ) {
     let timestamp = clock.timestamp.unwrap().seconds;
+    let day_id = utils::get_day_id(timestamp);
 
-    for delta in pool_daily_fields_deltas.deltas {
-        let day_id = get_day_id(timestamp);
+    for delta in volume_deltas.deltas {
+        let ordinal = delta.ordinal;
+        let volume = utils::delta_value(&delta);
 
-        match &delta.key {
-            key if key.starts_with(StoreKey::DailyVolumeUSD.unique_id().as_str()) => {
-                output_store.add(
-                    delta.ordinal,
-                    StoreKey::DailyVolumeUSD.get_unique_daily_protocol_key(day_id.clone()),
-                    &delta_value(&delta),
-                );
-            }
-            key if key.starts_with(StoreKey::DailySupplySideRevenueUSD.unique_id().as_str()) => {
-                output_store.add(
-                    delta.ordinal,
-                    StoreKey::DailySupplySideRevenueUSD
-                        .get_unique_daily_protocol_key(day_id.clone()),
-                    &delta_value(&delta),
-                );
-            }
-            key if key.starts_with(StoreKey::DailyProtocolSideRevenueUSD.unique_id().as_str()) => {
-                output_store.add(
-                    delta.ordinal,
-                    StoreKey::DailyProtocolSideRevenueUSD
-                        .get_unique_daily_protocol_key(day_id.clone()),
-                    &delta_value(&delta),
-                );
-            }
-            key if key.starts_with(StoreKey::DailyTotalRevenueUSD.unique_id().as_str()) => {
-                output_store.add(
-                    delta.ordinal,
-                    StoreKey::DailyTotalRevenueUSD.get_unique_daily_protocol_key(day_id.clone()),
-                    &delta_value(&delta),
-                );
-            }
+        if let Some(_) = StoreKey::Volume.get_pool(&delta.key) {
+            let (supply_side_revenue, protocol_side_revenue) =
+                utils::calculate_revenue(volume.clone());
 
-            _ => {}
+            output_store.add_protocol_snapshot(ordinal, day_id, StoreKey::DailyVolumeUSD, &volume);
+            output_store.add_protocol_snapshot(
+                ordinal,
+                day_id,
+                StoreKey::DailySupplySideRevenueUSD,
+                &supply_side_revenue,
+            );
+            output_store.add_protocol_snapshot(
+                ordinal,
+                day_id,
+                StoreKey::DailyProtocolSideRevenueUSD,
+                &protocol_side_revenue,
+            );
+            output_store.add_protocol_snapshot(
+                ordinal,
+                day_id,
+                StoreKey::DailyTotalRevenueUSD,
+                &(supply_side_revenue + protocol_side_revenue),
+            );
         }
     }
 }

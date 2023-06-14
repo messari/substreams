@@ -22,8 +22,8 @@ pub fn store_volume(
                 let pool_address = event.pool;
                 let ordinal = event.log_ordinal;
 
-                let token_in = swap_event.token_in.unwrap();
-                let token_out = swap_event.token_out.unwrap();
+                let token_in = swap_event.token_in.as_ref().unwrap();
+                let token_out = swap_event.token_out.as_ref().unwrap();
 
                 let volume = get_tracked_volume_usd(
                     ordinal,
@@ -38,19 +38,19 @@ pub fn store_volume(
                     ordinal,
                     StoreKey::VolumeByTokenUSD
                         .get_unique_pair_key(&pool_address, &token_in.address),
-                    &volume.clone(),
+                    &volume,
                 );
                 output_store.add(
                     ordinal,
                     StoreKey::VolumeByTokenUSD
                         .get_unique_pair_key(&pool_address, &token_out.address),
-                    &volume.clone(),
+                    &volume,
                 );
 
                 output_store.add(
                     ordinal,
                     StoreKey::Volume.get_unique_pool_key(&pool_address),
-                    &volume.clone(),
+                    &volume,
                 );
             }
             _ => {}

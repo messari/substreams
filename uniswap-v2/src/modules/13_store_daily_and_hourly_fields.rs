@@ -1,7 +1,8 @@
 use substreams::pb::substreams::Clock;
-use substreams::store::{DeltaBigDecimal, Deltas, StoreAdd};
+use substreams::store::{DeltaBigDecimal, Deltas};
 use substreams::store::{StoreAddBigDecimal, StoreNew};
 
+use crate::common::traits::StoreAddSnapshot;
 use crate::store_key::StoreKey;
 use crate::utils;
 
@@ -24,74 +25,78 @@ pub fn store_daily_and_hourly_fields(
             let (supply_side_revenue, protocol_side_revenue) =
                 utils::calculate_revenue(volume.clone());
 
-            output_store.add(
+            output_store.add_snapshot(
                 ordinal,
-                StoreKey::HourlyVolumeUSD
-                    .get_unique_hourly_pool_key(hour_id.clone(), &pool_address),
+                hour_id,
+                StoreKey::HourlyVolumeUSD,
+                vec![&pool_address],
                 &volume,
             );
-            output_store.add(
+            output_store.add_snapshot(
                 ordinal,
-                StoreKey::HourlySupplySideRevenueUSD
-                    .get_unique_hourly_pool_key(hour_id.clone(), &pool_address),
-                &supply_side_revenue.clone(),
+                hour_id,
+                StoreKey::HourlySupplySideRevenueUSD,
+                vec![&pool_address],
+                &supply_side_revenue,
             );
-            output_store.add(
+            output_store.add_snapshot(
                 ordinal,
-                StoreKey::HourlyProtocolSideRevenueUSD
-                    .get_unique_hourly_pool_key(hour_id.clone(), &pool_address),
-                &protocol_side_revenue.clone(),
+                hour_id,
+                StoreKey::HourlyProtocolSideRevenueUSD,
+                vec![&pool_address],
+                &protocol_side_revenue,
             );
-            output_store.add(
+            output_store.add_snapshot(
                 ordinal,
-                StoreKey::HourlyTotalRevenueUSD
-                    .get_unique_hourly_pool_key(hour_id.clone(), &pool_address),
+                hour_id,
+                StoreKey::HourlyTotalRevenueUSD,
+                vec![&pool_address],
                 &(supply_side_revenue.clone() + protocol_side_revenue.clone()),
             );
 
-            output_store.add(
+            output_store.add_snapshot(
                 ordinal,
-                StoreKey::DailyVolumeUSD.get_unique_daily_pool_key(day_id.clone(), &pool_address),
+                day_id,
+                StoreKey::DailyVolumeUSD,
+                vec![&pool_address],
                 &volume,
             );
-            output_store.add(
+            output_store.add_snapshot(
                 ordinal,
-                StoreKey::DailySupplySideRevenueUSD
-                    .get_unique_daily_pool_key(day_id.clone(), &pool_address),
-                &supply_side_revenue.clone(),
+                day_id,
+                StoreKey::DailySupplySideRevenueUSD,
+                vec![&pool_address],
+                &supply_side_revenue,
             );
-            output_store.add(
+            output_store.add_snapshot(
                 ordinal,
-                StoreKey::DailyProtocolSideRevenueUSD
-                    .get_unique_daily_pool_key(day_id.clone(), &pool_address),
-                &protocol_side_revenue.clone(),
+                day_id,
+                StoreKey::DailyProtocolSideRevenueUSD,
+                vec![&pool_address],
+                &protocol_side_revenue,
             );
-            output_store.add(
+            output_store.add_snapshot(
                 ordinal,
-                StoreKey::DailyTotalRevenueUSD
-                    .get_unique_daily_pool_key(day_id.clone(), &pool_address),
+                day_id,
+                StoreKey::DailyTotalRevenueUSD,
+                vec![&pool_address],
                 &(supply_side_revenue + protocol_side_revenue),
             );
         } else if let Some((pool_address, token_address)) =
             StoreKey::VolumeByTokenUSD.get_pool_and_token(&delta.key)
         {
-            output_store.add(
+            output_store.add_snapshot(
                 ordinal,
-                StoreKey::DailyVolumeByTokenUSD.get_unique_hourly_pool_and_token_key(
-                    day_id.clone(),
-                    &pool_address,
-                    &token_address,
-                ),
+                hour_id,
+                StoreKey::HourlyVolumeByTokenUSD,
+                vec![&pool_address, &token_address],
                 &volume,
             );
-
-            output_store.add(
+            output_store.add_snapshot(
                 ordinal,
-                StoreKey::HourlyVolumeByTokenUSD.get_unique_hourly_pool_and_token_key(
-                    hour_id.clone(),
-                    &pool_address,
-                    &token_address,
-                ),
+                day_id,
+                StoreKey::DailyVolumeByTokenUSD,
+                vec![&pool_address, &token_address],
                 &volume,
             );
         }

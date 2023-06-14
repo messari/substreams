@@ -17,11 +17,7 @@ pub fn map_protocol_entity(
 
     for delta in input_token_balances_deltas.deltas.iter() {
         if let Some(_) = StoreKey::TotalBalance.get_pool(&delta.key) {
-            let mut is_initialized: bool = true;
-
-            if delta.operation == store_delta::Operation::Create {
-                is_initialized = false;
-            }
+            let is_initialized = delta.operation != store_delta::Operation::Create;
 
             entity_changes.push(create_protocol(
                 delta.ordinal,

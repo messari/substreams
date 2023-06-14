@@ -1,6 +1,8 @@
 use substreams::scalar::BigInt;
-use substreams::store::{StoreAdd, StoreAddBigInt, StoreNew};
+use substreams::store::StoreAddBigInt;
+use substreams::store::StoreNew;
 
+use crate::common::traits::StoreAddSnapshot;
 use crate::pb::uniswap::v2::event::Type::SwapType;
 use crate::pb::uniswap::v2::Events;
 use crate::store_key::StoreKey;
@@ -23,41 +25,33 @@ pub fn store_volume_by_token_amount(swap_events: Events, output_store: StoreAddB
                 let amount_in = BigInt::try_from(swap.amount_in).unwrap();
                 let amount_out = BigInt::try_from(swap.amount_out).unwrap();
 
-                output_store.add(
+                output_store.add_snapshot(
                     ordinal,
-                    StoreKey::DailyVolumeByTokenAmount.get_unique_daily_pool_and_token_key(
-                        day_id.clone(),
-                        &pool_address,
-                        &token_in.address,
-                    ),
+                    day_id,
+                    StoreKey::DailyVolumeByTokenAmount,
+                    vec![&pool_address, &token_in.address],
                     &amount_in,
                 );
-                output_store.add(
+                output_store.add_snapshot(
                     ordinal,
-                    StoreKey::HourlyVolumeByTokenAmount.get_unique_hourly_pool_and_token_key(
-                        hour_id.clone(),
-                        &pool_address,
-                        &token_in.address,
-                    ),
+                    hour_id,
+                    StoreKey::HourlyVolumeByTokenAmount,
+                    vec![&pool_address, &token_in.address],
                     &amount_in,
                 );
 
-                output_store.add(
+                output_store.add_snapshot(
                     ordinal,
-                    StoreKey::DailyVolumeByTokenAmount.get_unique_daily_pool_and_token_key(
-                        day_id.clone(),
-                        &pool_address,
-                        &token_out.address,
-                    ),
+                    day_id,
+                    StoreKey::DailyVolumeByTokenAmount,
+                    vec![&pool_address, &token_out.address],
                     &amount_out,
                 );
-                output_store.add(
+                output_store.add_snapshot(
                     ordinal,
-                    StoreKey::HourlyVolumeByTokenAmount.get_unique_hourly_pool_and_token_key(
-                        hour_id.clone(),
-                        &pool_address,
-                        &token_out.address,
-                    ),
+                    hour_id,
+                    StoreKey::HourlyVolumeByTokenAmount,
+                    vec![&pool_address, &token_out.address],
                     &amount_out,
                 );
             }
