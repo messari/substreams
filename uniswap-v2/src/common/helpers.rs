@@ -37,7 +37,7 @@ impl TokenContract {
             name: self.get_name(),
             symbol: self.get_symbol(),
             address: self.0.to_hex(),
-            decimals: self.get_decimals().to_u64(),
+            decimals: self.get_decimals().try_into().unwrap_or(18),
         }
     }
 }

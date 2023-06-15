@@ -10,7 +10,7 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e goerli.eth.streamingfast.io:443 substreams.yaml map_pool_created -s 2638438 -t 2667860
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml graph_out -s 10008300
 .PHONY: pack
 pack:
 	substreams pack ./substreams.yaml
