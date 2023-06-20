@@ -46,7 +46,9 @@ pub(crate) async fn get_start_block_numbers(output_folder_paths: Vec<Location>, 
 
         if processed_block_files.len() > 0 {
             // For now we will just assume all files will be in form -> startBlock_stopBlock.fileExtension
-            let mut last_block_num_iterator = processed_block_files.into_iter().map(|file| file.split('.').next().unwrap().split('_').skip(1).next().unwrap().parse::<i64>().unwrap());
+            let mut last_block_num_iterator = processed_block_files.into_iter().map(|file| {
+                file.split('.').next().unwrap().split('_').last().unwrap().parse::<i64>().unwrap()
+            });
             let mut latest_block_num = last_block_num_iterator.next().unwrap();
             for block_num in last_block_num_iterator {
                 if block_num > latest_block_num {
