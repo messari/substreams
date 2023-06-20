@@ -141,77 +141,103 @@ impl FieldDecoder {
     }
 
     fn decode_single_value(&mut self, data: &mut &[u8], wire_type: u8, uncompressed_file_size: &mut usize) -> Result<(), String> {
-        // Todo: Add wire_type checks for single value decoding if necessary
-
         macro_rules! decode_value {
-            ($field_type:literal @ $values_ident:ident => $uncompressed_size_delta:expr => $val:ident = $try_read:expr => $insert:expr ) => {
+            ($field_type:literal @ $expected_wire_type:literal @ $values_ident:ident => $uncompressed_size_delta:expr => $val:ident = $try_read:expr => $insert:expr ) => {
+                if $expected_wire_type != wire_type {
+                    return Err(format!("Wire type read: {}, expected wire type: {}! Proto data for field: {}, type: {}, data: {:?}", wire_type, $expected_wire_type, self.flattened_field_name, $field_type, data));
+                }
+
                 match $try_read {
                     Some($val) => {
                         *uncompressed_file_size += $uncompressed_size_delta;
                         $values_ident.push($insert);
                     },
-                    // TODO: Move $field_type into string literal and also use better method for displaying the bytes!
-                    None => return Err(format!("Error reading proto data for column: {}! Field Type: {}, data: {:?}", self.flattened_field_name, $field_type, data)),
+                    None => return Err(format!("Error reading proto data for field: {}! Type: {}, data: {:?}", self.flattened_field_name, $field_type, data)),
                 }
             }
         }
 
-        // TODO: Add in good error responses for all possible failure events here, eg during the passing of UInt32 values,
-        // TODO: when converting the parsed u32 values to i32 the conversion should be done safely with a clear error
-        // TODO: when the u32 value is too large to be able to be converted to i32
         match self.value_store.borrow_mut() {
             ValueStore::Double(values) => {
-                decode_value! { "Double" @ values => 64 => b = try_read_8_bytes(data) => f64::from_le_bytes(b) }
+                decode_value! { "Double" @ 1 @ values => 64 => b = try_read_8_bytes(data) => f64::from_le_bytes(b) }
             }
             ValueStore::Float(values) => {
-                decode_value! { "Float" @ values => 32 => b = try_read_4_bytes(data) => f32::from_le_bytes(b) }
+                decode_value! { "Float" @ 5 @ values => 32 => b = try_read_4_bytes(data) => f32::from_le_bytes(b) }
             }
             ValueStore::Int32(values) => {
-                decode_value! { "Int32" @ values => 32 => b = i32::from_signed_varint(data) => b }
+                decode_value! { "Int32" @ 0 @ values => 32 => b = i32::from_signed_varint(data) => b }
             }
             ValueStore::Int64(values) => {
-                decode_value! { "Int64" @ values => 64 => b = i64::from_signed_varint(data) => b }
+                decode_value! { "Int64" @ 0 @ values => 64 => b = i64::from_signed_varint(data) => b }
             }
             ValueStore::Uint32(values) => {
-                decode_value! { "UInt32" @ values => 32 => b = u32::from_signed_varint(data) => b as i32 }
+                decode_value! { "UInt32" @ 0 @ values => 32 => b = u32::from_signed_varint(data) => {
+                    if b > i32::MAX as u32 {
+                        return Err(format!("Error decoding data for field: {}, u32 value supplied: {}, is larger than i32::MAX! (Parquet stores u32 vals in i32 form)", self.flattened_field_name, b));
+                    }
+                    b as i32
+                } }
             }
             ValueStore::Uint64(values) => {
-                decode_value! { "UInt64" @ values => 64 => b = u64::from_signed_varint(data) => b as i64 }
+                decode_value! { "UInt64" @ 0 @ values => 64 => b = u64::from_signed_varint(data) => {
+                    if b > i64::MAX as u64 {
+                        return Err(format!("Error decoding data for field: {}, u64 value supplied: {}, is larger than i64::MAX! (Parquet stores u64 vals in i64 form)", self.flattened_field_name, b));
+                    }
+                    b as i64
+                } }
             }
             ValueStore::Sint32(values) => {
-                decode_value! { "SInt32" @ values => 32 => b = u32::from_unsigned_varint(data) => {
+                decode_value! { "SInt32" @ 0 @ values => 32 => b = u32::from_unsigned_varint(data) => {
                     let (sign, sign_bit) = if b % 2 == 0 { (1i32, 0) } else { (-1i32, 1) };
-                    let magnitude = (b / 2) as i32 + sign_bit;
-                    sign * magnitude
+                    let magnitude = (b / 2) + sign_bit;
+                    if magnitude > i32::MAX as u32 {
+                        return Err(format!("Error decoding data for field: {}, u32 value supplied: {}, is larger than i32::MAX! (Parquet stores u32 vals in i32 form)", self.flattened_field_name, magnitude));
+                    }
+                    sign * (magnitude as i32)
                 } }
             }
             ValueStore::Sint64(values) => {
-                decode_value! { "SInt64" @ values => 64 => b = u64::from_unsigned_varint(data) => {
+                decode_value! { "SInt64" @ 0 @ values => 64 => b = u64::from_unsigned_varint(data) => {
                     let (sign, sign_bit) = if b % 2 == 0 { (1i64, 0) } else { (-1i64, 1) };
-                    let magnitude = (b / 2) as i64 + sign_bit;
-                    sign * magnitude
+                    let magnitude = (b / 2) + sign_bit;
+                    if magnitude > i64::MAX as u64 {
+                        return Err(format!("Error decoding data for field: {}, u64 value supplied: {}, is larger than i64::MAX! (Parquet stores u64 vals in i64 form)", self.flattened_field_name, magnitude));
+                    }
+                    sign * (magnitude as i64)
                 } }
             }
             ValueStore::Fixed32(values) => {
-                decode_value! { "Fixed32" @ values => 32 => b = try_read_4_bytes(data) => u32::from_le_bytes(b) as i32 }
+                decode_value! { "Fixed32" @ 5 @ values => 32 => b = try_read_4_bytes(data) => {
+                    let b = u32::from_le_bytes(b);
+                    if b > i32::MAX as u32 {
+                        return Err(format!("Error decoding data for field: {}, u32 value supplied: {}, is larger than i32::MAX! (Parquet stores u32 vals in i32 form)", self.flattened_field_name, b));
+                    }
+                    b as i32
+                } }
             }
             ValueStore::Fixed64(values) => {
-                decode_value! { "Fixed64" @ values => 64 => b = try_read_8_bytes(data) => u64::from_le_bytes(b) as i64 }
+                decode_value! { "Fixed64" @ 1 @ values => 64 => b = try_read_8_bytes(data) => {
+                    let b = u64::from_le_bytes(b);
+                    if b > i64::MAX as u64 {
+                        return Err(format!("Error decoding data for field: {}, u64 value supplied: {}, is larger than i64::MAX! (Parquet stores u64 vals in i64 form)", self.flattened_field_name, b));
+                    }
+                    b as i64
+                } }
             }
             ValueStore::Sfixed32(values) => {
-                decode_value! { "SFixed32" @ values => 32 => b = try_read_4_bytes(data) => i32::from_le_bytes(b) }
+                decode_value! { "SFixed32" @ 5 @ values => 32 => b = try_read_4_bytes(data) => i32::from_le_bytes(b) }
             }
             ValueStore::Sfixed64(values) => {
-                decode_value! { "SFixed64" @ values => 64 => b = try_read_8_bytes(data) => i64::from_le_bytes(b) }
+                decode_value! { "SFixed64" @ 1 @ values => 64 => b = try_read_8_bytes(data) => i64::from_le_bytes(b) }
             }
             ValueStore::Bool(values) => {
-                decode_value! { "Bool" @ values => 8 => b = usize::from_unsigned_varint(data) => b != 0 }
+                decode_value! { "Bool" @ 0 @ values => 8 => b = usize::from_unsigned_varint(data) => b != 0 }
             }
             ValueStore::String(values) => {
-                decode_value! { "String" @ values => b.len() => b = read_string(data) => b }
+                decode_value! { "String" @ 2 @ values => b.len() => b = read_string(data) => b }
             }
             ValueStore::Bytes(values) => {
-                decode_value! { "Bytes" @ values => b.len() => b = read_bytes(data) => b }
+                decode_value! { "Bytes" @ 2 @ values => b.len() => b = read_bytes(data) => b }
             }
         };
 
@@ -219,19 +245,15 @@ impl FieldDecoder {
     }
 
     fn decode_packed(&mut self, data: &mut &[u8], wire_type: u8, uncompressed_file_size: &mut usize, lvls: RepetitionAndDefinitionLvls) -> Result<(), String> {
-        if wire_type != 2 {
-            return Err("Wrong wire type!: TODO: Flesh out..".to_string());
-        }
-
         let packed_values_data_size = match usize::from_unsigned_varint(data) {
             Some(len) => len,
             None => {
-                return Err(format!("Error reading encoded packed values data size when decoding proto data for packed column: {}! Unprocessed proto data: {:?}", self.flattened_field_name, data));
+                return Err(format!("Error reading encoded packed values data size when decoding proto data for field: {}! Unprocessed proto data: {:?}", self.flattened_field_name, data));
             }
         };
 
         if data.len() < packed_values_data_size {
-            return Err(format!("Error with insufficient data for reading proto data for column: {}! Size of packed values data: {}B, Size of unprocessed proto data; {}B, Unprocessed proto data: {:?}", self.flattened_field_name, packed_values_data_size, data.len(), data))
+            return Err(format!("Error with insufficient data for reading proto data for field: {}! Size of packed values data: {}B, Size of unprocessed proto data; {}B, Unprocessed proto data: {:?}", self.flattened_field_name, packed_values_data_size, data.len(), data))
         }
 
         let mut packed_values_data = &data[..packed_values_data_size];
@@ -239,6 +261,10 @@ impl FieldDecoder {
 
         macro_rules! decode_packed_values {
             ($field_type:literal @ $values_ident:ident => $uncompressed_size_delta:expr => $val:ident = $try_read:expr => $insert:expr ) => {
+                if wire_type != 2 {
+                    return Err(format!("Wire type read: {}, expected wire type: 2! Proto data for field: {}, type: {} (packed), data: {:?}", wire_type, self.flattened_field_name, $field_type, packed_values_data));
+                }
+
                 let mut values_read = 0;
                 loop {
                     if packed_values_data.is_empty() {
@@ -317,6 +343,10 @@ impl FieldDecoder {
         }
 
         Ok(())
+    }
+
+    pub(in crate::streaming_fast::file_sinks) fn get_flattened_field_name(&self) -> &String {
+        &self.flattened_field_name
     }
 }
 

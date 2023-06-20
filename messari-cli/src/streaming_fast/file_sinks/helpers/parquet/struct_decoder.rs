@@ -37,14 +37,16 @@ impl StructDecoder {
         let max_repetition_lvl = lvls_store_builder.get_max_repetition_lvl();
         lvls_store_builder.revert_lvls_for_struct_repetition(&repetition);
 
+        let flattened_field_name = parquet_schema_builder.get_flattened_field_name(field_name);
+
         StructDecoder {
             field_decoders,
             field_specification: message_info.field_specification,
             fields,
             repeated_fields,
             max_repetition_lvl_for_repeated_fields: max_repetition_lvl + 1,
-            flattened_field_name: parquet_schema_builder.get_flattened_field_name(field_name),
-            oneof_group_tracker: OneofGroupTracker::new(message_info.oneof_groups)
+            flattened_field_name: flattened_field_name.clone(),
+            oneof_group_tracker: OneofGroupTracker::new(message_info.oneof_groups, flattened_field_name)
         }
     }
 
@@ -55,7 +57,9 @@ impl StructDecoder {
     }
 
     pub(in crate::streaming_fast::file_sinks) fn decode(&mut self, mut data: &mut &[u8], wire_type: u8, uncompressed_file_size: &mut usize, mut lvls: RepetitionAndDefinitionLvls) -> Result<(), String> {
-        // TODO: Validate wire_type before proceeding to make sure proto data was properly encoded
+        if wire_type != 2 {
+            return Err(format!("Wire type read: {}, expected wire type: 2! Proto data for field: {}, type: Struct, data: {:?}", wire_type, self.flattened_field_name, data));
+        }
 
         if self.field_specification == FieldSpecification::Optional {
             lvls.optional_item_seen();
@@ -84,7 +88,7 @@ impl StructDecoder {
                         if self.repeated_fields.contains(&field_number) {
                             field.decode(data, wire_type, uncompressed_file_size, lvls.repeated_item_previously_seen(self.max_repetition_lvl_for_repeated_fields))?;
                         } else {
-                            panic!("Non repeated field seen more than once... TODO: flesh out error");
+                            return Err(format!("Non repeated field: {}, seen more than once!", self.field_decoders.get(&field_number).unwrap().get_flattened_field_name()));
                         }
                     } else {
                         if self.repeated_fields.contains(&field_number) {
@@ -99,7 +103,7 @@ impl StructDecoder {
                     self.oneof_group_tracker.notify_field_seen(field_number)?;
                 }
                 _ => {
-                        panic!("TODO! - struct path: {}, field_number: {}", self.flattened_field_name, field_number);
+                        return Err(format!("FieldNumber: {}, is not a valid field! Struct name: {}", field_number, self.flattened_field_name));
                 },
             };
         }
@@ -119,7 +123,9 @@ impl StructDecoder {
     /// This is triggered when the proto data does not contain a value for a given field. Returns true if data is pushed to value store and false if no data is added
     pub(in crate::streaming_fast::file_sinks) fn push_null_or_default_values(&mut self, uncompressed_file_size: &mut usize, lvls: RepetitionAndDefinitionLvls) -> Result<(), String> {
         if self.field_specification == FieldSpecification::Required {
-            assert!(self.oneof_group_tracker.is_unpopulated(), "Null response given for struct with oneOf fields. This can't happen! TODO: Flesh out error");
+            if self.oneof_group_tracker.is_unpopulated() {
+                return Err(format!("Null response given for struct with oneOf fields! Field: {}", self.flattened_field_name));
+            }
             for field_number in self.fields.iter() {
                 self.field_decoders.get_mut(field_number).unwrap().push_null_or_default_values(uncompressed_file_size, lvls.clone())?;
             }
@@ -135,15 +141,20 @@ impl StructDecoder {
             self.field_decoders.get_mut(field_number).unwrap().push_nulls(uncompressed_file_size, lvls.clone());
         }
     }
+
+    pub(in crate::streaming_fast::file_sinks) fn get_flattened_field_name(&self) -> &String {
+        &self.flattened_field_name
+    }
 }
 
 struct OneofGroupTracker {
     field_to_oneof_group_mappings: HashMap<u64, u8>,
-    oneof_group_tracker: HashMap<u8, Option<u64>>
+    oneof_group_tracker: HashMap<u8, Option<u64>>,
+    flattened_field_name: String
 }
 
 impl OneofGroupTracker {
-    fn new(oneof_groups: Vec<Vec<u64>>) -> Self {
+    fn new(oneof_groups: Vec<Vec<u64>>, flattened_field_name: String) -> Self {
         let mut field_to_oneof_group_mappings = HashMap::new();
         let mut oneof_group_tracker = HashMap::new();
         for (group_index, oneof_group_fields) in oneof_groups.into_iter().enumerate() {
@@ -157,6 +168,7 @@ impl OneofGroupTracker {
         OneofGroupTracker {
             field_to_oneof_group_mappings,
             oneof_group_tracker,
+            flattened_field_name
         }
     }
 
@@ -174,7 +186,7 @@ impl OneofGroupTracker {
             let field = self.oneof_group_tracker.get_mut(group_index).unwrap();
             if let Some(field_seen) = field.as_ref() {
                 if field_number != *field_seen {
-                    return Err("TODO".to_string());
+                    return Err(format!("Struct: {}, has seen more than one variant from the same oneOf group! Field Id's seen: {} & {}", self.flattened_field_name, field_number, field_seen));
                 }
             } else {
                 *field = Some(field_number);
@@ -184,9 +196,15 @@ impl OneofGroupTracker {
     }
 
     fn assert_oneof_groups_all_seen(&self) -> Result<(), String> {
-        for (_oneof_group_number, field) in self.oneof_group_tracker.iter() {
+        for (oneof_group_number, field) in self.oneof_group_tracker.iter() {
             if field.is_none() {
-                return Err("TODO".to_string());
+                let mut fields_for_oneof_group = Vec::new();
+                for (field, group_number) in self.field_to_oneof_group_mappings.iter() {
+                    if group_number == oneof_group_number {
+                        fields_for_oneof_group.push(field);
+                    }
+                }
+                return Err(format!("Struct: {}, has not seen any variants for oneOf group! Field Id's for oneOf group: {:?}", self.flattened_field_name, fields_for_oneof_group));
             }
         }
         Ok(())

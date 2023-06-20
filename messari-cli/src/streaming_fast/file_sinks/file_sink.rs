@@ -1,6 +1,6 @@
 use derives::proto_structure_info::MessageInfo;
 
-pub(crate) trait FileSink {
+pub(crate) trait FileSink: Send + Sync {
     /// Initialises itself from a message type field
     fn new(output_type_info: MessageInfo) -> Self where Self: Sized;
 

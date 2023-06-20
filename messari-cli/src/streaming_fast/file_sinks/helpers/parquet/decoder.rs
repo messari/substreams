@@ -57,7 +57,7 @@ impl Decoder {
             Decoder::StructDecoder(struct_decoder) => {
                 let struct_data_length = usize::from_unsigned_varint(data).unwrap();
                 if data.len() < struct_data_length {
-                    return Err("TODO: Write error for this!".to_string());
+                    return Err(format!("Data to deserialize: {:?} is smaller than expected struct data size: {}!", data, struct_data_length));
                 }
                 let (mut consumed, remainder) = data.split_at(struct_data_length);
                 *data = remainder;
@@ -85,6 +85,14 @@ impl Decoder {
             Decoder::FieldDecoder(field_decoder) => field_decoder.push_null(uncompressed_file_size, lvls),
             Decoder::EnumDecoder(enum_decoder) => enum_decoder.push_null(uncompressed_file_size, lvls),
             Decoder::StructDecoder(struct_decoder) => struct_decoder.push_nulls(uncompressed_file_size, lvls),
+        }
+    }
+
+    pub(in crate::streaming_fast::file_sinks) fn get_flattened_field_name(&self) -> &String {
+        match self {
+            Decoder::FieldDecoder(decoder) => decoder.get_flattened_field_name(),
+            Decoder::StructDecoder(decoder) => decoder.get_flattened_field_name(),
+            Decoder::EnumDecoder(decoder) => decoder.get_flattened_field_name(),
         }
     }
 }

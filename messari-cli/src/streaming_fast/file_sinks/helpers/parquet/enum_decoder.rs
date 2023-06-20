@@ -3,9 +3,9 @@ use parquet::data_type::{ByteArray, ByteArrayType};
 use parquet::file::writer::SerializedRowGroupWriter;
 use derives::proto_structure_info::{FieldInfo, FieldSpecification};
 
+use crate::streaming_fast::file_sinks::helpers::parquet::repetition_and_definition::{RepetitionAndDefinitionLvls, RepetitionAndDefinitionLvlStore, RepetitionAndDefinitionLvlStoreBuilder};
 use crate::streaming_fast::file_sinks::helpers::parquet::file_buffer::FileBuffer;
 use crate::streaming_fast::file_sinks::helpers::parquet::parquet_schema_builder::ParquetSchemaBuilder;
-use crate::streaming_fast::file_sinks::helpers::parquet::repetition_and_definition::{RepetitionAndDefinitionLvls, RepetitionAndDefinitionLvlStore, RepetitionAndDefinitionLvlStoreBuilder};
 use crate::streaming_fast::streaming_fast_utils::FromSignedVarint;
 
 pub(in crate::streaming_fast::file_sinks) struct EnumDecoder {
@@ -85,7 +85,7 @@ impl EnumDecoder {
                     self.values.push(default_enum_value.clone());
                     *uncompressed_file_size += 64;
                 } else {
-                    return Err("TODO: no default enum value set! (Assuming a default value to be the 0 variant!)".to_string());
+                    return Err(format!("No default enum value set for field: {}! (Assuming a default value to be the 0 variant!)", self.flattened_field_name));
                 }
                 if let Some(lvls_store) = self.repetition_and_definition_lvl_store.as_mut() {
                     lvls_store.add_lvls(lvls);
@@ -106,7 +106,9 @@ impl EnumDecoder {
     }
 
     fn decode_value(&mut self, data: &mut &[u8], wire_type: u8, uncompressed_file_size: &mut usize) -> Result<(), String> {
-        // TODO: Add wire_type checks for single value decoding
+        if wire_type != 0 {
+            return Err(format!("Wire type read: {}, expected wire type: 0! Proto data for field: {}, type: ENUM, data: {:?}", wire_type, self.flattened_field_name, data));
+        }
 
         match i64::from_signed_varint(data) {
             Some(enum_key) => {
@@ -116,13 +118,17 @@ impl EnumDecoder {
                     *uncompressed_file_size += 64;
                     self.values.push(enum_value.clone());
                 } else {
-                    return Err("TODO..".to_string());
+                    return Err(format!("Error when parsing enum value - couldn't deserialize to i64! Field: {}", self.flattened_field_name));
                 }
             }
-            None => return Err(format!("Error reading proto data for column: {}! Field Type: Enum, data: {:?}", self.flattened_field_name, data))
+            None => return Err(format!("Error reading proto data for field: {}! Field Type: Enum, data: {:?}", self.flattened_field_name, data))
         }
 
 
         Ok(())
+    }
+
+    pub(in crate::streaming_fast::file_sinks) fn get_flattened_field_name(&self) -> &String {
+        &self.flattened_field_name
     }
 }

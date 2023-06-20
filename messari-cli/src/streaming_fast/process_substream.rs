@@ -1,24 +1,23 @@
-use std::{env, fs};
+use std::env;
 use std::collections::HashSet;
 use std::path::PathBuf;
 use futures::StreamExt;
 use prost::Message;
 use regex::Regex;
-use s3::Bucket;
-use s3::creds::Credentials;
 use tonic::metadata::MetadataValue;
 use tonic::Status;
 use tonic::transport::Channel;
 
 use crate::streaming_fast::block_client::get_latest_block_number;
 use crate::streaming_fast::streamingfast_dtos;
-use crate::streaming_fast::file::{Location, LocationType};
+use crate::streaming_fast::file::LocationType;
 use crate::streaming_fast::sink::Sink;
 use crate::streaming_fast::streamingfast_dtos::ForkStep::StepIrreversible;
 use crate::streaming_fast::streamingfast_dtos::{Package, Request, Response};
 use crate::streaming_fast::streamingfast_dtos::module_output::Data;
 use crate::streaming_fast::proto_structure_info::get_output_type_info;
 use crate::streaming_fast::streaming_config::{Chain, StreamingConfig};
+use crate::streaming_fast::streaming_fast_utils::{get_initial_block_for_module, get_start_block_num};
 use crate::streaming_fast::streamingfast_dtos::module::input::Input;
 
 pub(crate) async fn process_substream(spkg: Vec<u8>, config: StreamingConfig, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, start_block_arg: Option<i64>, stop_block_arg: Option<u64>) {
@@ -63,7 +62,7 @@ pub(crate) async fn process_substream(spkg: Vec<u8>, config: StreamingConfig, en
 
     let (start_block, stop_block) = get_block_range(&sink, &package, &proto_type_name, &chain, start_block_arg, stop_block_arg).await;
 
-    sink.set_starting_block_number(start_block);
+    sink.set_starting_block_number(start_block).await;
 
     let request = Request {
         start_block_num: start_block, // TODO: Should check whether negative values actually correspond to "x behind end block num"
@@ -91,10 +90,16 @@ pub(crate) async fn process_substream(spkg: Vec<u8>, config: StreamingConfig, en
     let response_stream = client.blocks(request).await.unwrap();
     let mut block_stream = response_stream.into_inner();
 
+    let mut num_block = 1;
+
     // TODO: Change the logic below into buffered streams in a select to prevent
     // TODO: downloading data and writing files blocking one another
     while let Some(block) = block_stream.next().await {
         if let Some((output_data, block_number)) = get_output_data(block).unwrap() {
+            num_block += 1;
+            if output_data.len() > 0 {
+                println!("Num block: {}, Block process: {}, data size: {}", num_block,block_number, output_data.len());
+            }
             match sink.process(output_data, block_number) {
                 Ok(files) => {
                     futures::future::join_all(files.into_iter().map(|file| file.save())).await;
@@ -132,7 +137,8 @@ async fn get_block_range(sink: &Sink, package: &Package, proto_type_name: &str, 
             start_block
         }
     } else {
-        get_start_block_num(sink.get_an_output_folder_path(), package, proto_type_name).await
+        let fallback_starting_block = get_initial_block_for_module(package, proto_type_name);
+        get_start_block_num(sink.get_output_folder_locations(), fallback_starting_block).await
     };
 
     (start_block, stop_block)
@@ -213,45 +219,6 @@ pub(crate) async fn get_block_range_info(spkg: Vec<u8>, module_name: &str, locat
     let (sink, proto_type_name) = get_sink_and_proto_type_name(&package, module_name, EncodingType::Parquet, location_type, data_location_path, &chain);
 
     get_block_range(&sink, &package, &proto_type_name, &chain, start_block_override, None).await
-}
-
-async fn get_start_block_num(location: Location, package: &Package, proto_type_name: &str) -> i64 {
-    // First we check to see if we have processed data for this substream/module combination before.
-    // If we have we will take this as the starting block_number
-    let processed_block_files = match location {
-        Location::DataWarehouse(path) => {
-            let bucket_name = "data-warehouse-load-427049689281-dev";
-            let region = "us-west-2".parse().unwrap();
-            let credentials = Credentials::default().unwrap();
-            let bucket = Bucket::new(bucket_name, region, credentials).unwrap();
-            let list_response = bucket.list(path.to_string_lossy().to_string(), None).await.unwrap();
-            list_response.into_iter().map(|x| x.name).collect::<Vec<_>>()
-        }
-        Location::Local(path) => {
-            fs::read_dir(path).unwrap().into_iter().map(|path| path.unwrap().path().display().to_string()).collect::<Vec<_>>()
-        }
-    };
-
-    if processed_block_files.len() > 0 {
-        // For now we will just assume all files will be in form -> startBlock_stopBlock.fileExtension
-        let mut last_block_num_iterator = processed_block_files.into_iter().map(|file| file.split('.').next().unwrap().split('_').skip(1).next().unwrap().parse::<i64>().unwrap());
-        let mut latest_block_num = last_block_num_iterator.next().unwrap();
-        for block_num in last_block_num_iterator {
-            if block_num > latest_block_num {
-                latest_block_num = block_num;
-            }
-        }
-        return latest_block_num;
-    }
-
-    // Otherwise we will fall back to taking the initial block number specified for the given module
-    for module in package.modules.as_ref().unwrap().modules.iter() {
-        if module.output.as_ref().unwrap().r#type.as_str() == proto_type_name {
-            return module.initial_block as i64;
-        }
-    }
-
-    panic!("Unable to match the module output: {} to a given module!", proto_type_name);
 }
 
 fn add_package_partitions_to_output_folder_path(mut sink_output_path: PathBuf, proto_type_name: &str, entity_name: &str) -> PathBuf {
