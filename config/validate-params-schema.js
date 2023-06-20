@@ -1,0 +1,16 @@
+const Validator = require('jsonschema').Validator;
+const paramsSchema = require('./schemas/params.schema.json');
+const params = require('./params');
+
+(() => {
+    var v = new Validator();
+    const res = v.validate(params, paramsSchema)
+
+    if (res.valid) {
+        console.info("Params Schema OK!")
+        return;
+    }
+
+    console.error('Invalid params.json file', res.errors);
+    throw new Error('Invalid params.json file');
+})();
