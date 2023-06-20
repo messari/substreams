@@ -7,9 +7,9 @@ use substreams_ethereum::pb::eth::{self as pbeth};
 
 use substreams_helper::hex::Hexable;
 use substreams_helper::storage::get_storage_changes_for_addresses;
+use substreams_helper::storage::EvmStruct;
 use substreams_helper::storage::Mapping;
 use substreams_helper::storage::StorageLayout;
-use substreams_helper::storage::Struct;
 use substreams_helper::storage::Uint128;
 use substreams_helper::storage::Uint256;
 
@@ -31,7 +31,7 @@ fn map_liquidation_rewards(
     );
 
     let mut accumulated_rewards_per_share: Option<pbBigInt> = None;
-    let mut account_rewards_entry = Struct::new(BigInt::from(0));
+    let mut account_rewards_entry = EvmStruct::new(BigInt::from(0));
     account_rewards_entry.add_field("claimable", Uint128::default());
     account_rewards_entry.add_field("entryAccumulatedRewards", Uint128::default());
     let entries = Mapping {

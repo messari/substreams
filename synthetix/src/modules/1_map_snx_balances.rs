@@ -9,9 +9,9 @@ use substreams_helper::hex::Hexable;
 use substreams_helper::storage::get_keccak_preimages_for_addresses;
 use substreams_helper::storage::ABIEncodeable;
 use substreams_helper::storage::Array;
+use substreams_helper::storage::EvmStruct;
 use substreams_helper::storage::Mapping;
 use substreams_helper::storage::StorageLayout;
-use substreams_helper::storage::Struct;
 use substreams_helper::storage::Uint128;
 use substreams_helper::storage::{get_storage_changes_for_addresses, StorageChange};
 
@@ -74,7 +74,7 @@ fn snx_balance_from_storage_change(change: &StorageChange, block: &Block) -> Opt
     let holder = balances_mapping
         .key_from_preimage::<Address>(preimage)
         .unwrap();
-    let amount = BigInt::abi_decode(change.change.new_value.clone()).unwrap();
+    let amount = BigInt::abi_decode(change.change.new_value.as_slice()).unwrap();
     Some(TokenBalance {
         token: change.change.address.to_hex(),
         holder: holder.to_hex(),
@@ -104,7 +104,7 @@ fn sds_balances_from_storage_changes(
             .key_from_preimage::<Address>(preimage.preimage.clone())
             .unwrap();
 
-        let mut balance = Struct::new(BigInt::zero());
+        let mut balance = EvmStruct::new(BigInt::zero());
         balance.add_field("balance", Uint128::default());
         balance.add_field("timestamp", Uint128::default());
         let mut arr = Array::new(preimage.slot, balance);

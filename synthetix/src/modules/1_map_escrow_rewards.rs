@@ -93,7 +93,7 @@ fn get_balance_from_mapping_change(
             return None;
         }
 
-        let balance = BigInt::abi_decode(change.change.new_value.clone()).unwrap();
+        let balance = BigInt::abi_decode(change.change.new_value.as_slice()).unwrap();
         return Some(EscrowReward {
             holder: holder.unwrap().to_hex(),
             balance: Some(balance.into()),
