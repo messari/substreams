@@ -51,7 +51,7 @@ mod abi_encodeable {
                 hex::decode("0000000000000000000000000000000000000000000000000000000000000036")
                     .unwrap();
             assert_eq!(
-                BigInt::abi_decode(encoded).unwrap(),
+                BigInt::abi_decode(encoded.as_slice()).unwrap(),
                 BigInt::from(54),
                 "Decode Normal Number"
             );
@@ -62,7 +62,7 @@ mod abi_encodeable {
                 hex::decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
                     .unwrap();
             assert_eq!(
-                    BigInt::abi_decode(encoded).unwrap(),
+                    BigInt::abi_decode(encoded.as_slice()).unwrap(),
                     BigInt::from_str("115792089237316195423570985008687907853269984665640564039457584007913129639935").unwrap(),
                     "Decode Max Uint256"
                 );
@@ -75,7 +75,7 @@ mod abi_encodeable {
             hex::decode("000000000000000000000000ca0e8f557ea98f950029a41d74f16dd76648b1f1")
                 .unwrap();
         assert_eq!(
-            Address::abi_decode(encoded).unwrap(),
+            Address::abi_decode(encoded.as_slice()).unwrap(),
             Address::from_str("0xca0e8f557ea98f950029a41d74f16dd76648b1f1").unwrap(),
             "Decode Padded Address",
         )
@@ -127,7 +127,8 @@ mod storage {
     fn test_array_storage_key_at_index() {
         let slot = BigInt::abi_decode(
             Hex::decode("da475eaaa4acc4d88403115cf1ef7280bb115c584f5611300cb1c87775af645b")
-                .unwrap(),
+                .unwrap()
+                .as_slice(),
         )
         .unwrap();
 
@@ -196,7 +197,7 @@ mod storage_layout {
 
     #[test]
     fn test_struct_simple() {
-        let mut s = Struct::new(BigInt::zero());
+        let mut s = EvmStruct::new(BigInt::zero());
         s.add_field("balance", Uint128::default());
         s.add_field("timestamp", Uint128::default());
 
@@ -219,7 +220,7 @@ mod storage_layout {
 
     #[test]
     fn test_struct_multislot() {
-        let mut s = Struct::new(BigInt::zero());
+        let mut s = EvmStruct::new(BigInt::zero());
         s.add_field("balance", Uint128::default());
         s.add_field("timestamp", Uint128::default());
         s.add_field("balance2", Uint128::default());
@@ -255,7 +256,7 @@ mod storage_layout {
 
     #[test]
     fn test_struct_multislot_with_big_gaps() {
-        let mut s = Struct::new(BigInt::zero());
+        let mut s = EvmStruct::new(BigInt::zero());
         s.add_field("u128_1", Uint128::default());
         s.add_field("u256_2", Uint256::default());
         s.add_field("u128_3", Uint128::default());

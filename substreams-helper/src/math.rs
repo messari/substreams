@@ -79,13 +79,16 @@ pub fn get_balance_gain(balance_change: &BalanceChange) -> BigInt {
     }
 }
 
-pub trait NumberModulo {
-    fn modulo(&self, other: &Self) -> Self;
+pub trait NumberModulo<T> {
+    fn modulo(&self, other: T) -> Self;
 }
 
-impl NumberModulo for BigInt {
-    fn modulo(&self, other: &Self) -> Self {
-        let division = self.to_owned() / other.to_owned();
-        self.to_owned() - other.to_owned() * division
+impl<T> NumberModulo<T> for BigInt
+where
+    T: Into<BigInt> + Clone,
+{
+    fn modulo(&self, other: T) -> Self {
+        let division = self.to_owned() / other.clone();
+        self.to_owned() - division * other
     }
 }
