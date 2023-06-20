@@ -18,8 +18,11 @@ use crate::pb::synthetix::v1::{BalanceType, EscrowReward, EscrowRewards};
 fn map_escrow_rewards(block: pbeth::v2::Block) -> Result<EscrowRewards, substreams::errors::Error> {
     let mut v1_rewards = get_escrow_rewards(&block, EscrowContractStorageData::V1);
     let mut v2_rewards = get_escrow_rewards(&block, EscrowContractStorageData::V2);
+    let mut v2_fallback_rewards =
+        get_escrow_rewards(&block, EscrowContractStorageData::V2_FALLBACK);
 
     let mut rewards = vec![];
+    rewards.append(&mut v2_fallback_rewards);
     rewards.append(&mut v2_rewards);
     rewards.append(&mut v1_rewards);
     Ok(EscrowRewards { rewards })

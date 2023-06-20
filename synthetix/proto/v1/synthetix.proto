@@ -31,6 +31,7 @@ enum BALANCE_TYPE{
 enum ESCROW_CONTRACT_VERSION {
     V1 = 0;
     V2 = 1;
+    V2_FALLBACK = 2;
 }
  
 message EscrowReward {
@@ -44,6 +45,17 @@ message EscrowReward {
 
 message EscrowRewards {
   repeated EscrowReward rewards = 1;
+}
+
+message LiquidatorReward {
+  BigInt claimable = 1;
+  BigInt entryAccumulatedRewards = 2;
+  string account = 3;
+}
+
+message LiquidatorRewards {
+  repeated LiquidatorReward rewards = 1;
+  BigInt accumulatedRewardsPerShare = 2;
 }
 
 message ParquetOut {

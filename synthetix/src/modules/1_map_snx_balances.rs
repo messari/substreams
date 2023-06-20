@@ -27,24 +27,34 @@ fn map_snx_balances(block: pbeth::v2::Block) -> Result<TokenBalances, substreams
     let sds_address = Address::from_str(SDS_TOKEN_CONTRACT).unwrap();
     let mut balances: Vec<TokenBalance> = vec![];
 
-    let changes = get_storage_changes_for_addresses(&vec![address, sds_address], &block);
+    let snx_changes = get_storage_changes_for_addresses(&address, &block);
+    let sds_changes = get_storage_changes_for_addresses(&sds_address, &block);
 
-    for change in changes.clone() {
+    let mut snx_balances = snx_balances_from_storage_changes(snx_changes, &block);
+    let mut sds_balances = sds_balances_from_storage_changes(
+        sds_changes,
+        get_keccak_preimages_for_addresses(&sds_address, &block),
+        &block,
+    );
+
+    balances.append(&mut snx_balances);
+    balances.append(&mut sds_balances);
+
+    Ok(TokenBalances { balances })
+}
+
+fn snx_balances_from_storage_changes(
+    snx_changes: Vec<StorageChange>,
+    block: &Block,
+) -> Vec<TokenBalance> {
+    let mut balances: Vec<TokenBalance> = vec![];
+    for change in snx_changes {
         let balance = snx_balance_from_storage_change(&change, &block);
         if balance.is_some() {
             balances.push(balance.unwrap());
         }
-
-        let mut sds_balances = sds_balance_from_storage_change(
-            changes.clone(),
-            get_keccak_preimages_for_addresses(&sds_address, &block),
-            &block,
-        );
-
-        balances.append(&mut sds_balances);
     }
-
-    Ok(TokenBalances { balances })
+    balances
 }
 
 fn snx_balance_from_storage_change(change: &StorageChange, block: &Block) -> Option<TokenBalance> {
@@ -73,7 +83,7 @@ fn snx_balance_from_storage_change(change: &StorageChange, block: &Block) -> Opt
     })
 }
 
-fn sds_balance_from_storage_change(
+fn sds_balances_from_storage_changes(
     changes: Vec<StorageChange>,
     preimages: Vec<Vec<u8>>,
     block: &Block,
@@ -82,8 +92,8 @@ fn sds_balance_from_storage_change(
         return vec![];
     }
 
-    let token = changes[0].change.address.clone();
     let mut sds_balances = vec![];
+    let token = changes[0].change.address.to_hex();
     let balances_array_mapping = Mapping {
         slot: BigInt::from(SDS_CONTRACT_BALANCE_SLOT),
     };
@@ -115,7 +125,7 @@ fn sds_balance_from_storage_change(
         }
 
         sds_balances.push(TokenBalance {
-            token: token.to_hex(),
+            token: token.clone(),
             holder: holder.to_hex(),
             balance: Some(most_recent_balance.into()),
             timestamp: Some(block.into()),

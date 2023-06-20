@@ -1,24 +1,27 @@
+use substreams::pb::substreams::Clock;
 use substreams_entity_change::pb::entity::EntityChanges;
 
 use substreams_helper::convert::BigIntDeserializeExt;
 use substreams_helper::tables::Tables;
 
 use crate::pb::synthetix::v1::{
-    BalanceType, EscrowContractVersion, EscrowReward, EscrowRewards, TokenBalance, TokenBalances,
+    BalanceType, EscrowContractVersion, EscrowReward, EscrowRewards, LiquidatorReward,
+    LiquidatorRewards, TokenBalance, TokenBalances,
 };
 
 #[substreams::handlers::map]
 fn graph_out(
+    clock: Clock,
     balances: TokenBalances,
     rewards: EscrowRewards,
+    liq_rewards: LiquidatorRewards,
 ) -> Result<EntityChanges, substreams::errors::Error> {
     let mut tables = Tables::new();
 
+    let timestamp = clock.timestamp.unwrap().seconds;
+    let block_num = clock.number;
     for balance in balances.balances {
         let ids = token_balance_ids(&balance);
-        let pbts = balance.timestamp.unwrap();
-        let block_num = pbts.block_number;
-        let timestamp = pbts.timestamp;
         let amount = balance.balance.unwrap().deserialize();
         tables
             .update_row("TokenBalance", ids.0.clone())
@@ -38,9 +41,6 @@ fn graph_out(
 
     for reward in rewards.rewards {
         let ids = reward_ids(&reward);
-        let pbts = reward.timestamp.unwrap();
-        let block_num = pbts.block_number;
-        let timestamp = pbts.timestamp;
         let amount = reward.balance.unwrap().deserialize();
         tables
             .update_row("EscrowReward", ids.0.clone())
@@ -65,6 +65,41 @@ fn graph_out(
             .create_row("EscrowRewardSnapshot", ids.1)
             .set("escrowReward", ids.0)
             .set_bigint("balance", amount.as_ref())
+            .set_bigint("timestamp", &timestamp.into())
+            .set_bigint("block", &block_num.into());
+    }
+
+    for liq in liq_rewards.rewards {
+        let ids = liq_reward_ids(&liq, &block_num);
+        let claimable = liq.claimable.unwrap().deserialize();
+        let accumulated = liq.entry_accumulated_rewards.unwrap().deserialize();
+        tables
+            .update_row("LiquidatorRewardEntry", ids.0.clone())
+            .set("account", ids.0.clone())
+            .set_bigint("claimable", claimable.as_ref())
+            .set_bigint("entryAccumulatedRewards", accumulated.as_ref())
+            .set_bigint("timestamp", &timestamp.into())
+            .set_bigint("block", &block_num.into());
+
+        tables
+            .create_row("LiquidatorRewardEntrySnapshot", ids.1)
+            .set("rewardEntry", ids.0)
+            .set_bigint("claimable", claimable.as_ref())
+            .set_bigint("entryAccumulatedRewards", accumulated.as_ref())
+            .set_bigint("timestamp", &timestamp.into())
+            .set_bigint("block", &block_num.into());
+    }
+
+    if let Some(accumulated) = liq_rewards.accumulated_rewards_per_share {
+        tables
+            .create_row(
+                "AccumulatedRewardsPerShareSnapshot",
+                format!("AccumulatedRewardsPerShare-{}", block_num),
+            )
+            .set_bigint(
+                "accumulatedRewardsPerShare",
+                accumulated.deserialize().as_ref(),
+            )
             .set_bigint("timestamp", &timestamp.into())
             .set_bigint("block", &block_num.into());
     }
@@ -98,5 +133,11 @@ fn escrow_contract_version_to_graphql_enum(version: EscrowContractVersion) -> St
     match version {
         EscrowContractVersion::V1 => "V1".to_string(),
         EscrowContractVersion::V2 => "V2".to_string(),
+        EscrowContractVersion::V2Fallback => "V2_FALLBACK".to_string(),
     }
+}
+
+fn liq_reward_ids(reward: &LiquidatorReward, block_num: &u64) -> (String, String) {
+    let id = reward.account.clone();
+    return (id.clone(), format!("{}-{}", id, block_num));
 }

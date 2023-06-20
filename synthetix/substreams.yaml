@@ -29,6 +29,21 @@ modules:
     output:
       type: "proto:messari.synthetix.v1.EscrowRewards"
 
+  - name: store_balances
+    kind: store
+    updatePolicy: set
+    valueType: "proto:messari.synthetix.v1.TokenBalances"
+    inputs:
+      - map: map_snx_balances
+
+  - name: map_liquidation_rewards
+    kind: map
+    initialBlock: 14771402
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: "proto:messari.synthetix.v1.LiquidatorRewards"
+
   - name: parquet_out
     kind: map
     initialBlock: 7680399
@@ -42,8 +57,10 @@ modules:
     kind: map
     initialBlock: 7680399
     inputs:
+      - source: sf.substreams.v1.Clock
       - map: map_snx_balances
       - map: map_escrow_rewards
+      - map: map_liquidation_rewards
     output:
       type: "proto:sf.substreams.entity.v1.EntityChanges"
 

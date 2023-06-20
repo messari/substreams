@@ -4,4 +4,4 @@ build:
 
 .PHONY: run
 run:
-	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml graph_out -s 7682084 --stop-block +2
+	substreams run -e mainnet.eth.streamingfast.io:443 substreams.yaml graph_out -s 14784804 --stop-block +1
