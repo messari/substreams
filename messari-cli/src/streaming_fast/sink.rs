@@ -42,11 +42,13 @@ impl Sink {
         }
     }
 
-    pub(crate) fn set_starting_block_number(&mut self, starting_block_number: i64) {
-        self.multiple_files_sink.set_starting_block_number(starting_block_number);
+    pub(crate) async fn set_starting_block_number(&mut self, starting_block_number: i64) {
+        self.multiple_files_sink.set_starting_block_number(starting_block_number).await;
     }
 
     pub(crate) fn process(&mut self, proto_data: Vec<u8>, block_number: i64) -> Result<Vec<File>, String> {
+        self.multiple_files_sink.notify_new_block(block_number);
+
         if let Some(items_field_number) = self.items_field_number {
             let mut data_slice = proto_data.as_slice();
             let mut output_files = Vec::new();
@@ -65,11 +67,17 @@ impl Sink {
                 let field_number = tag >> 3;
                 let wire_type = (tag & 0x07) as u8;
 
-                assert_eq!(items_field_number, field_number, "TODO: Write error message!!");
+                if wire_type != 2 {
+                    return Err(format!("Wire type read: {}, expected wire type: 2! Proto data of entire result, type: Struct, data: {:?}", wire_type, proto_data));
+                }
+
+                if items_field_number != field_number {
+                    return Err(format!("Sink is expecting a solo items field with number: {}. Instead a field number: {} was seen!", items_field_number, field_number));
+                }
 
                 let struct_data_length = usize::from_unsigned_varint(&mut data_slice).unwrap();
                 if data_slice.len() < struct_data_length {
-                    return Err("TODO: Write error for this!3".to_string());
+                    return Err(format!("Data to deserialize: {:?} is smaller than expected struct data size: {}!", data_slice, struct_data_length));
                 }
                 let (mut consumed, remainder) = data_slice.split_at(struct_data_length);
                 data_slice = remainder;
@@ -82,10 +90,8 @@ impl Sink {
         }
     }
 
-    /// Resulting path used for calculating the start block_number based off previously processed data
-    /// (if even multiple file types produced by the sink only one file type is needed for tracking)
-    pub(crate) fn get_an_output_folder_path(&self) -> Location {
-        self.multiple_files_sink.get_an_output_folder_location()
+    pub(crate) fn get_output_folder_locations(&self) -> Vec<Location> {
+        self.multiple_files_sink.get_output_folder_locations()
     }
 
     /// Instead of waiting for file to "fill" to required size, instead you can call this method to

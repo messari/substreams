@@ -1,8 +1,66 @@
 use std::fmt::Debug;
+use std::fs;
 #[cfg(test)]
 use derives::TestData;
+use s3::Bucket;
+use s3::creds::Credentials;
+use crate::streaming_fast::file::Location;
 
 use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
+use crate::streaming_fast::streamingfast_dtos::Package;
+
+/// Considers all output folder paths and takes the earliest start block from all output folders as the global start block
+pub(crate) async fn get_start_block_num(output_folder_paths: Vec<Location>, fallback_starting_block: i64) -> i64 {
+    get_start_block_numbers(output_folder_paths, fallback_starting_block).await.into_iter().min().unwrap()
+}
+
+pub(crate) fn get_initial_block_for_module(package: &Package, proto_type_name: &str) -> i64 {
+    for module in package.modules.as_ref().unwrap().modules.iter() {
+        if module.output.is_some() && module.output.as_ref().unwrap().r#type.as_str() == proto_type_name {
+            return module.initial_block as i64;
+        }
+    }
+
+    panic!("Unable to match the module output: {} to a given module!", proto_type_name);
+}
+
+/// Returns a list of block number where each block number is the starting block for the
+/// corresponding output folder path in the input list for the same element number
+pub(crate) async fn get_start_block_numbers(output_folder_paths: Vec<Location>, fallback_starting_block: i64) -> Vec<i64> {
+    let mut starting_block_numbers = Vec::new();
+
+    for output_folder_path in output_folder_paths.into_iter() {
+        let processed_block_files = match output_folder_path {
+            Location::DataWarehouse(path) => {
+                let bucket_name = "data-warehouse-load-427049689281-dev";
+                let region = "us-west-2".parse().unwrap();
+                let credentials = Credentials::default().unwrap();
+                let bucket = Bucket::new(bucket_name, region, credentials).unwrap();
+                let list_response = bucket.list(path.to_string_lossy().to_string(), None).await.unwrap();
+                list_response.into_iter().map(|x| x.name).collect::<Vec<_>>()
+            }
+            Location::Local(path) => {
+                fs::read_dir(path).unwrap().into_iter().map(|path| path.unwrap().path().display().to_string()).collect::<Vec<_>>()
+            }
+        };
+
+        if processed_block_files.len() > 0 {
+            // For now we will just assume all files will be in form -> startBlock_stopBlock.fileExtension
+            let mut last_block_num_iterator = processed_block_files.into_iter().map(|file| file.split('.').next().unwrap().split('_').skip(1).next().unwrap().parse::<i64>().unwrap());
+            let mut latest_block_num = last_block_num_iterator.next().unwrap();
+            for block_num in last_block_num_iterator {
+                if block_num > latest_block_num {
+                    latest_block_num = block_num;
+                }
+            }
+            starting_block_numbers.push(latest_block_num);
+        } else {
+            starting_block_numbers.push(fallback_starting_block);
+        }
+    }
+
+    starting_block_numbers
+}
 
 #[cfg(test)]
 pub(crate) fn assert_data_sinks_to_parquet_correctly<T: TestData + Debug>() {
