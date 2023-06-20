@@ -48,6 +48,7 @@ enum EscrowBalanceType {
 enum EscrowContractVersion {
   V1
   V2
+  V2_FALLBACK
 }
 
 type EscrowReward @entity {
@@ -66,6 +67,35 @@ type EscrowRewardSnapshot @entity(immutable: true) {
   id: ID!
   escrowReward: EscrowReward!
   balance: BigInt!
+  timestamp: BigInt!
+  block: BigInt!
+}
+
+type LiquidatorRewardEntry @entity {
+  id: ID!
+  account: String!
+  claimable: BigInt!
+  entryAccumulatedRewards: BigInt!
+  timestamp: BigInt!
+  block: BigInt!
+
+  snapshots: [LiquidatorRewardEntrySnapshot!]!
+    @derivedFrom(field: "rewardEntry")
+}
+
+type LiquidatorRewardEntrySnapshot @entity(immutable: true) {
+  id: ID!
+  rewardEntry: LiquidatorRewardEntry!
+  claimable: BigInt!
+  entryAccumulatedRewards: BigInt!
+  timestamp: BigInt!
+  block: BigInt!
+}
+
+type AccumulatedRewardsPerShareSnapshot @entity(immutable: true) {
+  id: ID!
+  accumulatedRewardsPerShare: BigInt!
+
   timestamp: BigInt!
   block: BigInt!
 }
