@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://raw.githubusercontent.com/messari/substreams/master/config/schemas/subgraphs.schema.json",
+  "title": "Schema for the substream powered subgraphs deployment registry",
+  "description": "All substreams that we deploy as subgraphs, both to the hosted service and network should be reflected in subgraphs.json, following the schema in this file.",
+
+  "type": "object",
+  "additionalProperties": {
+    "$ref": "#/$defs/subgraph"
+  },
+
+  "$defs": {
+    "subgraph": {
+      "properties": {
+        "services": {
+          "type": "object",
+          "properties": {
+            "hosted-service": {
+              "$ref": "#/$defs/service"
+            },
+            "decentralized-network": {
+              "$ref": "#/$defs/service"
+            },
+            "anyOf": [
+              { "required": ["hosted-service"] },
+              { "required": ["decentralized-network"] }
+            ]
+          }
+        }
+      },
+      "required": ["services"]
+    },
+
+    "service": {
+      "type": "object",
+      "properties": {
+        "slug": {
+          "type": "string"
+        },
+        "query-id": {
+          "type": "string"
+        }
+      },
+      "required": ["slug", "query-id"]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "eth-supply/eth-supply-ethereum": {
+    "services": {
+      "hosted-service": {
+        "slug": "substream-eth-supply-ethereum",
+        "query-id": "substream-eth-supply-ethereum"
+      }
+    }
+  },
+  "synthetix/synthetix-ethereum": {
+    "services": {
+      "hosted-service": {
+        "slug": "substream-snx-balance-ethereum",
+        "query-id": "substream-snx-balance-ethereum"
+      }
+    }
+  }
+}
