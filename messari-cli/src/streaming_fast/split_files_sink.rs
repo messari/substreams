@@ -49,7 +49,7 @@ impl MultipleFilesSink for SplitFilesSink {
                 return Err(format!("Wire type read: {}, expected wire type: 2! Proto data of entire result, type: Struct, data: {:?}", wire_type, proto_data));
             }
 
-            if self.file_sinks.contains_key(&field_number) {
+            if !self.file_sinks.contains_key(&field_number) {
                 return Err(format!("FieldNumber: {}, is not a valid field! Error found in split file sink!", field_number));
             }
 
@@ -73,7 +73,7 @@ impl MultipleFilesSink for SplitFilesSink {
             }
         }
 
-        if field_seen.is_some() {
+        if field_seen.is_none() {
             Err("No fields seen when deserializing proto response!".to_string())
         } else {
             Ok(output_files)
