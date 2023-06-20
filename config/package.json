@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "validate:params": "node validate-params-schema.js"
+    "validate:params": "node validate-params-schema.js",
+    "validate:subgraphs": "node validate-subgraphs-schema.js"
   },
   "author": "",
   "license": "ISC",

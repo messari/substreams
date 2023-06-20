@@ -29,6 +29,9 @@ jobs:
       - name: Validate Substreams Params Schema
         run: cd config && npm run validate:params
 
+      - name: Validate Subgraph Deployments
+        run: cd config && npm run validate:subgraphs
+
   build:
     name: Build
     runs-on: ubuntu-latest
