@@ -10,7 +10,7 @@ use crate::streaming_fast::file_sinks::helpers::parquet::parquet_schema_builder:
 use crate::streaming_fast::file_sinks::helpers::parquet::repetition_and_definition::{RepetitionAndDefinitionLvls, RepetitionAndDefinitionLvlStoreBuilder};
 use crate::streaming_fast::file_sinks::helpers::parquet::struct_decoder::StructDecoder;
 
-const UNCOMPRESSED_FILE_SIZE_THRESHOLD: usize = 500 * 1024 * 1024; // 500MB
+const UNCOMPRESSED_FILE_SIZE_THRESHOLD: usize = 10 * 1024 * 1024; // 10MB
 
 pub(crate) struct ParquetFileSink {
     decoder: StructDecoder,
@@ -68,6 +68,8 @@ impl FileSink for ParquetFileSink {
         let file_buffer = FileBuffer::new();
         let mut file_writer = SerializedFileWriter::new(file_buffer.clone(), self.parquet_schema.clone(), self.writer_properties.clone()).unwrap();
         let mut row_group_writer = file_writer.next_row_group().unwrap();
+
+        println!("Column: block_numbers, #values: {}", self.block_numbers.len());
 
         // We need to add the block_numbers to the first column before adding the rest of the data from the proto decoding (block_number is the primary key for our data!)
         let mut serialized_column_writer = row_group_writer.next_column().unwrap().unwrap();

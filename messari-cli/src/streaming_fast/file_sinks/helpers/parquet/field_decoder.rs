@@ -62,6 +62,8 @@ impl FieldDecoder {
         macro_rules! write_batch {
             ($values_ident:ident, $value_type:ident) => {
                 {
+                    println!("Column: {}, #values: {}", self.flattened_field_name, $values_ident.len());
+
                     serialized_column_writer.typed::<$value_type>().write_batch(
                         $values_ident,
                         definition_lvls,
