@@ -46,6 +46,8 @@ impl EnumDecoder {
             (None, None)
         };
 
+        println!("Column: {}, #values: {}", self.flattened_field_name, self.values.len());
+
         serialized_column_writer.typed::<ByteArrayType>().write_batch(self.values.as_slice(), definition_lvls, repetition_lvls).unwrap();
         self.values.clear();
 
