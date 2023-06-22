@@ -31,6 +31,8 @@ tonic = { version = "0.8.3", features = ["tls-roots", "gzip"] }
 rand = "0.8.5"
 derives = { path= "derives" }
 async-trait = "0.1.68"
+aws-sdk-s3 = "0.28.0"
+aws-config = "0.55.3"
 
 #[dev-dependencies]
 #rand = "0.8.5"
