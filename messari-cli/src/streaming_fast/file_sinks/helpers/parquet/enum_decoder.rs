@@ -49,7 +49,11 @@ impl EnumDecoder {
         println!("Column: {}, #values: {}", self.flattened_field_name, self.values.len());
 
         serialized_column_writer.typed::<ByteArrayType>().write_batch(self.values.as_slice(), definition_lvls, repetition_lvls).unwrap();
+
         self.values.clear();
+        if let Some(repetition_and_definition_lvl_store) = self.repetition_and_definition_lvl_store.as_mut() {
+            repetition_and_definition_lvl_store.clear();
+        }
 
         serialized_column_writer.close().unwrap();
     }
