@@ -7,35 +7,45 @@ pub struct Request {
     pub start_cursor: ::prost::alloc::string::String,
     #[prost(uint64, tag = "3")]
     pub stop_block_num: u64,
-    #[prost(enumeration = "ForkStep", repeated, tag = "4")]
-    pub fork_steps: ::prost::alloc::vec::Vec<i32>,
-    #[prost(string, tag = "5")]
-    pub irreversibility_condition: ::prost::alloc::string::String,
-    /// By default, the engine runs in developer mode, with richer and deeper output,
-    /// * support for multiple `output_modules`, of `store` and `map` kinds
-    /// * support for `initial_store_snapshot_for_modules`
-    /// * log outputs for output modules
+    /// With final_block_only, you only receive blocks that are irreversible:
+    /// 'final_block_height' will be equal to current block and no 'undo_signal' will ever be sent
+    #[prost(bool, tag = "4")]
+    pub final_blocks_only: bool,
+    /// Substreams has two mode when executing your module(s) either development mode or production
+    /// mode. Development and production modes impact the execution of Substreams, important aspects
+    /// of execution include:
+    /// * The time required to reach the first byte.
+    /// * The speed that large ranges get executed.
+    /// * The module logs and outputs sent back to the client.
     ///
-    /// With `production_mode`, however, you trade off functionality for high speed, where it:
-    /// * restricts the possible requested `output_modules` to a single mapper module,
-    /// * turns off support for `initial_store_snapshot_for_modules`,
-    /// * still streams output linearly, with a cursor, but at higher speeds
-    /// * and purges log outputs from responses.
-    #[prost(bool, tag = "9")]
+    /// By default, the engine runs in developer mode, with richer and deeper output. Differences
+    /// between production and development modes include:
+    /// * Forward parallel execution is enabled in production mode and disabled in development mode
+    /// * The time required to reach the first byte in development mode is faster than in production mode.
+    ///
+    /// Specific attributes of development mode include:
+    /// * The client will receive all of the executed module's logs.
+    /// * It's possible to request specific store snapshots in the execution tree (via `debug_initial_store_snapshot_for_modules`).
+    /// * Multiple module's output is possible.
+    ///
+    /// With production mode`, however, you trade off functionality for high speed enabling forward
+    /// parallel execution of module ahead of time.
+    #[prost(bool, tag = "5")]
     pub production_mode: bool,
-    #[prost(message, optional, tag = "6")]
+    #[prost(string, tag = "6")]
+    pub output_module: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "7")]
     pub modules: ::core::option::Option<Modules>,
-    #[prost(string, repeated, tag = "7")]
-    pub output_modules: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-    #[prost(string, repeated, tag = "8")]
-    pub initial_store_snapshot_for_modules: ::prost::alloc::vec::Vec<
+    /// Available only in developer mode
+    #[prost(string, repeated, tag = "10")]
+    pub debug_initial_store_snapshot_for_modules: ::prost::alloc::vec::Vec<
         ::prost::alloc::string::String,
     >,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Response {
-    #[prost(oneof = "response::Message", tags = "5, 1, 2, 3, 4")]
+    #[prost(oneof = "response::Message", tags = "1, 2, 3, 4, 10, 11")]
     pub message: ::core::option::Option<response::Message>,
 }
 /// Nested message and enum types in `Response`.
@@ -44,18 +54,50 @@ pub mod response {
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Message {
         /// Always sent first
-        #[prost(message, tag = "5")]
+        #[prost(message, tag = "1")]
         Session(super::SessionInit),
         /// Progress of data preparation, before sending in the stream of `data` events.
-        #[prost(message, tag = "1")]
-        Progress(super::ModulesProgress),
         #[prost(message, tag = "2")]
-        SnapshotData(super::InitialSnapshotData),
+        Progress(super::ModulesProgress),
         #[prost(message, tag = "3")]
-        SnapshotComplete(super::InitialSnapshotComplete),
+        BlockScopedData(super::BlockScopedData),
         #[prost(message, tag = "4")]
-        Data(super::BlockScopedData),
+        BlockUndoSignal(super::BlockUndoSignal),
+        /// Available only in developer mode, and only if `debug_initial_store_snapshot_for_modules` is set.
+        #[prost(message, tag = "10")]
+        DebugSnapshotData(super::InitialSnapshotData),
+        /// Available only in developer mode, and only if `debug_initial_store_snapshot_for_modules` is set.
+        #[prost(message, tag = "11")]
+        DebugSnapshotComplete(super::InitialSnapshotComplete),
     }
+}
+/// BlockUndoSignal informs you that every bit of data
+/// with a block number above 'last_valid_block' has been reverted
+/// on-chain. Delete that data and restart from 'last_valid_cursor'
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BlockUndoSignal {
+    #[prost(message, optional, tag = "1")]
+    pub last_valid_block: ::core::option::Option<BlockRef>,
+    #[prost(string, tag = "2")]
+    pub last_valid_cursor: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BlockScopedData {
+    #[prost(message, optional, tag = "1")]
+    pub output: ::core::option::Option<MapModuleOutput>,
+    #[prost(message, optional, tag = "2")]
+    pub clock: ::core::option::Option<Clock>,
+    #[prost(string, tag = "3")]
+    pub cursor: ::prost::alloc::string::String,
+    /// Non-deterministic, allows substreams-sink to let go of their undo data.
+    #[prost(uint64, tag = "4")]
+    pub final_block_height: u64,
+    #[prost(message, repeated, tag = "10")]
+    pub debug_map_outputs: ::prost::alloc::vec::Vec<MapModuleOutput>,
+    #[prost(message, repeated, tag = "11")]
+    pub debug_store_outputs: ::prost::alloc::vec::Vec<StoreModuleOutput>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -74,8 +116,8 @@ pub struct InitialSnapshotComplete {
 pub struct InitialSnapshotData {
     #[prost(string, tag = "1")]
     pub module_name: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "2")]
-    pub deltas: ::core::option::Option<StoreDeltas>,
+    #[prost(message, repeated, tag = "2")]
+    pub deltas: ::prost::alloc::vec::Vec<StoreDelta>,
     #[prost(uint64, tag = "4")]
     pub sent_keys: u64,
     #[prost(uint64, tag = "3")]
@@ -83,46 +125,40 @@ pub struct InitialSnapshotData {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct BlockScopedData {
-    #[prost(message, repeated, tag = "1")]
-    pub outputs: ::prost::alloc::vec::Vec<ModuleOutput>,
-    #[prost(message, optional, tag = "3")]
-    pub clock: ::core::option::Option<Clock>,
-    #[prost(enumeration = "ForkStep", tag = "6")]
-    pub step: i32,
-    #[prost(string, tag = "10")]
-    pub cursor: ::prost::alloc::string::String,
+pub struct MapModuleOutput {
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub map_output: ::core::option::Option<::prost_types::Any>,
+    /// DebugOutputInfo is available in non-production mode only
+    #[prost(message, optional, tag = "10")]
+    pub debug_info: ::core::option::Option<OutputDebugInfo>,
+}
+/// StoreModuleOutput are produced for store modules in development mode.
+/// It is not possible to retrieve store models in production, with parallelization
+/// enabled. If you need the deltas directly, write a pass through mapper module
+/// that will get them down to you.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StoreModuleOutput {
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    #[prost(message, repeated, tag = "2")]
+    pub debug_store_deltas: ::prost::alloc::vec::Vec<StoreDelta>,
+    #[prost(message, optional, tag = "10")]
+    pub debug_info: ::core::option::Option<OutputDebugInfo>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ModuleOutput {
-    #[prost(string, tag = "1")]
-    pub name: ::prost::alloc::string::String,
-    #[prost(string, repeated, tag = "4")]
-    pub debug_logs: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+pub struct OutputDebugInfo {
+    #[prost(string, repeated, tag = "1")]
+    pub logs: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     /// LogsTruncated is a flag that tells you if you received all the logs or if they
     /// were truncated because you logged too much (fixed limit currently is set to 128 KiB).
-    #[prost(bool, tag = "5")]
-    pub debug_logs_truncated: bool,
-    #[prost(bool, tag = "6")]
+    #[prost(bool, tag = "2")]
+    pub logs_truncated: bool,
+    #[prost(bool, tag = "3")]
     pub cached: bool,
-    #[prost(oneof = "module_output::Data", tags = "2, 3")]
-    pub data: ::core::option::Option<module_output::Data>,
-}
-/// Nested message and enum types in `ModuleOutput`.
-pub mod module_output {
-    #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum Data {
-        #[prost(message, tag = "2")]
-        MapOutput(::prost_types::Any),
-        /// StoreDeltas are produced for store modules in development mode.
-        /// It is not possible to retrieve store models in production, with parallelization
-        /// enabled. If you need the deltas directly, write a pass through mapper module
-        /// that will get them down to you.
-        #[prost(message, tag = "3")]
-        DebugStoreDeltas(super::StoreDeltas),
-    }
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -142,7 +178,7 @@ pub struct ModuleProgress {
 pub mod module_progress {
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
-    pub struct ProcessedRange {
+    pub struct ProcessedRanges {
         #[prost(message, repeated, tag = "1")]
         pub processed_ranges: ::prost::alloc::vec::Vec<super::BlockRange>,
     }
@@ -159,6 +195,12 @@ pub mod module_progress {
         pub total_bytes_read: u64,
         #[prost(uint64, tag = "2")]
         pub total_bytes_written: u64,
+        #[prost(uint64, tag = "3")]
+        pub bytes_read_delta: u64,
+        #[prost(uint64, tag = "4")]
+        pub bytes_written_delta: u64,
+        #[prost(uint64, tag = "5")]
+        pub nano_seconds_delta: u64,
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
@@ -176,7 +218,7 @@ pub mod module_progress {
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Type {
         #[prost(message, tag = "2")]
-        ProcessedRanges(ProcessedRange),
+        ProcessedRanges(ProcessedRanges),
         #[prost(message, tag = "3")]
         InitialState(InitialState),
         #[prost(message, tag = "4")]
@@ -192,12 +234,6 @@ pub struct BlockRange {
     pub start_block: u64,
     #[prost(uint64, tag = "3")]
     pub end_block: u64,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct StoreDeltas {
-    #[prost(message, repeated, tag = "1")]
-    pub deltas: ::prost::alloc::vec::Vec<StoreDelta>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -258,17 +294,296 @@ pub mod store_delta {
         }
     }
 }
+/// Generated client implementations.
+pub mod stream_client {
+    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
+    use tonic::codegen::*;
+    use tonic::codegen::http::Uri;
+    #[derive(Debug, Clone)]
+    pub struct StreamClient<T> {
+        inner: tonic::client::Grpc<T>,
+    }
+    impl StreamClient<tonic::transport::Channel> {
+        /// Attempt to create a new client by connecting to a given endpoint.
+        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
+            where
+                D: std::convert::TryInto<tonic::transport::Endpoint>,
+                D::Error: Into<StdError>,
+        {
+            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
+            Ok(Self::new(conn))
+        }
+    }
+    impl<T> StreamClient<T>
+        where
+            T: tonic::client::GrpcService<tonic::body::BoxBody>,
+            T::Error: Into<StdError>,
+            T::ResponseBody: Body<Data = Bytes> + Send + 'static,
+            <T::ResponseBody as Body>::Error: Into<StdError> + Send,
+    {
+        pub fn new(inner: T) -> Self {
+            let inner = tonic::client::Grpc::new(inner);
+            Self { inner }
+        }
+        pub fn with_origin(inner: T, origin: Uri) -> Self {
+            let inner = tonic::client::Grpc::with_origin(inner, origin);
+            Self { inner }
+        }
+        pub fn with_interceptor<F>(
+            inner: T,
+            interceptor: F,
+        ) -> StreamClient<InterceptedService<T, F>>
+            where
+                F: tonic::service::Interceptor,
+                T::ResponseBody: Default,
+                T: tonic::codegen::Service<
+                    http::Request<tonic::body::BoxBody>,
+                    Response = http::Response<
+                        <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    >,
+                >,
+                <T as tonic::codegen::Service<
+                    http::Request<tonic::body::BoxBody>,
+                >>::Error: Into<StdError> + Send + Sync,
+        {
+            StreamClient::new(InterceptedService::new(inner, interceptor))
+        }
+        /// Compress requests with the given encoding.
+        ///
+        /// This requires the server to support it otherwise it might respond with an
+        /// error.
+        #[must_use]
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.send_compressed(encoding);
+            self
+        }
+        /// Enable decompressing responses.
+        #[must_use]
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.accept_compressed(encoding);
+            self
+        }
+        pub async fn blocks(
+            &mut self,
+            request: impl tonic::IntoRequest<super::Request>,
+        ) -> Result<
+            tonic::Response<tonic::codec::Streaming<super::Response>>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/sf.substreams.rpc.v2.Stream/Blocks",
+            );
+            self.inner.server_streaming(request.into_request(), path, codec).await
+        }
+    }
+}
+/// Generated server implementations.
+pub mod stream_server {
+    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
+    use tonic::codegen::*;
+    /// Generated trait containing gRPC methods that should be implemented for use with StreamServer.
+    #[async_trait]
+    pub trait Stream: Send + Sync + 'static {
+        /// Server streaming response type for the Blocks method.
+        type BlocksStream: futures_core::Stream<
+            Item = Result<super::Response, tonic::Status>,
+        >
+        + Send
+        + 'static;
+        async fn blocks(
+            &self,
+            request: tonic::Request<super::Request>,
+        ) -> Result<tonic::Response<Self::BlocksStream>, tonic::Status>;
+    }
+    #[derive(Debug)]
+    pub struct StreamServer<T: Stream> {
+        inner: _Inner<T>,
+        accept_compression_encodings: EnabledCompressionEncodings,
+        send_compression_encodings: EnabledCompressionEncodings,
+    }
+    struct _Inner<T>(Arc<T>);
+    impl<T: Stream> StreamServer<T> {
+        pub fn new(inner: T) -> Self {
+            Self::from_arc(Arc::new(inner))
+        }
+        pub fn from_arc(inner: Arc<T>) -> Self {
+            let inner = _Inner(inner);
+            Self {
+                inner,
+                accept_compression_encodings: Default::default(),
+                send_compression_encodings: Default::default(),
+            }
+        }
+        pub fn with_interceptor<F>(
+            inner: T,
+            interceptor: F,
+        ) -> InterceptedService<Self, F>
+            where
+                F: tonic::service::Interceptor,
+        {
+            InterceptedService::new(Self::new(inner), interceptor)
+        }
+        /// Enable decompressing requests with the given encoding.
+        #[must_use]
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.accept_compression_encodings.enable(encoding);
+            self
+        }
+        /// Compress responses with the given encoding, if the client supports it.
+        #[must_use]
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.send_compression_encodings.enable(encoding);
+            self
+        }
+    }
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for StreamServer<T>
+        where
+            T: Stream,
+            B: Body + Send + 'static,
+            B::Error: Into<StdError> + Send + 'static,
+    {
+        type Response = http::Response<tonic::body::BoxBody>;
+        type Error = std::convert::Infallible;
+        type Future = BoxFuture<Self::Response, Self::Error>;
+        fn poll_ready(
+            &mut self,
+            _cx: &mut Context<'_>,
+        ) -> Poll<Result<(), Self::Error>> {
+            Poll::Ready(Ok(()))
+        }
+        fn call(&mut self, req: http::Request<B>) -> Self::Future {
+            let inner = self.inner.clone();
+            match req.uri().path() {
+                "/sf.substreams.rpc.v2.Stream/Blocks" => {
+                    #[allow(non_camel_case_types)]
+                    struct BlocksSvc<T: Stream>(pub Arc<T>);
+                    impl<T: Stream> tonic::server::ServerStreamingService<super::Request>
+                    for BlocksSvc<T> {
+                        type Response = super::Response;
+                        type ResponseStream = T::BlocksStream;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::ResponseStream>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::Request>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move { (*inner).blocks(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = BlocksSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            );
+                        let res = grpc.server_streaming(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                _ => {
+                    Box::pin(async move {
+                        Ok(
+                            http::Response::builder()
+                                .status(200)
+                                .header("grpc-status", "12")
+                                .header("content-type", "application/grpc")
+                                .body(empty_body())
+                                .unwrap(),
+                        )
+                    })
+                }
+            }
+        }
+    }
+    impl<T: Stream> Clone for StreamServer<T> {
+        fn clone(&self) -> Self {
+            let inner = self.inner.clone();
+            Self {
+                inner,
+                accept_compression_encodings: self.accept_compression_encodings,
+                send_compression_encodings: self.send_compression_encodings,
+            }
+        }
+    }
+    impl<T: Stream> Clone for _Inner<T> {
+        fn clone(&self) -> Self {
+            Self(self.0.clone())
+        }
+    }
+    impl<T: std::fmt::Debug> std::fmt::Debug for _Inner<T> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{:?}", self.0)
+        }
+    }
+    impl<T: Stream> tonic::server::NamedService for StreamServer<T> {
+        const NAME: &'static str = "sf.substreams.rpc.v2.Stream";
+    }
+}
+
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Output {
-    #[prost(uint64, tag = "1")]
-    pub block_num: u64,
-    #[prost(string, tag = "2")]
-    pub block_id: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "4")]
-    pub timestamp: ::core::option::Option<::prost_types::Timestamp>,
+pub struct Package {
+    /// Needs to be one so this file can be used _directly_ as a
+    /// buf `Image` andor a ProtoSet for grpcurl and other tools
+    #[prost(message, repeated, tag = "1")]
+    pub proto_files: ::prost::alloc::vec::Vec<::prost_types::FileDescriptorProto>,
+    #[prost(uint64, tag = "5")]
+    pub version: u64,
+    #[prost(message, optional, tag = "6")]
+    pub modules: ::core::option::Option<Modules>,
+    #[prost(message, repeated, tag = "7")]
+    pub module_meta: ::prost::alloc::vec::Vec<ModuleMetadata>,
+    #[prost(message, repeated, tag = "8")]
+    pub package_meta: ::prost::alloc::vec::Vec<PackageMetadata>,
+    /// Source network for Substreams to fetch its data from.
+    #[prost(string, tag = "9")]
+    pub network: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "10")]
-    pub value: ::core::option::Option<::prost_types::Any>,
+    pub sink_config: ::core::option::Option<::prost_types::Any>,
+    #[prost(string, tag = "11")]
+    pub sink_module: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PackageMetadata {
+    #[prost(string, tag = "1")]
+    pub version: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub url: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub name: ::prost::alloc::string::String,
+    #[prost(string, tag = "4")]
+    pub doc: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ModuleMetadata {
+    /// Corresponds to the index in `Package.metadata.package_meta`
+    #[prost(uint64, tag = "1")]
+    pub package_index: u64,
+    #[prost(string, tag = "2")]
+    pub doc: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -495,43 +810,7 @@ pub mod module {
         KindStore(KindStore),
     }
 }
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Package {
-    /// Needs to be one so this file can be used _directly_ as a
-    /// buf `Image` andor a ProtoSet for grpcurl and other tools
-    #[prost(message, repeated, tag = "1")]
-    pub proto_files: ::prost::alloc::vec::Vec<::prost_types::FileDescriptorProto>,
-    #[prost(uint64, tag = "5")]
-    pub version: u64,
-    #[prost(message, optional, tag = "6")]
-    pub modules: ::core::option::Option<Modules>,
-    #[prost(message, repeated, tag = "7")]
-    pub module_meta: ::prost::alloc::vec::Vec<ModuleMetadata>,
-    #[prost(message, repeated, tag = "8")]
-    pub package_meta: ::prost::alloc::vec::Vec<PackageMetadata>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct PackageMetadata {
-    #[prost(string, tag = "1")]
-    pub version: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub url: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub name: ::prost::alloc::string::String,
-    #[prost(string, tag = "4")]
-    pub doc: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ModuleMetadata {
-    /// Corresponds to the index in `Package.metadata.package_meta`
-    #[prost(uint64, tag = "1")]
-    pub package_index: u64,
-    #[prost(string, tag = "2")]
-    pub doc: ::prost::alloc::string::String,
-}
+/// Clock is a pointer to a block with added timestamp
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Clock {
@@ -542,284 +821,12 @@ pub struct Clock {
     #[prost(message, optional, tag = "3")]
     pub timestamp: ::core::option::Option<::prost_types::Timestamp>,
 }
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum ForkStep {
-    StepUnknown = 0,
-    /// Block is new head block of the chain, that is linear with the previous block
-    StepNew = 1,
-    /// Block is now forked and should be undone, it's not the head block of the chain anymore
-    StepUndo = 2,
-    /// Block is now irreversible and can be committed to (finality is chain specific, see chain documentation for more details)
-    StepIrreversible = 4,
-}
-impl ForkStep {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            ForkStep::StepUnknown => "STEP_UNKNOWN",
-            ForkStep::StepNew => "STEP_NEW",
-            ForkStep::StepUndo => "STEP_UNDO",
-            ForkStep::StepIrreversible => "STEP_IRREVERSIBLE",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "STEP_UNKNOWN" => Some(Self::StepUnknown),
-            "STEP_NEW" => Some(Self::StepNew),
-            "STEP_UNDO" => Some(Self::StepUndo),
-            "STEP_IRREVERSIBLE" => Some(Self::StepIrreversible),
-            _ => None,
-        }
-    }
-}
-/// Generated client implementations.
-pub mod stream_client {
-    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
-    use tonic::codegen::*;
-    use tonic::codegen::http::Uri;
-    #[derive(Debug, Clone)]
-    pub struct StreamClient<T> {
-        inner: tonic::client::Grpc<T>,
-    }
-    impl StreamClient<tonic::transport::Channel> {
-        /// Attempt to create a new client by connecting to a given endpoint.
-        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
-            where
-                D: std::convert::TryInto<tonic::transport::Endpoint>,
-                D::Error: Into<StdError>,
-        {
-            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
-            Ok(Self::new(conn))
-        }
-    }
-    impl<T> StreamClient<T>
-        where
-            T: tonic::client::GrpcService<tonic::body::BoxBody>,
-            T::Error: Into<StdError>,
-            T::ResponseBody: Body<Data = Bytes> + Send + 'static,
-            <T::ResponseBody as Body>::Error: Into<StdError> + Send,
-    {
-        pub fn new(inner: T) -> Self {
-            let inner = tonic::client::Grpc::new(inner);
-            Self { inner }
-        }
-        pub fn with_origin(inner: T, origin: Uri) -> Self {
-            let inner = tonic::client::Grpc::with_origin(inner, origin);
-            Self { inner }
-        }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> StreamClient<InterceptedService<T, F>>
-            where
-                F: tonic::service::Interceptor,
-                T::ResponseBody: Default,
-                T: tonic::codegen::Service<
-                    http::Request<tonic::body::BoxBody>,
-                    Response = http::Response<
-                        <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
-                    >,
-                >,
-                <T as tonic::codegen::Service<
-                    http::Request<tonic::body::BoxBody>,
-                >>::Error: Into<StdError> + Send + Sync,
-        {
-            StreamClient::new(InterceptedService::new(inner, interceptor))
-        }
-        /// Compress requests with the given encoding.
-        ///
-        /// This requires the server to support it otherwise it might respond with an
-        /// error.
-        #[must_use]
-        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.inner = self.inner.send_compressed(encoding);
-            self
-        }
-        /// Enable decompressing responses.
-        #[must_use]
-        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.inner = self.inner.accept_compressed(encoding);
-            self
-        }
-        pub async fn blocks(
-            &mut self,
-            request: impl tonic::IntoRequest<super::Request>,
-        ) -> Result<
-            tonic::Response<tonic::codec::Streaming<super::Response>>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/sf.substreams.v1.Stream/Blocks",
-            );
-            self.inner.server_streaming(request.into_request(), path, codec).await
-        }
-    }
-}
-/// Generated server implementations.
-pub mod stream_server {
-    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
-    use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with StreamServer.
-    #[async_trait]
-    pub trait Stream: Send + Sync + 'static {
-        /// Server streaming response type for the Blocks method.
-        type BlocksStream: futures_core::Stream<
-            Item = Result<super::Response, tonic::Status>,
-        >
-        + Send
-        + 'static;
-        async fn blocks(
-            &self,
-            request: tonic::Request<super::Request>,
-        ) -> Result<tonic::Response<Self::BlocksStream>, tonic::Status>;
-    }
-    #[derive(Debug)]
-    pub struct StreamServer<T: Stream> {
-        inner: _Inner<T>,
-        accept_compression_encodings: EnabledCompressionEncodings,
-        send_compression_encodings: EnabledCompressionEncodings,
-    }
-    struct _Inner<T>(Arc<T>);
-    impl<T: Stream> StreamServer<T> {
-        pub fn new(inner: T) -> Self {
-            Self::from_arc(Arc::new(inner))
-        }
-        pub fn from_arc(inner: Arc<T>) -> Self {
-            let inner = _Inner(inner);
-            Self {
-                inner,
-                accept_compression_encodings: Default::default(),
-                send_compression_encodings: Default::default(),
-            }
-        }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> InterceptedService<Self, F>
-            where
-                F: tonic::service::Interceptor,
-        {
-            InterceptedService::new(Self::new(inner), interceptor)
-        }
-        /// Enable decompressing requests with the given encoding.
-        #[must_use]
-        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.accept_compression_encodings.enable(encoding);
-            self
-        }
-        /// Compress responses with the given encoding, if the client supports it.
-        #[must_use]
-        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.send_compression_encodings.enable(encoding);
-            self
-        }
-    }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for StreamServer<T>
-        where
-            T: Stream,
-            B: Body + Send + 'static,
-            B::Error: Into<StdError> + Send + 'static,
-    {
-        type Response = http::Response<tonic::body::BoxBody>;
-        type Error = std::convert::Infallible;
-        type Future = BoxFuture<Self::Response, Self::Error>;
-        fn poll_ready(
-            &mut self,
-            _cx: &mut Context<'_>,
-        ) -> Poll<Result<(), Self::Error>> {
-            Poll::Ready(Ok(()))
-        }
-        fn call(&mut self, req: http::Request<B>) -> Self::Future {
-            let inner = self.inner.clone();
-            match req.uri().path() {
-                "/sf.substreams.v1.Stream/Blocks" => {
-                    #[allow(non_camel_case_types)]
-                    struct BlocksSvc<T: Stream>(pub Arc<T>);
-                    impl<T: Stream> tonic::server::ServerStreamingService<super::Request>
-                    for BlocksSvc<T> {
-                        type Response = super::Response;
-                        type ResponseStream = T::BlocksStream;
-                        type Future = BoxFuture<
-                            tonic::Response<Self::ResponseStream>,
-                            tonic::Status,
-                        >;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::Request>,
-                        ) -> Self::Future {
-                            let inner = self.0.clone();
-                            let fut = async move { (*inner).blocks(request).await };
-                            Box::pin(fut)
-                        }
-                    }
-                    let accept_compression_encodings = self.accept_compression_encodings;
-                    let send_compression_encodings = self.send_compression_encodings;
-                    let inner = self.inner.clone();
-                    let fut = async move {
-                        let inner = inner.0;
-                        let method = BlocksSvc(inner);
-                        let codec = tonic::codec::ProstCodec::default();
-                        let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            );
-                        let res = grpc.server_streaming(method, req).await;
-                        Ok(res)
-                    };
-                    Box::pin(fut)
-                }
-                _ => {
-                    Box::pin(async move {
-                        Ok(
-                            http::Response::builder()
-                                .status(200)
-                                .header("grpc-status", "12")
-                                .header("content-type", "application/grpc")
-                                .body(empty_body())
-                                .unwrap(),
-                        )
-                    })
-                }
-            }
-        }
-    }
-    impl<T: Stream> Clone for StreamServer<T> {
-        fn clone(&self) -> Self {
-            let inner = self.inner.clone();
-            Self {
-                inner,
-                accept_compression_encodings: self.accept_compression_encodings,
-                send_compression_encodings: self.send_compression_encodings,
-            }
-        }
-    }
-    impl<T: Stream> Clone for _Inner<T> {
-        fn clone(&self) -> Self {
-            Self(self.0.clone())
-        }
-    }
-    impl<T: std::fmt::Debug> std::fmt::Debug for _Inner<T> {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(f, "{:?}", self.0)
-        }
-    }
-    impl<T: Stream> tonic::server::NamedService for StreamServer<T> {
-        const NAME: &'static str = "sf.substreams.v1.Stream";
-    }
+/// BlockRef is a pointer to a block to which we don't know the timestamp
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BlockRef {
+    #[prost(string, tag = "1")]
+    pub id: ::prost::alloc::string::String,
+    #[prost(uint64, tag = "2")]
+    pub number: u64,
 }
