@@ -24,13 +24,28 @@ impl File {
     pub(crate) async fn save(self) {
         match self.output_location {
             Location::DataWarehouse(file_path) => {
+                // let bucket_name = "data-warehouse-load-427049689281-dev";
+                // let region = "us-west-2".parse().unwrap();
+                // let credentials = Credentials::default().unwrap();
+                // let bucket = Bucket::new(bucket_name, region, credentials).unwrap();
+                // let response_data = bucket.put_object(file_path.to_str().unwrap(), self.file_data.as_slice()).await.unwrap();
+
                 let bucket_name = "data-warehouse-load-427049689281-dev";
-                let region = "us-west-2".parse().unwrap();
-                let credentials = Credentials::default().unwrap();
-                let bucket = Bucket::new(bucket_name, region, credentials).unwrap();
-                let response_data = bucket.put_object(file_path.to_str().unwrap(), self.file_data.as_slice()).await.unwrap();
-                assert_eq!(response_data.status_code(), 200, "Response was not successful!");
-                println!("Data warehouse file uploaded!\nFilesize: {}B, Prefix: {}", get_file_size_string(self.file_data.len()), file_path.to_string_lossy());
+                let region = "us-west-2";
+                let file_data_len = self.file_data.len();
+
+                aws_sdk_s3::Client::new(&aws_config::from_env().region(region).load().await)
+                    .put_object()
+                    .bucket(bucket_name)
+                    .key(file_path.to_str().unwrap())
+                    .body(self.file_data.into())
+                    .metadata("substream_data", "AWAITING_UPLOAD_TO_SNOWFLAKE")
+                    .send()
+                    .await
+                    .unwrap();
+
+                // assert_eq!(response_data.status_code(), 200, "Response was not successful!");
+                println!("Data warehouse file uploaded!\nFilesize: {}B, Prefix: {}", get_file_size_string(file_data_len), file_path.to_string_lossy());
             }
             Location::Local(file_path) => {
                 let mut file = TokioFile::create(&file_path).await.unwrap();
