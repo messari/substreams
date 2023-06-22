@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use derives::proto_structure_info::MessageInfo;
+use derives::proto_structure_info::{FieldSpecification, MessageInfo};
 use async_trait::async_trait;
 
 use crate::streaming_fast::file::{File, Location, LocationType};
@@ -16,8 +16,9 @@ pub(crate) struct SingleFileSink {
 }
 
 impl SingleFileSink {
-    pub(crate) fn new(output_type_info: MessageInfo, encoding_type: EncodingType, location_type: LocationType, mut sink_output_path: PathBuf) -> Self {
+    pub(crate) fn new(mut output_type_info: MessageInfo, encoding_type: EncodingType, location_type: LocationType, mut sink_output_path: PathBuf) -> Self {
         sink_output_path = sink_output_path.join(&output_type_info.type_name);
+        output_type_info.field_specification = FieldSpecification::Required;
 
         let file_sink = match encoding_type {
             EncodingType::Parquet => {
