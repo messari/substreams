@@ -12,9 +12,7 @@ use crate::streaming_fast::block_client::get_latest_block_number;
 use crate::streaming_fast::streamingfast_dtos;
 use crate::streaming_fast::file::LocationType;
 use crate::streaming_fast::sink::Sink;
-use crate::streaming_fast::streamingfast_dtos::ForkStep::StepIrreversible;
 use crate::streaming_fast::streamingfast_dtos::{Package, Request, Response};
-use crate::streaming_fast::streamingfast_dtos::module_output::Data;
 use crate::streaming_fast::proto_structure_info::get_output_type_info;
 use crate::streaming_fast::streaming_config::{Chain, StreamingConfig};
 use crate::streaming_fast::streaming_fast_utils::{get_initial_block_for_module, get_start_block_num};
@@ -65,15 +63,14 @@ pub(crate) async fn process_substream(spkg: Vec<u8>, config: StreamingConfig, en
     sink.set_starting_block_number(start_block).await;
 
     let request = Request {
-        start_block_num: start_block, // TODO: Should check whether negative values actually correspond to "x behind end block num"
+        start_block_num: start_block,
         start_cursor: "".to_string(),
         stop_block_num: stop_block as u64,
-        fork_steps: vec![StepIrreversible as i32],
-        irreversibility_condition: "".to_string(),
         modules: package.modules,
-        output_modules: vec![config.output_module],
         production_mode: true,
-        ..Default::default()
+        final_blocks_only: true,
+        output_module: config.output_module,
+        debug_initial_store_snapshot_for_modules: vec![],
     };
 
     let streamingfast_token = env::var("SUBSTREAMS_API_TOKEN").unwrap();
@@ -239,17 +236,10 @@ fn get_output_data(block: Result<Response, Status>) -> Result<Option<(Vec<u8>, i
         Ok(response) => {
             if let Some(message) = response.message {
                 match message {
-                    streamingfast_dtos::response::Message::Data(block_scoped_data) => {
+                    streamingfast_dtos::response::Message::BlockScopedData(block_scoped_data) => {
                         let block_number = block_scoped_data.clock.unwrap().number as i64;
-                        for module_output in block_scoped_data.outputs {
-                            match module_output.data {
-                                None => {}
-                                Some(Data::MapOutput(data)) => {
-                                    return Ok(Some((data.value, block_number)));
-                                }
-                                _ => {}
-                            }
-                        }
+                        let output = block_scoped_data.output.unwrap().map_output.unwrap();
+                        return Ok(Some((output.value, block_number)));
                     },
                     _ => {}
                 }
