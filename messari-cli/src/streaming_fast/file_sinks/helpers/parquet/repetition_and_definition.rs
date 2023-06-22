@@ -54,6 +54,11 @@ impl RepetitionAndDefinitionLvlStore {
         self.repetition_lvls.push(lvls.repetition_lvl);
     }
 
+    pub(in crate::streaming_fast::file_sinks) fn clear(&mut self) {
+        self.repetition_lvls.clear();
+        self.definition_lvls.clear();
+    }
+
     pub(in crate::streaming_fast::file_sinks) fn add_lvls_for_packed_field(&mut self, values_read: usize, mut lvls: RepetitionAndDefinitionLvls) {
         lvls = lvls.repeated_item_newly_seen();
         if values_read > 1 {

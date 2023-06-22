@@ -93,6 +93,10 @@ impl FieldDecoder {
             ValueStore::Bytes(values) => write_batch!(values, ByteArrayType),
         };
 
+        if let Some(repetition_and_definition_lvl_store) = self.repetition_and_definition_lvl_store.as_mut() {
+            repetition_and_definition_lvl_store.clear();
+        }
+
         serialized_column_writer.close().unwrap();
     }
 
