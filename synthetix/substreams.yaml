@@ -48,8 +48,10 @@ modules:
     kind: map
     initialBlock: 7680399
     inputs:
+      - source: sf.substreams.v1.Clock
       - map: map_snx_balances
       - map: map_escrow_rewards
+      - map: map_liquidation_rewards
     output:
       type: "proto:messari.synthetix.v1.ParquetOuts"
 

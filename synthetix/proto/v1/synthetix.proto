@@ -58,10 +58,18 @@ message LiquidatorRewards {
   BigInt accumulatedRewardsPerShare = 2;
 }
 
+message AccumulatedRewardsPerShare {
+  BigInt accumulatedRewardsPerShare = 1;
+
+  Timestamp timestamp = 2;
+}
+
 message ParquetOut {
   oneof synthetix {
     TokenBalance balance = 1;
     EscrowReward escrow_reward = 2;
+    LiquidatorReward liquidator_reward = 3;
+    AccumulatedRewardsPerShare accumulated_rewards_per_share = 4;
   }
 }
 
