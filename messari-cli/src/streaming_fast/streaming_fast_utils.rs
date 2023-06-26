@@ -36,8 +36,8 @@ pub(crate) async fn get_start_block_numbers(output_folder_paths: Vec<Location>, 
                 let region = "us-west-2".parse().unwrap();
                 let credentials = Credentials::default().unwrap();
                 let bucket = Bucket::new(bucket_name, region, credentials).unwrap();
-                let list_response = bucket.list(path.to_string_lossy().to_string(), None).await.unwrap();
-                list_response.into_iter().map(|x| x.name).collect::<Vec<_>>()
+                let list_response = bucket.list(path.to_string_lossy().to_string() + "/", Some("/".to_string())).await.unwrap();
+                list_response[0].contents.clone().into_iter().map(|x| x.key).collect::<Vec<_>>()
             }
             Location::Local(path) => {
                 fs::read_dir(path).unwrap().into_iter().map(|path| path.unwrap().path().display().to_string()).collect::<Vec<_>>()
