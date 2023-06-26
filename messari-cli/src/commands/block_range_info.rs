@@ -43,7 +43,7 @@ impl BlockRangeInfo {
 
         let (start_block, stop_block) = get_block_range_info(spkg_data, config.output_module.as_str(), location_type, data_location_path, config.get_start_block_override(), config.chain_override).await;
 
-        println!("{{start_block: {}, stop_block: {}}}", start_block, stop_block);
+        println!("{{\"start_block\": {}, \"stop_block\": {}}}", start_block, stop_block);
     }
 }
 
