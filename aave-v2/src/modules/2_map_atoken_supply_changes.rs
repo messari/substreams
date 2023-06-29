@@ -54,19 +54,20 @@ fn map_atoken_supply_changes(
     // This is where AAVE V2 AToken contracts store the scaled_supply variable.
     let scaled_supply_storage_key = storage::Uint256 {
         slot: BigInt::from(54),
+        value: BigInt::zero(),
     }
     .storage_key();
 
     let mut supplies = HashMap::<Vec<u8>, ATokenSupply>::new();
     for change in changes {
-        if change.key != scaled_supply_storage_key {
+        if change.change.key != scaled_supply_storage_key {
             continue;
         }
 
-        let scaled_supply = BigInt::from_unsigned_bytes_be(change.new_value.as_slice());
+        let scaled_supply = BigInt::from_unsigned_bytes_be(change.change.new_value.as_slice());
         let token = addresser
             .store
-            .get_last(change.address.clone().to_hex())
+            .get_last(change.change.address.clone().to_hex())
             .unwrap();
         let supply = ATokenSupply {
             timestamp: bh.timestamp(),
@@ -74,7 +75,7 @@ fn map_atoken_supply_changes(
             a_token: Some(token.token.unwrap()),
             scaled_supply: Some(scaled_supply.into()),
         };
-        supplies.insert(change.address.clone(), supply);
+        supplies.insert(change.change.address.clone(), supply);
     }
 
     Ok(ATokenSupplies {
@@ -128,7 +129,11 @@ fn get_balances(
                 balances.push(ATokenBalance {
                     a_token: store.get_last(log.address.to_hex()).unwrap().token,
                     address: address,
-                    scaled_balance: Some(BigInt::abi_decode(change.new_value).unwrap().into()),
+                    scaled_balance: Some(
+                        BigInt::abi_decode(change.new_value.as_slice())
+                            .unwrap()
+                            .into(),
+                    ),
                 })
             }
         }
