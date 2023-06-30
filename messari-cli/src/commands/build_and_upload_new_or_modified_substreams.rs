@@ -53,7 +53,9 @@ impl BuildAndUploadNewOrModifiedSubstreams {
 
             println!("Uploading spkg for substream: {}", modified_substream_project.substream_name);
 
-            upload_config_and_spkg_file(&config_file_path, &spkg_path).await;
+            // let substream = find_substream_name_from_path();
+            // let config = find_substream_config();
+            // upload_config_and_spkg_file(&config, &spkg_path).await;
         }
     }
 }
