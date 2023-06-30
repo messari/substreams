@@ -10,6 +10,7 @@ pub mod keyer;
 pub mod math;
 pub mod price;
 pub mod storage;
+pub mod tables;
 pub mod types;
 pub mod utils;
 

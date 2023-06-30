@@ -12,6 +12,7 @@ build-all:
 	$(MAKE) -C eth-balance build
 	$(MAKE) -C ens-names build
 	$(MAKE) -C eth-supply build
+	$(MAKE) -C aave-v2 build
 
 .PHONY: run-all
 run-all:
@@ -22,6 +23,7 @@ run-all:
 	$(MAKE) -C network run
 	$(MAKE) -C ens-names run
 	$(MAKE) -C eth-supply run
+	$(MAKE) -C aave-v2 run
 
 .PHONY: test
 test:
