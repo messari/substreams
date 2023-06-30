@@ -10,7 +10,7 @@ use crate::streaming_fast::file_sinks::helpers::parquet::parquet_schema_builder:
 use crate::streaming_fast::file_sinks::helpers::parquet::repetition_and_definition::{RepetitionAndDefinitionLvls, RepetitionAndDefinitionLvlStoreBuilder};
 use crate::streaming_fast::file_sinks::helpers::parquet::struct_decoder::StructDecoder;
 
-const UNCOMPRESSED_FILE_SIZE_THRESHOLD: usize = 10 * 1024 * 1024; // 10MB
+const UNCOMPRESSED_FILE_SIZE_THRESHOLD: usize = 10 * 8 * 1024 * 1024; // 10MB, in bits
 
 pub(crate) struct ParquetFileSink {
     decoder: StructDecoder,

@@ -23,11 +23,11 @@ impl UploadCliToAws {
         let file_name = cli_file_path.file_name().unwrap().to_string_lossy().to_string();
         assert_eq!(file_name.as_str(), "messari", "CLI needs to be called messari!");
 
-        let bucket_name = "spkg-bucket";
+        let bucket_name = "data-warehouse-load-427049689281-dev";
         let region = "us-west-2".parse().unwrap();
         let credentials = Credentials::default().unwrap();
         let bucket = Bucket::new(bucket_name, region, credentials).unwrap();
-        let response_data = bucket.put_object("/messari-cli/messari", file_data.as_slice()).await.unwrap();
+        let response_data = bucket.put_object("/cli/messari-cli", file_data.as_slice()).await.unwrap();
         assert_eq!(response_data.status_code(), 200, "Response was not successful!");
         println!("messari CLI has now been uploaded!\nFilesize: {}", get_file_size_string(file_data.len()));
     }

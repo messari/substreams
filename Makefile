@@ -37,7 +37,7 @@ install-cli:
 .PHONY: upload-cli-for-dagster
 upload-cli-for-dagster:
 	$(MAKE) -C messari-cli build-dagster
-	messari upload-file-to-spkg-bucket ./messari-cli/dagster-cli/messari
+	messari upload-cli-to-aws ./messari-cli/dagster-cli/messari
 
 .PHONY: pack-all
 pack-all:
