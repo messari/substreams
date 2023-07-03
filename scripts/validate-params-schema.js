@@ -1,6 +1,6 @@
 const Validator = require('jsonschema').Validator;
-const paramsSchema = require('./schemas/params.schema.json');
-const params = require('./params');
+const paramsSchema = require('../config/schemas/params.schema.json');
+const params = require('../config/params');
 
 (() => {
     var v = new Validator();

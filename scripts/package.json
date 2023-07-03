@@ -1,0 +1,24 @@
+{
+  "name": "config",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "validate:params": "node validate-params-schema.js",
+    "validate:subgraphs": "node validate-subgraphs-schema.js",
+    "versions:update": "node update-substreams-versions.js",
+    "versions:update:git": "node update-substreams-versions.js `git diff --name-only master`",
+    "versions:update:list": "node list-update-versions.js",
+    "versions:list": "node list-substreams-versions.js",
+    "versions:validate": "node validate-versions.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "json-schema": "^0.4.0",
+    "jsonschema": "^1.4.1",
+    "semver": "^7.5.3"
+  }
+}
