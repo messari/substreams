@@ -1,7 +1,7 @@
 const Validator = require('jsonschema').Validator;
-const subgraphsSchema = require('./schemas/subgraphs.schema.json');
-const subgraphs = require('./subgraphs');
-const substreams = require('./params');
+const subgraphsSchema = require('../config/schemas/subgraphs.schema.json');
+const subgraphs = require('../config/subgraphs');
+const substreams = require('../config/params');
 
 (() => {
     var v = new Validator();
