@@ -13,6 +13,7 @@ message Domain {
     string registrant_address = 6;
 
     string transaction_hash = 7;
+    uint64 block_number = 8;
 }
 
 message Domains {
