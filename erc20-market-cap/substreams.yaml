@@ -1,7 +1,7 @@
 specVersion: v0.1.0
 package:
   name: erc20_market_cap_substreams
-  version: v0.1.1
+  version: v0.1.2
 imports:
   eth: >-
     https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
