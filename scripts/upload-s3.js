@@ -26,7 +26,7 @@ const params = require('../config/params.json');
         const spkgCommand = new PutObjectCommand({
             Bucket: BUCKET,
             Key: `spkgs/${spkg}`,
-            Body: fs.readFileSync(`/tmp/spkgs/${spkg}`, 'binary'),
+            Body: fs.readFileSync(`/tmp/spkgs/${spkg}`),
         });
 
         promises.push(
