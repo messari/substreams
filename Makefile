@@ -11,6 +11,8 @@ build-all:
 	$(MAKE) -C solana-sample build
 	$(MAKE) -C eth-balance build
 	$(MAKE) -C ens-names build
+	$(MAKE) -C eth-supply build
+	$(MAKE) -C aave-v2 build
 
 .PHONY: run-all
 run-all:
@@ -20,6 +22,8 @@ run-all:
 	$(MAKE) -C erc721 run
 	$(MAKE) -C network run
 	$(MAKE) -C ens-names run
+	$(MAKE) -C eth-supply run
+	$(MAKE) -C aave-v2 run
 
 .PHONY: test
 test:
@@ -33,7 +37,7 @@ install-cli:
 .PHONY: upload-cli-for-dagster
 upload-cli-for-dagster:
 	$(MAKE) -C messari-cli build-dagster
-	messari upload-file-to-spkg-bucket ./messari-cli/dagster-cli/messari
+	messari upload-cli-to-aws ./messari-cli/dagster-cli/messari
 
 .PHONY: pack-all
 pack-all:

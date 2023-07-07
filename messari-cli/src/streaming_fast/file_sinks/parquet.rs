@@ -1,16 +1,18 @@
+use derives::proto_structure_info::{FieldSpecification, MessageInfo};
 use parquet::data_type::Int64Type;
 use parquet::file::properties::WriterPropertiesPtr;
 use parquet::file::writer::SerializedFileWriter;
 use parquet::schema::types::TypePtr;
-use derives::proto_structure_info::{FieldSpecification, MessageInfo};
 
 use crate::streaming_fast::file_sinks::file_sink::FileSink;
 use crate::streaming_fast::file_sinks::helpers::parquet::file_buffer::FileBuffer;
 use crate::streaming_fast::file_sinks::helpers::parquet::parquet_schema_builder::ParquetSchemaBuilder;
-use crate::streaming_fast::file_sinks::helpers::parquet::repetition_and_definition::{RepetitionAndDefinitionLvls, RepetitionAndDefinitionLvlStoreBuilder};
+use crate::streaming_fast::file_sinks::helpers::parquet::repetition_and_definition::{
+    RepetitionAndDefinitionLvlStoreBuilder, RepetitionAndDefinitionLvls,
+};
 use crate::streaming_fast::file_sinks::helpers::parquet::struct_decoder::StructDecoder;
 
-const UNCOMPRESSED_FILE_SIZE_THRESHOLD: usize = 10 * 1024 * 1024; // 10MB
+const UNCOMPRESSED_FILE_SIZE_THRESHOLD: usize = 10 * 8 * 1024 * 1024; // 10MB, in bits
 
 pub(crate) struct ParquetFileSink {
     decoder: StructDecoder,
@@ -23,11 +25,18 @@ pub(crate) struct ParquetFileSink {
 
 impl FileSink for ParquetFileSink {
     fn new(output_type_info: MessageInfo) -> Self {
-        let mut parquet_schema_builder = ParquetSchemaBuilder::new(output_type_info.type_name.clone());
+        let mut parquet_schema_builder =
+            ParquetSchemaBuilder::new(output_type_info.type_name.clone());
 
-        let struct_is_required = output_type_info.field_specification == FieldSpecification::Required;
+        let struct_is_required =
+            output_type_info.field_specification == FieldSpecification::Required;
 
-        let decoder = StructDecoder::new("", output_type_info, &mut parquet_schema_builder, &mut RepetitionAndDefinitionLvlStoreBuilder::new());
+        let decoder = StructDecoder::new(
+            "",
+            output_type_info,
+            &mut parquet_schema_builder,
+            &mut RepetitionAndDefinitionLvlStoreBuilder::new(),
+        );
 
         let (parquet_schema, writer_properties) = parquet_schema_builder.compile();
 
@@ -41,14 +50,26 @@ impl FileSink for ParquetFileSink {
         }
     }
 
-    fn process(&mut self, proto_data: &mut &[u8], block_number: i64) -> Result<Option<Vec<u8>>, String> {
+    fn process(
+        &mut self,
+        proto_data: &mut &[u8],
+        block_number: i64,
+    ) -> Result<Option<Vec<u8>>, String> {
         if proto_data.is_empty() {
             if self.struct_is_required {
-                self.decoder.push_null_or_default_values(&mut self.uncompressed_file_size, RepetitionAndDefinitionLvls::new())?;
+                self.decoder.push_null_or_default_values(
+                    &mut self.uncompressed_file_size,
+                    RepetitionAndDefinitionLvls::new(),
+                )?;
                 self.block_numbers.push(block_number);
             }
         } else {
-            self.decoder.decode(proto_data, 2, &mut self.uncompressed_file_size, RepetitionAndDefinitionLvls::new())?;
+            self.decoder.decode(
+                proto_data,
+                2,
+                &mut self.uncompressed_file_size,
+                RepetitionAndDefinitionLvls::new(),
+            )?;
             self.block_numbers.push(block_number);
         }
 
@@ -66,14 +87,25 @@ impl FileSink for ParquetFileSink {
         }
 
         let file_buffer = FileBuffer::new();
-        let mut file_writer = SerializedFileWriter::new(file_buffer.clone(), self.parquet_schema.clone(), self.writer_properties.clone()).unwrap();
+        let mut file_writer = SerializedFileWriter::new(
+            file_buffer.clone(),
+            self.parquet_schema.clone(),
+            self.writer_properties.clone(),
+        )
+        .unwrap();
         let mut row_group_writer = file_writer.next_row_group().unwrap();
 
-        println!("Column: block_numbers, #values: {}", self.block_numbers.len());
+        println!(
+            "Column: block_numbers, #values: {}",
+            self.block_numbers.len()
+        );
 
         // We need to add the block_numbers to the first column before adding the rest of the data from the proto decoding (block_number is the primary key for our data!)
         let mut serialized_column_writer = row_group_writer.next_column().unwrap().unwrap();
-        serialized_column_writer.typed::<Int64Type>().write_batch(self.block_numbers.as_slice(), None, None).unwrap();
+        serialized_column_writer
+            .typed::<Int64Type>()
+            .write_batch(self.block_numbers.as_slice(), None, None)
+            .unwrap();
         serialized_column_writer.close().unwrap();
         self.block_numbers.clear();
 
@@ -97,21 +129,21 @@ mod tests {
         pub struct AnotherStruct {
             field1: Vec<u64>,
             field2: Option<String>,
-            field3: u32
+            field3: u32,
         }
 
         #[derive(TestData)]
         pub enum ExampleEnum {
             Variant1(u64),
             Variant2(String),
-            Variant3(AnotherStruct)
+            Variant3(AnotherStruct),
         }
 
         #[derive(TestData)]
         pub struct EnumTest {
             #[proto_type(Oneof[(Variant1,u64), (Variant2,String), (Variant3,AnotherStruct)])]
             field1: ExampleEnum,
-            field2: Vec<String>
+            field2: Vec<String>,
         }
 
         assert_data_sinks_to_parquet_correctly::<EnumTest>();
@@ -135,7 +167,7 @@ mod tests {
             field4: Vec<u64>,
             field5: OptionalAndRepeatedFields,
             field6: Option<OptionalAndRepeatedFields>,
-            field7: Vec<OptionalAndRepeatedFields>
+            field7: Vec<OptionalAndRepeatedFields>,
         }
 
         assert_data_sinks_to_parquet_correctly::<TwoLayeredOptionalAndRepeatedFields>();
@@ -145,12 +177,12 @@ mod tests {
     fn test_escrow_reward() {
         #[derive(TestData)]
         pub struct Timestamp {
-            timestamp: u64
+            timestamp: u64,
         }
 
         #[derive(TestData)]
         pub struct BigInt {
-            val: String
+            val: String,
         }
 
         #[derive(TestData)]
@@ -173,7 +205,7 @@ mod tests {
             escrow_contract_version: EscrowContractVersion,
             balance: BigInt,
             holder: String,
-            timestamp: Timestamp
+            timestamp: Timestamp,
         }
 
         assert_data_sinks_to_parquet_correctly::<EscrowReward>();
@@ -183,12 +215,12 @@ mod tests {
     fn test_token_balance() {
         #[derive(TestData)]
         pub struct Timestamp {
-            timestamp: u64
+            timestamp: u64,
         }
 
         #[derive(TestData)]
         pub struct BigInt {
-            val: String
+            val: String,
         }
 
         #[derive(TestData)]
@@ -196,7 +228,7 @@ mod tests {
             token: String,
             holder: String,
             balance: BigInt,
-            timestamp: Timestamp
+            timestamp: Timestamp,
         }
 
         assert_data_sinks_to_parquet_correctly::<TokenBalance>();
@@ -208,7 +240,7 @@ mod tests {
         pub enum TestEnum {
             Field1,
             Field2,
-            Field3
+            Field3,
         }
 
         #[derive(TestData)]
@@ -219,8 +251,7 @@ mod tests {
             field4: i64,
             #[proto_type(Enum)]
             field5: TestEnum,
-            field6: String
-            // TODO: Put all types here for testing
+            field6: String, // TODO: Put all types here for testing
         }
 
         assert_data_sinks_to_parquet_correctly::<FlatSimple>();

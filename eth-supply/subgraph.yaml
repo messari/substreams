@@ -1,0 +1,17 @@
+specVersion: 0.0.4
+description: Ethereum supply subgraph powered by substreams
+repository: https://github.com/messari/substreams/eth-supply
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: substreams
+    name: eth_supply
+    network: mainnet
+    source:
+      package:
+        moduleName: map_entity_changes
+        file: eth-supply-v0.1.0.spkg
+    mapping:
+      kind: substreams/graph-entities
+      apiVersion: 0.0.5

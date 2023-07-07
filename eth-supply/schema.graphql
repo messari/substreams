@@ -1,0 +1,31 @@
+type Supply @entity(immutable: true) {
+  id: Bytes!
+
+  blockHash: Bytes!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+
+  " Total ETH in existence at this block. All initial supply and rewards added up, minus burned fees. "
+  currentSupply: BigInt!
+
+  " ETH created at genesis. "
+  genesisSupply: BigInt!
+
+  " ETH created as block mining rewards (up until the merge). "
+  cumulativeMiningRewards: BigInt!
+
+  " ETH created as part of including uncle blocks (up until the merge). "
+  cumulativeUncleRewards: BigInt!
+
+  " ETH burned because of base fee burn after eip1559. "
+  cumulativeBurnedFees: BigInt!
+
+  " ETH created in this block as mining rewards. "
+  blockMiningReward: BigInt!
+
+  " ETH created in this block as uncle rewards. "
+  blockUncleReward: BigInt!
+
+  " Eth burned in this block via eip1559. "
+  blockBurnedFees: BigInt!
+}

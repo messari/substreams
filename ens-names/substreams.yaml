@@ -52,3 +52,11 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
       - store: store_ens_record
+
+  - name: ens_jsonl_out
+    kind: map
+    inputs:
+      - store: store_ens_record
+        mode: deltas
+    output:
+      type: proto:messari.ens.v1.Lines

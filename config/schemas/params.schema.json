@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://raw.githubusercontent.com/messari/substreams/master/config/schemas/params.schema.json",
+  "title": "Schema for the definition of substream parameters",
+  "description": "A given substream can potentially be run with multiple different inputs, networks, and start blocks. This schema defines how we define all the supported deployments for the substreams in this repository.",
+
+  "type": "array",
+  "items": {
+    "$ref": "#/$defs/substream"
+  },
+
+  "$defs": {
+    "substream": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "outputModules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subgraphModule": {
+          "type": "string"
+        },
+        "deployments": {
+          "$ref": "#/$defs/substreamDeployments"
+        }
+      },
+      "required": ["name", "path", "outputModules", "deployments"]
+    },
+
+    "substreamDeployment": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "network": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object"
+        },
+        "startBlocks": {
+          "type": "object"
+        }
+      },
+      "required": ["name", "network", "startBlocks"]
+    },
+
+    "substreamDeployments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/substreamDeployment"
+      }
+    }
+  }
+}

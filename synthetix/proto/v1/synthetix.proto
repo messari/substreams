@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package messari.synthetix.v1;
+
+message Timestamp {
+  uint64 block_number = 1;
+  uint64 timestamp = 2;
+}
+
+message BigInt {
+  string val = 1;
+}
+
+message TokenBalance {
+  string token = 1;
+  string holder = 2;
+  BigInt balance = 3; 
+
+  Timestamp timestamp = 4;
+}
+
+message TokenBalances {
+  repeated TokenBalance balances = 1;
+}
+
+enum BALANCE_TYPE{
+    ESCROWED = 0;
+    VESTED = 1;
+}
+
+enum ESCROW_CONTRACT_VERSION {
+    V1 = 0;
+    V2 = 1;
+    V2_FALLBACK = 2;
+}
+ 
+message EscrowReward {
+  BALANCE_TYPE balance_type = 1;
+  ESCROW_CONTRACT_VERSION escrow_contract_version = 2;
+  BigInt balance = 3;
+  string holder = 4;
+
+  Timestamp timestamp = 5;
+}
+
+message EscrowRewards {
+  repeated EscrowReward rewards = 1;
+}
+
+message LiquidatorReward {
+  BigInt claimable = 1;
+  BigInt entryAccumulatedRewards = 2;
+  string account = 3;
+}
+
+message LiquidatorRewards {
+  repeated LiquidatorReward rewards = 1;
+  BigInt accumulatedRewardsPerShare = 2;
+}
+
+message AccumulatedRewardsPerShare {
+  BigInt accumulatedRewardsPerShare = 1;
+
+  Timestamp timestamp = 2;
+}
+
+message ParquetOut {
+  oneof synthetix {
+    TokenBalance balance = 1;
+    EscrowReward escrow_reward = 2;
+    LiquidatorReward liquidator_reward = 3;
+    AccumulatedRewardsPerShare accumulated_rewards_per_share = 4;
+  }
+}
+
+message ParquetOuts {
+  repeated ParquetOut outs = 1;
+}
