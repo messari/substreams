@@ -1,39 +1,35 @@
 specVersion: v0.1.0
 package:
   name: eth_supply
-  version: v0.1.0
-
+  version: v0.1.1
 imports:
-  eth: "https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg"
-  entity: "https://github.com/streamingfast/substreams-entity-change/releases/download/v0.2.1/substreams-entity-change-v0.2.1.spkg"
-
+  eth: >-
+    https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+  entity: >-
+    https://github.com/streamingfast/substreams-entity-change/releases/download/v0.2.1/substreams-entity-change-v0.2.1.spkg
 binaries:
   default:
     type: wasm/rust-v1
-    file: "../target/wasm32-unknown-unknown/release/eth_supply.wasm"
-
+    file: ../target/wasm32-unknown-unknown/release/eth_supply.wasm
 modules:
   - name: map_supply_delta
     kind: map
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: "proto:messari.eth_supply.v1.EthSupply"
-
+      type: proto:messari.eth_supply.v1.EthSupply
   - name: store_supply
     kind: store
     updatePolicy: add
     valueType: bigint
     inputs:
       - map: map_supply_delta
-
   - name: map_output
     kind: map
     inputs:
       - store: store_supply
     output:
-      type: "proto:messari.eth_supply.v1.EthSupply"
-
+      type: proto:messari.eth_supply.v1.EthSupply
   - name: map_entity_changes
     kind: map
     inputs:
@@ -41,10 +37,9 @@ modules:
       - map: map_supply_delta
       - map: map_output
     output:
-      type: "proto:substreams.entity.v1.EntityChanges"
-
+      type: proto:substreams.entity.v1.EntityChanges
 protobuf:
   files:
     - eth_supply.proto
   importPaths:
-    - "./proto/v1"
+    - ./proto/v1

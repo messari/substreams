@@ -1,11 +1,10 @@
 specVersion: v0.1.0
 package:
   name: ens_names
-  version: v0.1.0
-
+  version: v0.1.1
 imports:
-  eth: "https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg"
-
+  eth: >-
+    https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
 protobuf:
   files:
     - ens.proto
@@ -13,12 +12,10 @@ protobuf:
   importPaths:
     - ./proto/v1
     - ../common/proto
-
 binaries:
   default:
     type: wasm/rust-v1
-    file: "../target/wasm32-unknown-unknown/release/ens_names.wasm"
-
+    file: ../target/wasm32-unknown-unknown/release/ens_names.wasm
 modules:
   - name: map_domain
     kind: map
@@ -27,7 +24,6 @@ modules:
       - source: sf.ethereum.type.v2.Block
     output:
       type: proto:messari.ens.v1.Domains
-  
   - name: store_ens_record
     kind: store
     updatePolicy: set
@@ -35,7 +31,6 @@ modules:
     valueType: proto:messari.ens.v1.Domain
     inputs:
       - map: map_domain
-
   - name: store_registrant_ens
     kind: store
     updatePolicy: append
@@ -43,7 +38,6 @@ modules:
     valueType: string
     inputs:
       - map: map_domain
-
   - name: store_registrant_address
     kind: store
     updatePolicy: set
@@ -52,7 +46,6 @@ modules:
     inputs:
       - source: sf.ethereum.type.v2.Block
       - store: store_ens_record
-
   - name: ens_jsonl_out
     kind: map
     inputs:
