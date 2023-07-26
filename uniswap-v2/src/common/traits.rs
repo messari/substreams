@@ -37,10 +37,7 @@ impl<V: AsRef<BigDecimal>> StoreAddSnapshot<V> for StoreAddBigDecimal {
     fn add_snapshot<K: AsRef<str>>(&self, ord: u64, id: i64, k: StoreKey, keys: Vec<K>, value: V) {
         let keys: Vec<&str> = keys.iter().map(AsRef::as_ref).collect();
 
-        self.delete_prefix(
-            ord as i64,
-            &format!("{}:{}:{}", k.unique_id(), id - 1, keys[0]),
-        );
+        self.delete_prefix(ord as i64, &format!("{}:{}", k.unique_id(), id - 1));
         self.add(ord, k.get_unique_snapshot_key(id, keys), value);
     }
 
@@ -57,10 +54,7 @@ impl<V: AsRef<BigInt>> StoreAddSnapshot<V> for StoreAddBigInt {
     fn add_snapshot<K: AsRef<str>>(&self, ord: u64, id: i64, k: StoreKey, keys: Vec<K>, value: V) {
         let keys: Vec<&str> = keys.iter().map(AsRef::as_ref).collect();
 
-        self.delete_prefix(
-            ord as i64,
-            &format!("{}:{}:{}", k.unique_id(), id - 1, keys[0]),
-        );
+        self.delete_prefix(ord as i64, &format!("{}:{}", k.unique_id(), id - 1));
         self.add(ord, k.get_unique_snapshot_key(id, keys), value);
     }
 
