@@ -7,7 +7,7 @@ const { filesChangedToListOfSubstreamsModified } = require("./versions/versions"
     if (process.argv.length < 3) {
         changedFiles = JSON.parse(process.argv[2]);
     } else {
-        changedFiles = process.argv.slice(2, -1);
+        changedFiles = process.argv.slice(2);
     }
 
     const modifiedSubstreams = filesChangedToListOfSubstreamsModified(changedFiles);

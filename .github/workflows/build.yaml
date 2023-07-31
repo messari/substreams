@@ -1,48 +1,10 @@
-name: Messari Substreams
+name: Messari Substreams Build
 on:
   pull_request:
   push:
     branches:
       - master
 jobs:
-  validate-versions:
-    name: ValidateSubstreamVersioning
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.base_ref }}
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: "14"
-
-      - name: Cache dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: npm-${{ hashFiles('./scripts/package-lock.json') }}
-          restore-keys: npm-
-
-      - name: Install dependencies
-        run: cd scripts && npm ci --ignore-scripts
-
-      - name: Validate versions
-        run: |
-          cd scripts
-          CURRENT_VERSIONS=$(npm run versions:list -s)
-
-          git checkout ${{ github.head_ref }}
-          PR_VERSIONS=$(npm run versions:list -s)
-
-          URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${{ github.event.pull_request.number }}/files"
-          PR_FILES=$(curl -s -X GET -G $URL | jq -r '.[] | .filename')
-          SHOULD_UPDATE=$(npm run versions:update:list $(echo $PR_FILES) -s)
-
-          npm run versions:validate $CURRENT_VERSIONS $PR_VERSIONS $SHOULD_UPDATE -s
-
   validate-params:
     name: ValidateSubstreamsParams
     runs-on: ubuntu-latest
