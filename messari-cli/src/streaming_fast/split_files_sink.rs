@@ -11,16 +11,18 @@ use crate::streaming_fast::single_file_sink::SingleFileSink;
 
 pub(crate) struct SplitFilesSink {
     file_sinks: HashMap<u64, SingleFileSink>,
-    pending_sinks: HashMap<u64, i64> // i64 is the starting block corresponding to the sink
+    pending_sinks: HashMap<u64, i64>, // i64 is the starting block corresponding to the sink
+    bucket_name: Option<String>,
 }
 
 impl SplitFilesSink {
-    pub(crate) fn new(oneof_fields: Vec<FieldInfo>, encoding_type: EncodingType, location_type: LocationType, sink_output_path: PathBuf) -> Self {
+    pub(crate) fn new(oneof_fields: Vec<FieldInfo>, encoding_type: EncodingType, location_type: LocationType, sink_output_path: PathBuf, bucket_name: Option<String>) -> Self {
         SplitFilesSink {
             file_sinks: oneof_fields.into_iter().map(|field| {
-                (field.field_number, SingleFileSink::new(field.get_struct_info().0, encoding_type.clone(), location_type.clone(), sink_output_path.clone()))
+                (field.field_number, SingleFileSink::new(field.get_struct_info().0, encoding_type.clone(), location_type.clone(), sink_output_path.clone(), bucket_name.clone()))
             }).collect(),
             pending_sinks: Default::default(),
+            bucket_name: bucket_name,
         }
     }
 }
@@ -92,6 +94,10 @@ impl MultipleFilesSink for SplitFilesSink {
 
     fn get_output_folder_locations(&self) -> Vec<Location> {
         self.file_sinks.values().flat_map(|file_sink| file_sink.get_output_folder_locations()).collect()
+    }
+
+    fn get_bucket_name(&self) -> Option<String> {
+        self.bucket_name.clone()
     }
 
     fn notify_new_block(&mut self, block_number: i64) {

@@ -10,34 +10,34 @@ use crate::streaming_fast::split_files_sink::SplitFilesSink;
 
 pub(crate) struct Sink {
     items_field_number: Option<u64>,
-    multiple_files_sink: Box<dyn MultipleFilesSink>
+    multiple_files_sink: Box<dyn MultipleFilesSink>,
 }
 
 impl Sink {
-    pub(crate) fn new(output_type_info: MessageInfo, encoding_type: EncodingType, location_type: LocationType, sink_output_path: PathBuf) -> Self {
+    pub(crate) fn new(output_type_info: MessageInfo, encoding_type: EncodingType, location_type: LocationType, sink_output_path: PathBuf, bucket_name: Option<String>) -> Self {
         if output_type_info.is_collection_of_items() {
             let (inner_type_info, items_field_number) = output_type_info.get_item_type_info();
 
             if inner_type_info.is_oneof_type() {
                 Sink {
                     items_field_number: Some(items_field_number),
-                    multiple_files_sink: Box::new(SplitFilesSink::new(inner_type_info.fields, encoding_type, location_type, sink_output_path)),
+                    multiple_files_sink: Box::new(SplitFilesSink::new(inner_type_info.fields, encoding_type, location_type, sink_output_path, bucket_name)),
                 }
             } else {
                 Sink {
                     items_field_number: Some(items_field_number),
-                    multiple_files_sink: Box::new(SingleFileSink::new(inner_type_info, encoding_type, location_type, sink_output_path)),
+                    multiple_files_sink: Box::new(SingleFileSink::new(inner_type_info, encoding_type, location_type, sink_output_path, bucket_name)),
                 }
             }
         } else if output_type_info.is_oneof_type() {
             Sink {
                 items_field_number: None,
-                multiple_files_sink: Box::new(SplitFilesSink::new(output_type_info.fields, encoding_type, location_type, sink_output_path)),
+                multiple_files_sink: Box::new(SplitFilesSink::new(output_type_info.fields, encoding_type, location_type, sink_output_path, bucket_name)),
             }
         } else {
             Sink {
                 items_field_number: None,
-                multiple_files_sink: Box::new(SingleFileSink::new(output_type_info, encoding_type, location_type, sink_output_path)),
+                multiple_files_sink: Box::new(SingleFileSink::new(output_type_info, encoding_type, location_type, sink_output_path, bucket_name)),
             }
         }
     }

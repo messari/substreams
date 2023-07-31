@@ -59,45 +59,6 @@ impl StaticStrExt for &'static str {
     }
 }
 
-pub(crate) fn get_files_changed_from_master_branch() -> Vec<PathBuf> {
-    let repo_root_folder = get_repo_root_folder();
-
-    let changed_files_output_bytes = Command::new("git")
-        .args(&["diff", "--name-status", "master"])
-        .stdout(Stdio::piped())
-        .output()
-        .expect("Error getting the modified files between the current branch and master branch!")
-        .stdout;
-
-    let changed_files_output = str::from_utf8(&changed_files_output_bytes)
-        .expect("Failed to read output from \"git diff --name-status main\" command! Make sure you are running commands from inside the messari/substreams repo on your machine!");
-
-    let mut relative_file_paths: Vec<String> = Vec::new();
-    for line in changed_files_output.split("\n").into_iter() {
-        let mut line_iter = line.chars().into_iter();
-
-        let mut spaces_seen = false;
-        let mut relative_file_path = String::new();
-        'a: while let Some(char) = line_iter.next() {
-            if char == ' ' {
-                spaces_seen = true;
-            } else {
-                if spaces_seen {
-                    relative_file_path.push(char);
-                    break 'a;
-                }
-            }
-        }
-        relative_file_path.push_str(&line_iter.collect::<String>());
-        if relative_file_path.is_empty() {
-            panic!("Failed to parse relative file path from \"git diff --name-status main\" command!")
-        }
-        relative_file_paths.push(relative_file_path);
-    }
-
-    relative_file_paths.into_iter().map(|relative_file_path| repo_root_folder.join(relative_file_path)).collect()
-}
-
 pub(crate) fn get_repo_root_folder() -> PathBuf {
     let repo_root_folder_bytes = Command::new("git")
         .args(&["rev-parse", "--show-toplevel"])

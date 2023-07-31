@@ -16,7 +16,7 @@ pub(crate) struct SingleFileSink {
 }
 
 impl SingleFileSink {
-    pub(crate) fn new(mut output_type_info: MessageInfo, encoding_type: EncodingType, location_type: LocationType, mut sink_output_path: PathBuf) -> Self {
+    pub(crate) fn new(mut output_type_info: MessageInfo, encoding_type: EncodingType, location_type: LocationType, mut sink_output_path: PathBuf, bucket_name: Option<String>) -> Self {
         sink_output_path = sink_output_path.join(&output_type_info.type_name);
         output_type_info.field_specification = FieldSpecification::Required;
 
@@ -27,7 +27,7 @@ impl SingleFileSink {
             }
         };
 
-        let sink_output_location = Location::new(location_type, sink_output_path);
+        let sink_output_location = Location::new(location_type, sink_output_path, bucket_name);
 
         SingleFileSink {
             file_sink,
@@ -66,6 +66,13 @@ impl MultipleFilesSink for SingleFileSink {
 
     fn get_output_folder_locations(&self) -> Vec<Location> {
         vec![self.sink_output_location.clone()]
+    }
+
+    fn get_bucket_name(&self) -> Option<String> {
+        match &self.sink_output_location {
+            Location::DataWarehouse(_, bucket_name) => Some(bucket_name.to_string()),
+            _ => None,
+        }
     }
 
     fn notify_new_block(&mut self, _block_number: i64) {}

@@ -5,8 +5,6 @@ use derives::TestData;
 use s3::Bucket;
 use s3::creds::Credentials;
 use crate::streaming_fast::file::Location;
-
-use crate::streaming_fast::file_sinks::parquet::ParquetFileSink;
 use crate::streaming_fast::streamingfast_dtos::Package;
 
 /// Considers all output folder paths and takes the earliest start block from all output folders as the global start block
@@ -31,11 +29,10 @@ pub(crate) async fn get_start_block_numbers(output_folder_paths: Vec<Location>, 
 
     for output_folder_path in output_folder_paths.into_iter() {
         let processed_block_files = match output_folder_path {
-            Location::DataWarehouse(path) => {
-                let bucket_name = "data-warehouse-load-427049689281-dev";
+            Location::DataWarehouse(path, bucket_name) => {
                 let region = "us-west-2".parse().unwrap();
                 let credentials = Credentials::default().unwrap();
-                let bucket = Bucket::new(bucket_name, region, credentials).unwrap();
+                let bucket = Bucket::new(&bucket_name, region, credentials).unwrap();
                 let list_response = bucket.list(path.to_string_lossy().to_string() + "/", Some("/".to_string())).await.unwrap();
                 list_response[0].contents.clone().into_iter().map(|x| x.key).collect::<Vec<_>>()
             }

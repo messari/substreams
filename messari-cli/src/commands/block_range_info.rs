@@ -15,6 +15,8 @@ pub(crate) struct BlockRangeInfo {
     location_type: Option<LocationType>,
     #[arg(short, long, value_name = "Data location path", help="If not specified it will default to check substreams on aws and ./data/ on local.")]
     data_location_path: Option<String>,
+    #[arg(short, long, value_name = "Bucket", help="Mandatory if location type is DWH")]
+    bucket: Option<String>,
 }
 
 #[derive(ValueEnum, Clone)]
@@ -36,12 +38,17 @@ impl BlockRangeInfo {
         let location_type = match self.location_type {
             None => Location::Local,
             Some(LocationType::Local) => Location::Local,
-            Some(LocationType::Dwh) => Location::DataWarehouse,
+            Some(LocationType::Dwh) => {
+                if self.bucket.is_none() {
+                    panic!("Bucket is mandatory if location type is DWH");
+                }
+                Location::DataWarehouse
+            },
         };
 
         let data_location_path = self.data_location_path.clone().map(|path| PathBuf::from(path));
 
-        let (start_block, stop_block) = get_block_range_info(spkg_data, config.output_module.as_str(), location_type, data_location_path, config.get_start_block_override(), config.chain_override).await;
+        let (start_block, stop_block) = get_block_range_info(spkg_data, config.output_module.as_str(), location_type, data_location_path, self.bucket.clone(), config.get_start_block_override(), config.chain_override).await;
 
         println!("{{\"start_block\": {}, \"stop_block\": {}}}", start_block, stop_block);
     }

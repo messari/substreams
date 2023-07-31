@@ -17,7 +17,7 @@ impl ConfigArg {
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct StreamingConfig {
-    pub(crate) name: String,
+    pub(crate) name: Option<String>,
     pub(crate) output_module: String,
     pub(crate) substream_name_override: Option<String>,
     pub(crate) chain_override: Option<Chain>,

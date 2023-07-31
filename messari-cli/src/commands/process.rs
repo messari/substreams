@@ -15,6 +15,8 @@ pub(crate) struct Process {
     location_type: Option<LocationType>,
     #[arg(short, long, value_name = "Data location path", help="If not specified it will default to substreams on aws and ./data/ on local.")]
     data_location_path: Option<String>,
+    #[arg(short, long, value_name = "Bucket", help="Mandatory if location type is DWH")]
+    bucket: Option<String>,
     #[arg(short, long, value_name = "Start Block")]
     start_block: Option<i64>,
     #[arg(short, long, value_name = "Stop Block")]
@@ -40,12 +42,17 @@ impl Process {
         let location_type = match self.location_type {
             None => Location::Local,
             Some(LocationType::Local) => Location::Local,
-            Some(LocationType::Dwh) => Location::DataWarehouse,
+            Some(LocationType::Dwh) => {
+                if self.bucket.is_none() {
+                    panic!("Bucket is mandatory if location type is DWH");
+                }
+                Location::DataWarehouse
+            },
         };
 
         let data_location_path = self.data_location_path.clone().map(|path| PathBuf::from(path));
 
-        process_substream(spkg_data, config, EncodingType::Parquet, location_type, data_location_path, self.start_block, self.stop_block).await;
+        process_substream(spkg_data, config, EncodingType::Parquet, location_type, data_location_path, self.bucket.clone(), self.start_block, self.stop_block).await;
 
         println!("Processing complete!!!");
     }

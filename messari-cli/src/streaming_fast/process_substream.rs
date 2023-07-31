@@ -18,7 +18,7 @@ use crate::streaming_fast::streaming_config::{Chain, StreamingConfig};
 use crate::streaming_fast::streaming_fast_utils::{get_initial_block_for_module, get_start_block_num};
 use crate::streaming_fast::streamingfast_dtos::module::input::Input;
 
-pub(crate) async fn process_substream(spkg: Vec<u8>, config: StreamingConfig, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, start_block_arg: Option<i64>, stop_block_arg: Option<u64>) {
+pub(crate) async fn process_substream(spkg: Vec<u8>, config: StreamingConfig, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, bucket_name: Option<String>, start_block_arg: Option<i64>, stop_block_arg: Option<u64>) {
     let mut package = Package::decode(spkg.as_slice()).unwrap();
 
     let chain = if let Some(chain_override) = config.chain_override {
@@ -36,7 +36,7 @@ pub(crate) async fn process_substream(spkg: Vec<u8>, config: StreamingConfig, en
         get_chain_info(&package)
     };
 
-    let (mut sink, proto_type_name) = get_sink_and_proto_type_name(&package, config.output_module.as_str(), encoding_type, location_type, data_location_path, &chain);
+    let (mut sink, proto_type_name) = get_sink_and_proto_type_name(&package, config.output_module.as_str(), encoding_type, location_type, data_location_path, bucket_name, &chain);
 
     if let Some(substream_name) = config.substream_name_override {
         package.package_meta.iter_mut().next().unwrap().name = substream_name;
@@ -141,7 +141,7 @@ async fn get_block_range(sink: &Sink, package: &Package, proto_type_name: &str, 
     (start_block, stop_block)
 }
 
-fn get_sink_and_proto_type_name(package: &Package, module_name: &str, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, chain: &Chain) -> (Sink, String) {
+fn get_sink_and_proto_type_name(package: &Package, module_name: &str, encoding_type: EncodingType, location_type: LocationType, data_location_path: Option<PathBuf>, bucket_name: Option<String>, chain: &Chain) -> (Sink, String) {
     let mut sink_output_path = if let Some(data_location_path) = data_location_path {
         data_location_path
     } else {
@@ -162,7 +162,7 @@ fn get_sink_and_proto_type_name(package: &Package, module_name: &str, encoding_t
     let package_version = get_package_version(package);
     sink_output_path = sink_output_path.join(package_version);
 
-    let sink = Sink::new(output_type_info, encoding_type, location_type, sink_output_path);
+    let sink = Sink::new(output_type_info, encoding_type, location_type, sink_output_path, bucket_name);
 
     (sink, proto_type_name)
 }
@@ -210,10 +210,10 @@ fn get_chain_info(package: &Package) -> Chain {
 }
 
 /// Returns block range info in the form -> (start_block_num, stop_block_num)
-pub(crate) async fn get_block_range_info(spkg: Vec<u8>, module_name: &str, location_type: LocationType, data_location_path: Option<PathBuf>, start_block_override: Option<i64>, chain_override: Option<Chain>) -> (i64, i64) {
+pub(crate) async fn get_block_range_info(spkg: Vec<u8>, module_name: &str, location_type: LocationType, data_location_path: Option<PathBuf>, bucket_name: Option<String>, start_block_override: Option<i64>, chain_override: Option<Chain>) -> (i64, i64) {
     let package = Package::decode(spkg.as_slice()).unwrap();
     let chain = chain_override.unwrap_or(get_chain_info(&package));
-    let (sink, proto_type_name) = get_sink_and_proto_type_name(&package, module_name, EncodingType::Parquet, location_type, data_location_path, &chain);
+    let (sink, proto_type_name) = get_sink_and_proto_type_name(&package, module_name, EncodingType::Parquet, location_type, data_location_path, bucket_name, &chain);
 
     get_block_range(&sink, &package, &proto_type_name, &chain, start_block_override, None).await
 }

@@ -96,45 +96,6 @@ impl CargoToml {
         true
     }
 
-    pub(crate) fn get_local_dependencies(&self) -> Vec<PathBuf> {
-        let item = if let Some(item) = self.manifest.data.get("dependencies") {
-            item
-        } else {
-            return Vec::new()
-        };
-
-        let dependency_table = item.as_table().unwrap();
-
-        let mut local_dependency_paths = Vec::new();
-        'a: for (_, dependency_value) in dependency_table.iter() {
-            let inner_table = if let Some(dep_value) = dependency_value.as_value() {
-                if let Some(inner_table) = dep_value.as_inline_table() {
-                    inner_table
-                } else {
-                    continue 'a;
-                }
-            } else {
-                continue 'a;
-            };
-
-            for (key, value) in inner_table.iter() {
-                if key == "path" {
-                    local_dependency_paths.push(value.as_str().unwrap().to_string());
-                    continue 'a;
-                }
-            }
-        }
-
-        local_dependency_paths.into_iter().map(|x| {
-            let local_dependency_path = self.cargo_dir.join(x);
-            if local_dependency_path.exists() {
-                local_dependency_path.canonicalize().unwrap()
-            } else {
-                panic!("Local dependency path: {}, referenced in {}/Cargo.toml not found!", local_dependency_path.to_string_lossy(), self.cargo_dir.to_string_lossy());
-            }
-        }).collect()
-    }
-
     /// Returns true if an edit to the cargo.toml was made. (false if no changes made)
     pub(crate) fn add_build_dependencies(&mut self, build_dependencies: Vec<Dependency>) -> bool {
         if build_dependencies.is_empty() {

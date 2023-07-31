@@ -1,7 +1,5 @@
 use std::fs;
 use std::path::PathBuf;
-use s3::Bucket;
-use s3::creds::Credentials;
 use tokio::fs::File as TokioFile;
 use tokio::io::AsyncWriteExt;
 
@@ -23,14 +21,7 @@ impl File {
 
     pub(crate) async fn save(self) {
         match self.output_location {
-            Location::DataWarehouse(file_path) => {
-                // let bucket_name = "data-warehouse-load-427049689281-dev";
-                // let region = "us-west-2".parse().unwrap();
-                // let credentials = Credentials::default().unwrap();
-                // let bucket = Bucket::new(bucket_name, region, credentials).unwrap();
-                // let response_data = bucket.put_object(file_path.to_str().unwrap(), self.file_data.as_slice()).await.unwrap();
-
-                let bucket_name = "data-warehouse-load-427049689281-dev";
+            Location::DataWarehouse(file_path, bucket_name) => {
                 let region = "us-west-2";
                 let file_data_len = self.file_data.len();
 
@@ -39,13 +30,11 @@ impl File {
                     .bucket(bucket_name)
                     .key(file_path.to_str().unwrap())
                     .body(self.file_data.into())
-                    .metadata("substream_data", "AWAITING_UPLOAD_TO_SNOWFLAKE")
                     .send()
                     .await
                     .unwrap();
 
-                // assert_eq!(response_data.status_code(), 200, "Response was not successful!");
-                println!("Data warehouse file uploaded!\nFilesize: {}B, Prefix: {}", get_file_size_string(file_data_len), file_path.to_string_lossy());
+                println!("S3 file uploaded!\nFilesize: {}B, Prefix: {}", get_file_size_string(file_data_len), file_path.to_string_lossy());
             }
             Location::Local(file_path) => {
                 let mut file = TokioFile::create(&file_path).await.unwrap();
@@ -58,14 +47,14 @@ impl File {
 
 #[derive(Clone)]
 pub(crate) enum Location {
-    DataWarehouse(PathBuf),
+    DataWarehouse(PathBuf, String),
     Local(PathBuf)
 }
 
 impl Location {
-    pub(crate) fn new(location_type: LocationType, path: PathBuf) -> Location {
+    pub(crate) fn new(location_type: LocationType, path: PathBuf, bucket_name: Option<String>) -> Location {
         match location_type {
-            LocationType::DataWarehouse => Location::DataWarehouse(path),
+            LocationType::DataWarehouse => Location::DataWarehouse(path, bucket_name.unwrap()),
             LocationType::Local => {
                 fs::create_dir_all(&path).unwrap();
                 Location::Local(path)
@@ -79,7 +68,7 @@ impl Location {
         };
 
         match self {
-            Location::DataWarehouse(base_path) => Location::DataWarehouse(base_path.join(filename)),
+            Location::DataWarehouse(base_path, bucket_name) => Location::DataWarehouse(base_path.join(filename), bucket_name.to_string()),
             Location::Local(base_path) => Location::Local(base_path.join(filename))
         }
     }

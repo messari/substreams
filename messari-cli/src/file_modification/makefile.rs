@@ -139,27 +139,6 @@ impl MakeFile {
         true
     }
 
-    pub(crate) fn get_spkg_target_path(&self) -> Option<PathBuf> {
-        for command in self.commands.iter() {
-            if command.command_name == "pack" {
-                for operation in command.operations.iter() {
-                    if operation.starts_with("substreams pack") {
-                        let mut arg_iter = operation.split(" ").into_iter();
-                        while let Some(arg) = arg_iter.next() {
-                            if arg == "--output-file" {
-                                if let Some(relative_output_file_path) = arg_iter.next() {
-                                    return Some(self.makefile_dir.join(relative_output_file_path));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        None
-    }
-
     pub(crate) fn get_file_contents(self) -> String {
         let command_block_strings = self
             .commands
