@@ -9,12 +9,12 @@ pub mod common {
 }
 
 #[rustfmt::skip]
-#[path = "../target/pb/messari.dex_amm.v1.rs"]
-pub(in crate::pb) mod dex_amm_v1;
+#[path = "../target/pb/substreams.entity.v1.rs"]
+pub(in crate::pb) mod entity_v1;
 
-pub mod dex_amm {
+pub mod entity {
     pub mod v1 {
-        pub use super::super::dex_amm_v1::*;
+        pub use super::super::entity_v1::*;
     }
 }
 
