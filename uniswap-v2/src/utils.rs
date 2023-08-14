@@ -31,8 +31,7 @@ pub fn delta_value(delta: &DeltaBigDecimal) -> BigDecimal {
 pub fn calculate_revenue(volume: BigDecimal) -> (BigDecimal, BigDecimal) {
     let supply_side_revenue =
         volume.clone() * BigDecimal::from(25_i32) / BigDecimal::from(10000_i32);
-    let protocol_side_revenue =
-        volume * BigDecimal::from(5_i32) / BigDecimal::from(10000_i32);
+    let protocol_side_revenue = volume * BigDecimal::from(5_i32) / BigDecimal::from(10000_i32);
 
     (supply_side_revenue, protocol_side_revenue)
 }
