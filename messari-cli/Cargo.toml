@@ -20,6 +20,23 @@ semver = "1.0.14"
 strum = "0.24.1"
 regex = "1.6.0"
 url = "2.3.1"
+parquet = "35.0.0"
+rust-s3 = "0.32.3"
+futures = "0.3.27"
+bytes = "1.4.0"
+prost = "0.11.6"
+prost-types = "0.11.6"
+tokio = { version ="1.25.0", features = ["macros", "rt-multi-thread", "fs"] }
+tonic = { version = "0.8.3", features = ["tls-roots", "gzip"] }
+rand = "0.8.5"
+derives = { path= "derives" }
+async-trait = "0.1.68"
+aws-sdk-s3 = "0.28.0"
+aws-config = "0.55.3"
+
+#[dev-dependencies]
+#rand = "0.8.5"
+#rand_derive2 = { version="0.1.18", path= "test_data_derive" }
 
 [[bin]]
 name = "messari"

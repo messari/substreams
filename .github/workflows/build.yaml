@@ -70,6 +70,8 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: install-cli
+        run: make install-cli
       - name: build all
         run: |
           chmod a+x /opt/hostedtoolcache/streamingfast/substreams/v1.0.1/linux-x64/substreams
