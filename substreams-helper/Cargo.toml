@@ -20,6 +20,10 @@ tiny-keccak = { version = "2.0", features = ["keccak"] }
 substreams = { workspace = true }
 substreams-ethereum = { workspace = true }
 thiserror = "1.0.37"
+downcast-rs = "1.2.0"
+substreams-entity-change = "1.1.0"
+base64 = "0.13.0"
+
 
 [build-dependencies]
 anyhow = "1.0.69"

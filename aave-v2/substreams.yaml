@@ -1,0 +1,83 @@
+specVersion: v0.1.0
+package:
+  name: aave_v2
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.3.spkg
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/aave_v2.wasm"
+
+modules:
+  - name: store_observed_contracts
+    kind: store
+    initialBlock: 12486774
+    updatePolicy: set_if_not_exists
+    valueType: "proto:messari.aave_v2.v1.Contract"
+    inputs:
+      - params: string
+      - source: sf.ethereum.type.v2.Block
+    doc: |
+      Stores the addresses of the AAVE contracts we want to track.
+      It requires as params a semicolon separated list of hex addresses which should be the
+      initial contracts to track (not factory created). And those that will spawn new contracts.
+
+  - name: map_atoken_supply_changes
+    kind: map
+    initialBlock: 12486774
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_observed_contracts
+    output:
+      type: "proto:messari.aave_v2.v1.ATokenSupplies"
+    doc: |
+      Will look at storage changes from addresses in `store_observed_contracts`
+      and look for scaled_total_supply changes on AToken, StableDebtToken and VariableDebtToken contracts.
+
+  - name: map_atoken_balances
+    kind: map
+    initialBlock: 12486774
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_observed_contracts
+    output:
+      type: "proto:messari.aave_v2.v1.ATokenBalances"
+    doc: |
+      Will look at storage changes and Transfer events on AToken, StableDebtToken and VariableDebtToken
+      to track scaled_balance's of token holders. The output is a list of balances for all accounts
+      that had their balance change in the block.
+
+  - name: map_raw_events
+    kind: map
+    initialBlock: 12486774
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_observed_contracts
+    output:
+      type: "proto:messari.aave_v2.v1.AaveV2Events"
+    doc: |
+      Will output literally every event emitted by the AAVE contracts being observed.
+
+  - name: map_output
+    kind: map
+    initialBlock: 12486774
+    inputs:
+      - map: map_raw_events
+      - map: map_atoken_balances
+      - map: map_atoken_supply_changes
+    output:
+      type: "proto:messari.aave_v2.v1.Output"
+    doc: |
+      Combines the output of all previous modules (supply, balances, events). Useful to be sinked somewhere.
+
+protobuf:
+  files:
+    - aave_v2.proto
+  importPaths:
+    - "./proto/v1"
+
+params:
+  store_observed_contracts: "0x357d51124f59836ded84c8a1730d72b749d8bc23;0x8dff5e27ea6b7ac08ebfdf9eb090f32ee9a30fcf;0x26db2b833021583566323e3b8985999981b9f1f3"

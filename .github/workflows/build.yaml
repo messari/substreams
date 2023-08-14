@@ -1,10 +1,37 @@
-name: Messari Substreams
+name: Messari Substreams Build
 on:
   pull_request:
   push:
     branches:
       - master
 jobs:
+  validate-params:
+    name: ValidateSubstreamsParams
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('./scripts/package-lock.json') }}
+          restore-keys: npm-
+
+      - name: Install dependencies
+        run: cd scripts && npm ci --ignore-scripts
+
+      - name: Validate Substreams Params Schema
+        run: cd scripts && npm run validate:params
+
+      - name: Validate Subgraph Deployments
+        run: cd scripts && npm run validate:subgraphs
+
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -15,7 +42,7 @@ jobs:
         uses: jaxxstorm/action-install-gh-release@v1.7.1
         with:
           repo: streamingfast/substreams
-          tag: v0.0.21
+          tag: v1.0.1
           cache: enable
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -24,10 +51,10 @@ jobs:
       - name: install rust-toolchain
         uses: actions-rs/toolchain@v1.0.6
         with:
-            toolchain: stable
-            target: wasm32-unknown-unknown
-            override: true
-            components: rustfmt, clippy
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          override: true
+          components: rustfmt, clippy
       - name: run cargo fmt check
         uses: actions-rs/cargo@v1
         with:
@@ -45,6 +72,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: build all
         run: |
-          chmod a+x /opt/hostedtoolcache/streamingfast/substreams/v0.0.21/linux-x64/substreams_0.0.21_linux_x86_64/substreams
-          export PATH="/opt/hostedtoolcache/streamingfast/substreams/v0.0.21/linux-x64/substreams_0.0.21_linux_x86_64/:$PATH"
+          chmod a+x /opt/hostedtoolcache/streamingfast/substreams/v1.0.1/linux-x64/substreams
+          export PATH="/opt/hostedtoolcache/streamingfast/substreams/v1.0.1/linux-x64/:$PATH"
           make build-all

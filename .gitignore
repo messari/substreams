@@ -8,6 +8,8 @@ Reference/
 
 **/target/
 **/build/
+**/data/
 **/*.spkg
 **/buf.gen.yaml
+replay.log
 Cargo.lock

@@ -3,6 +3,20 @@
 version = 3
 
 [[package]]
+name = "aave-v2"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ethabi",
+ "hex-literal",
+ "prost 0.11.9",
+ "substreams 0.5.6",
+ "substreams-common",
+ "substreams-ethereum",
+ "substreams-helper",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "0.7.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -193,6 +207,12 @@ dependencies = [
  "block-buffer",
  "crypto-common",
 ]
+
+[[package]]
+name = "downcast-rs"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "either"
@@ -1049,6 +1069,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "substreams-entity-change"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5fae0dac9eaf0a2d5b626a8afe039f87eb3a353bd91a419aa56f6bcf8a05302"
+dependencies = [
+ "base64",
+ "prost 0.11.9",
+ "prost-types 0.11.1",
+ "substreams 0.5.6",
+]
+
+[[package]]
 name = "substreams-erc20-holdings"
 version = "0.1.0"
 dependencies = [
@@ -1142,7 +1174,9 @@ name = "substreams-helper"
 version = "0.0.2"
 dependencies = [
  "anyhow",
+ "base64",
  "bigdecimal",
+ "downcast-rs",
  "ethabi",
  "hex",
  "hex-literal",
@@ -1152,6 +1186,7 @@ dependencies = [
  "prost-types 0.10.1",
  "substreams 0.5.0",
  "substreams-common",
+ "substreams-entity-change 1.1.0",
  "substreams-ethereum",
  "thiserror",
  "tiny-keccak",
@@ -1231,6 +1266,23 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "synthetix"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ethabi",
+ "hex",
+ "hex-literal",
+ "num-bigint",
+ "prost 0.11.9",
+ "substreams 0.5.6",
+ "substreams-common",
+ "substreams-entity-change 1.1.0",
+ "substreams-ethereum",
+ "substreams-helper",
 ]
 
 [[package]]
