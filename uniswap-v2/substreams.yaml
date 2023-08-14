@@ -1,101 +1,241 @@
 specVersion: v0.1.0
 package:
-  name: "substreams_uniswap_v2"
+  name: substreams_uniswap_v2
   version: v0.1.0
 
 imports:
   eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
-
-protobuf:
-  files:
-    - common.proto
-    - dex_amm.proto
-    - uniswap.proto
-    - erc20.proto
-  importPaths:
-    - ../common/proto
-    - ./proto/v1
-    - ./proto/v2
+  entities_change: https://github.com/streamingfast/substreams-entity-change/releases/download/v0.2.0/substreams-entity-change-v0.2.0.spkg
 
 binaries:
   default:
     type: wasm/rust-v1
-    file: ../target/wasm32-unknown-unknown/release/substreams_uniswap_v2.wasm
+    file: "../target/wasm32-unknown-unknown/release/substreams_uniswap_v2.wasm"
+
+protobuf:
+  files:
+    - common.proto
+    - erc20.proto
+    - uniswap.proto
+  importPaths:
+    - ./proto/v1
+    - ../common/proto
 
 modules:
-  - name: map_pair_created_events
+  - name: map_pool_created
     kind: map
-    initialBlock: 10000835
+    initialBlock: 10008300
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:messari.uniswap.v2.PairCreatedEvents
-
-  - name: store_pair_created_events
-    kind: store
-    updatePolicy: set
-    valueType: proto:messari.uniswap.v2.PairCreatedEvents
-    inputs:
-      - map: map_pair_created_events
-
-  - name: map_pools
-    kind: map
-    inputs:
-      - map: map_pair_created_events
-    output:
-      type: proto:messari.dex_amm.v1.Pools
+      type: proto:messari.uniswap.v2.Pools
 
   - name: store_pools
     kind: store
-    updatePolicy: set
-    valueType: proto:messari.dex_amm.v1.Pools
+    updatePolicy: set_if_not_exists
+    valueType: proto:messari.uniswap.v2.Pool
     inputs:
-      - map: map_pools
+      - map: map_pool_created
 
-  - name: map_mint_events
-    kind: map
-    initialBlock: 10000835
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - store: store_pools
-    output:
-      type: proto:messari.uniswap.v2.MintEvents
-
-  - name: map_block_to_transfers
-    kind: map
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-    output:
-      type: proto:messari.erc20.v1.TransferEvents
-
-  - name: store_transfers
+  - name: store_output_token_supply
     kind: store
-    updatePolicy: set
-    valueType: proto:messari.erc20.v1.TransferEvents
-    inputs:
-      - map: map_block_to_transfers
-
-  - name: map_swap_events
-    kind: map
-    initialBlock: 10000835
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-      - store: store_pools
-    output:
-      type: proto:messari.uniswap.v2.SwapEvents
-
-  - name: store_swap_events
-    kind: store
-    initialBlock: 10000835
-    updatePolicy: set
-    valueType: proto:messari.uniswap.v2.SwapEvent
-    inputs:
-      - map: map_swap_events
-
-  - name: store_swap_count
-    kind: store
-    initialBlock: 10000835
     updatePolicy: add
-    valueType: int64
+    valueType: bigint
     inputs:
-      - map: map_swap_events
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pools
+
+  - name: map_pool_events
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pools
+      - store: store_output_token_supply
+        mode: deltas
+    output:
+      type: proto:messari.uniswap.v2.Events
+
+  - name: store_input_token_balances
+    kind: store
+    updatePolicy: set
+    valueType: bigint
+    inputs:
+      - map: map_pool_events
+
+  - name: store_native_prices
+    kind: store
+    updatePolicy: set
+    valueType: bigdecimal
+    inputs:
+      - store: store_pools
+      - store: store_input_token_balances
+      - store: store_input_token_balances
+        mode: deltas
+
+  - name: store_usd_prices
+    kind: store
+    updatePolicy: set
+    valueType: bigdecimal
+    inputs:
+      - store: store_pools
+      - map: map_pool_events
+      - store: store_native_prices
+
+  - name: store_pool_tvl
+    kind: store
+    updatePolicy: set
+    valueType: bigdecimal
+    inputs:
+      - store: store_pools
+      - store: store_input_token_balances
+      - store: store_input_token_balances
+        mode: deltas
+      - store: store_usd_prices
+
+  - name: store_volume
+    kind: store
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - map: map_pool_events
+      - store: store_usd_prices
+
+  - name: store_volume_by_token_amount
+    kind: store
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: map_pool_events
+
+  - name: store_cumulative_fields
+    kind: store
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - store: store_volume
+        mode: deltas
+
+  - name: map_liquidity_pool_entity
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - store: store_pools
+      - store: store_output_token_supply
+      - store: store_input_token_balances
+      - store: store_input_token_balances
+        mode: deltas
+      - store: store_pool_tvl
+      - store: store_cumulative_fields
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
+  - name: store_daily_and_hourly_fields
+    kind: store
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - store: store_volume
+        mode: deltas
+
+  - name: map_liquidity_pool_snapshots_entity
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - store: store_pools
+      - store: store_output_token_supply
+      - store: store_input_token_balances
+      - store: store_input_token_balances
+        mode: deltas
+      - store: store_pool_tvl
+      - store: store_cumulative_fields
+      - store: store_daily_and_hourly_fields
+      - store: store_volume_by_token_amount
+      - store: store_usd_prices
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
+  - name: store_protocol_tvl
+    kind: store
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - store: store_pool_tvl
+        mode: deltas
+
+  - name: store_protocol_cumulative_fields
+    kind: store
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - store: store_cumulative_fields
+        mode: deltas
+
+  - name: store_protocol_daily_fields
+    kind: store
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - store: store_volume
+        mode: deltas
+
+  - name: map_protocol_entity
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - store: store_input_token_balances
+        mode: deltas
+      - store: store_protocol_tvl
+      - store: store_protocol_cumulative_fields
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
+  - name: map_financial_daily_snapshot_entity
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - source: sf.substreams.v1.Clock
+      - store: store_input_token_balances
+      - store: store_input_token_balances
+        mode: deltas
+      - store: store_protocol_tvl
+      - store: store_protocol_cumulative_fields
+      - store: store_protocol_daily_fields
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
+  - name: map_token_entity
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - map: map_pool_created
+      - store: store_usd_prices
+        mode: deltas
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
+  - name: map_events_entity
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - map: map_pool_events
+      - store: store_pools
+      - store: store_usd_prices
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
+  - name: graph_out
+    kind: map
+    initialBlock: 10008300
+    inputs:
+      - map: map_liquidity_pool_entity
+      - map: map_liquidity_pool_snapshots_entity
+      - map: map_protocol_entity
+      - map: map_financial_daily_snapshot_entity
+      - map: map_token_entity
+      - map: map_events_entity
+    output:
+      type: proto:substreams.entity.v1.EntityChanges

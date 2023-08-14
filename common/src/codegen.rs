@@ -95,32 +95,35 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     }
 
     let pb_files = {
-        let mut pb_files_hash = HashMap::new();
+        let mut pb_files_hash: HashMap<(String, String), HashSet<String>> = HashMap::new();
         let pb_filenames = dir_filenames(&tmp_dir);
         for file in pb_filenames.iter() {
-            if file == "mod" {
+            // parse version from file name
+            let filename = file.split('.').collect::<Vec<&str>>();
+
+            if filename.len().le(&2) {
                 continue;
             }
 
-            // parse version from file name
-            let filename = file.split('.').collect::<Vec<&str>>();
-            let name = format!("{}.{}", filename[0], filename[1]);
+            let package_name = filename[0].to_string();
+            let name = filename[1].to_string();
             let version = filename[2];
             pb_files_hash
-                .entry(name)
+                .entry((package_name, name))
                 .or_insert(HashSet::new())
                 .insert(version.to_owned());
         }
         let mut pb_files_vec = pb_files_hash
             .into_iter()
-            .map(|(filename, versions_hash)| {
+            .map(|((package_name, filename), versions_hash)| {
                 let mut versions = versions_hash.into_iter().collect::<Vec<_>>();
                 versions.sort();
-                (filename, versions)
+
+                (package_name, filename, versions)
             })
             .collect::<Vec<_>>();
 
-        pb_files_vec.sort_by(|(filename1, _), (filename2, _)| filename1.cmp(filename2));
+        pb_files_vec.sort_by(|(_, filename1, _), (_, filename2, _)| filename1.cmp(filename2));
         pb_files_vec
     };
 
@@ -128,7 +131,7 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
         // We use create_dir rather than create_dir_all as the substreams protogen cmd above always creates the
         // target/tmp folder if successful so we only need to create the pb folder itself. Failure to create this
         // folder would imply a failure with the substreams protogen cmd.
-        fs::create_dir(&target_pb_dir).unwrap();
+        fs::create_dir(&target_pb_dir).unwrap_or_else(|e| panic!("Error creating dir: {}", e));
     }
 
     // Move all pb files to target folder
@@ -148,10 +151,7 @@ pub fn generate_pb(out_dir: Option<&str>) -> Result<(), Error> {
     if !pb_files.is_empty() {
         let pb_file_content = pb_files
             .into_iter()
-            .map(|(filename, versions)| {
-                let split = filename.split(".").collect::<Vec<&str>>();
-                let package_name = split[0];
-                let filename = split[1];
+            .map(|(package_name, filename, versions)| {
                 let (mod_content, registration_content): (Vec<String>, Vec<String>) = versions
                     .into_iter()
                     .map(|version| {
