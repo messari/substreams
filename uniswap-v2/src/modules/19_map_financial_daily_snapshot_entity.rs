@@ -84,7 +84,8 @@ fn create_financial_daily_snapshot(
                     ordinal,
                     StoreKey::TotalValueLockedUSD.get_unique_protocol_key(),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change(
             "dailyVolumeUSD",
@@ -93,7 +94,8 @@ fn create_financial_daily_snapshot(
                     ordinal,
                     StoreKey::DailyVolumeUSD.get_unique_daily_protocol_key(day_id),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change(
             "cumulativeVolumeUSD",
@@ -102,7 +104,8 @@ fn create_financial_daily_snapshot(
                     ordinal,
                     StoreKey::CumulativeVolumeUSD.get_unique_protocol_key(),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change(
             "dailySupplySideRevenueUSD",
@@ -111,7 +114,8 @@ fn create_financial_daily_snapshot(
                     ordinal,
                     StoreKey::DailySupplySideRevenueUSD.get_unique_daily_protocol_key(day_id),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change(
             "cumulativeSupplySideRevenueUSD",
@@ -120,7 +124,8 @@ fn create_financial_daily_snapshot(
                     ordinal,
                     StoreKey::CumulativeSupplySideRevenueUSD.get_unique_protocol_key(),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change(
             "dailyProtocolSideRevenueUSD",
@@ -129,7 +134,8 @@ fn create_financial_daily_snapshot(
                     ordinal,
                     StoreKey::DailyProtocolSideRevenueUSD.get_unique_daily_protocol_key(day_id),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change(
             "cumulativeProtocolSideRevenueUSD",
@@ -138,7 +144,8 @@ fn create_financial_daily_snapshot(
                     ordinal,
                     StoreKey::CumulativeProtocolSideRevenueUSD.get_unique_protocol_key(),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change(
             "dailyTotalRevenueUSD",
@@ -147,7 +154,8 @@ fn create_financial_daily_snapshot(
                     ordinal,
                     StoreKey::DailyTotalRevenueUSD.get_unique_daily_protocol_key(day_id),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change(
             "cumulativeTotalRevenueUSD",
@@ -156,7 +164,8 @@ fn create_financial_daily_snapshot(
                     ordinal,
                     StoreKey::CumulativeTotalRevenueUSD.get_unique_protocol_key(),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change("blockNumber", block_number)
         .change("timestamp", timestamp);

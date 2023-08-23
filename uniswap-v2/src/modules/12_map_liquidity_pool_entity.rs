@@ -130,18 +130,19 @@ fn create_liquidity_pool(
                         ordinal,
                         StoreKey::Token0Balance.get_unique_pool_key(&pool_address),
                     )
-                    .unwrap_or(BigInt::zero())
-                    .to_string(),
+                    .unwrap_or(BigInt::zero()),
                 input_token_balances_store
                     .get_at(
                         ordinal,
                         StoreKey::Token1Balance.get_unique_pool_key(&pool_address),
                     )
-                    .unwrap_or(BigInt::zero())
-                    .to_string(),
+                    .unwrap_or(BigInt::zero()),
             ],
         )
-        .change("inputTokenWeights", vec!["0.5".to_string(); 2])
+        .change(
+            "inputTokenWeights",
+            vec![BigDecimal::try_from("0.5").unwrap(); 2],
+        )
         .change(
             "outputTokenSupply",
             output_token_supply_store

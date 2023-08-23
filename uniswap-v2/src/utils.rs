@@ -36,6 +36,14 @@ pub fn calculate_revenue(volume: BigDecimal) -> (BigDecimal, BigDecimal) {
     (supply_side_revenue, protocol_side_revenue)
 }
 
+pub fn is_valid_amount(amount: &BigDecimal) -> bool {
+    if amount.ge(&BigDecimal::from(10_i32.pow(9))) {
+        return false;
+    }
+
+    return true;
+}
+
 pub fn get_token_price(ordinal: u64, store: &StoreGetBigDecimal, address: &String) -> BigDecimal {
     store
         .get_at(ordinal, StoreKey::TokenPrice.get_unique_pool_key(address))

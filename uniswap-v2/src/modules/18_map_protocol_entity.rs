@@ -66,7 +66,8 @@ fn create_protocol(
                     ordinal,
                     StoreKey::TotalValueLockedUSD.get_unique_protocol_key(),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change(
             "cumulativeVolumeUSD",
@@ -75,7 +76,8 @@ fn create_protocol(
                     ordinal,
                     StoreKey::CumulativeVolumeUSD.get_unique_protocol_key(),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change(
             "cumulativeSupplySideRevenueUSD",
@@ -84,7 +86,8 @@ fn create_protocol(
                     ordinal,
                     StoreKey::CumulativeSupplySideRevenueUSD.get_unique_protocol_key(),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change(
             "cumulativeProtocolSideRevenueUSD",
@@ -93,7 +96,8 @@ fn create_protocol(
                     ordinal,
                     StoreKey::CumulativeProtocolSideRevenueUSD.get_unique_protocol_key(),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change(
             "cumulativeTotalRevenueUSD",
@@ -102,7 +106,8 @@ fn create_protocol(
                     ordinal,
                     StoreKey::CumulativeTotalRevenueUSD.get_unique_protocol_key(),
                 )
-                .unwrap_or(BigDecimal::zero()),
+                .unwrap_or(BigDecimal::zero())
+                .with_prec(3),
         )
         .change("cumulativeUniqueUsers", 0)
         .change("totalPoolCount", 0);

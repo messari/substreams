@@ -40,3 +40,26 @@ pub const WHITELIST_TOKENS: [&str; 21] = [
     "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9", // AAVE
     "0xfe2e637202056d30016725477c5da089ab0a043a", // sETH2
 ];
+
+pub const BLACKLISTED_TOKENS: [&str; 12] = [
+    "0x9d1555d8cb3c846bb4f7d5b1b1080872c3166676", // Wrapped Mirror SLV Token
+    "0x76306f029f8f99effe509534037ba7030999e3cf", // Acreage
+    "0x9d86f93ff837b80032e3fd7b3f8e1aacc25d3d80", // MIR EAEUnion
+    "0xb611920d44324655335b5e11ebc9c929faddfbaf", // Lawa USD
+    "0x0698dda3c390ff92722f9eed766d8b1727621df9", // Ethereum2Proof-of-stake
+    "0x35bd8472ed2da9eed980e49b8b92ccbcf625adbd", // Enreich
+    "0xf2bae67cc0b4642b9bc71264cc878598cb0722bd", // Nicaragua Canal
+    "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39", // HEX
+    "0x9bb6fd000109e24eb38b0deb806382ff9247e478", // hex.bet
+    "0x57bfb100498f5ce6c54298f0730f1bc9b67addd6", // MAGGIE
+    "0x72e5390edb7727e3d4e3436451dadaff675dbcc0", // Hanu Yokia
+    "0x395c8db957d743a62ac3aaaa4574553bcf2380b3", // ulock.eth Wrapped Ether
+];
+
+pub const BLACKLISTED_POOLS: [&str; 5] = [
+    "0x1f447690a6ddf18400533b705516159e1312f892",
+    "0x340a5a2f73ebaa181ec2826802fdf8ed21fc759a",
+    "0x6a9e7f087a7d1057dd36a84ae148dac2c07ea67e",
+    "0x13bb5add7fd43c52d987e2c320f95d4b5e9cfa5f",
+    "0x1693c24445895bd8f4d5a327eafa0263191ed906",
+];
