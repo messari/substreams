@@ -42,7 +42,7 @@ fn handle_mint(
 
         events.push(Event {
             hash: tx.hash.to_hex(),
-            log_index: log.index,
+            log_index: log.block_index,
             log_ordinal: log.ordinal,
             to: tx.to.to_hex(),
             from: tx.from.to_hex(),
