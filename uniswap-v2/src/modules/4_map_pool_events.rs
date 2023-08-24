@@ -42,7 +42,7 @@ fn handle_mint(
 
         events.push(Event {
             hash: tx.hash.to_hex(),
-            log_index: log.index,
+            log_index: log.block_index,
             log_ordinal: log.ordinal,
             to: tx.to.to_hex(),
             from: tx.from.to_hex(),
@@ -78,7 +78,7 @@ fn handle_burn(
 
         events.push(Event {
             hash: tx.hash.to_hex(),
-            log_index: log.index,
+            log_index: log.block_index,
             log_ordinal: log.ordinal,
             to: tx.to.to_hex(),
             from: tx.from.to_hex(),
@@ -107,7 +107,7 @@ fn handle_sync(block: &eth::Block, store: &StoreGetProto<Pool>, events: &mut Vec
 
         events.push(Event {
             hash: tx.hash.to_hex(),
-            log_index: log.index,
+            log_index: log.block_index,
             log_ordinal: log.ordinal,
             to: tx.to.to_hex(),
             from: tx.from.to_hex(),
@@ -133,7 +133,7 @@ fn handle_swap(block: &eth::Block, store: &StoreGetProto<Pool>, events: &mut Vec
 
         events.push(Event {
             hash: tx.hash.to_hex(),
-            log_index: log.index,
+            log_index: log.block_index,
             log_ordinal: log.ordinal,
             to: tx.to.to_hex(),
             from: tx.from.to_hex(),

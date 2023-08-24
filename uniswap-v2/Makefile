@@ -14,7 +14,7 @@ run_mainnet:
 
 .PHONY: run
 run:
-	substreams run -e bsc.substreams.pinax.network:9000 substreams.yaml graph_out -s 30907417
+	substreams run -e bsc.substreams.pinax.network:9000 substreams.yaml graph_out -s 6809737
 
 .PHONY: pack
 pack:

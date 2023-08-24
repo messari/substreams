@@ -235,7 +235,7 @@ modules:
       # - map: map_liquidity_pool_snapshots_entity
       # - map: map_protocol_entity
       # - map: map_financial_daily_snapshot_entity
-      # - map: map_token_entity
+      - map: map_token_entity
       - map: map_events_entity
     output:
       type: proto:substreams.entity.v1.EntityChanges
