@@ -12,28 +12,31 @@ pub fn store_cumulative_fields(
     for delta in volume_deltas.deltas {
         if let Some(pool_address) = StoreKey::Volume.get_pool(&delta.key) {
             let volume = utils::delta_value(&delta);
-            output_store.add(
-                delta.ordinal,
-                StoreKey::CumulativeVolumeUSD.get_unique_pool_key(&pool_address),
-                &volume,
-            );
 
-            let (supply_side_revenue, protocol_side_revenue) = utils::calculate_revenue(volume);
-            output_store.add(
-                delta.ordinal,
-                StoreKey::CumulativeSupplySideRevenueUSD.get_unique_pool_key(&pool_address),
-                &supply_side_revenue,
-            );
-            output_store.add(
-                delta.ordinal,
-                StoreKey::CumulativeProtocolSideRevenueUSD.get_unique_pool_key(&pool_address),
-                &protocol_side_revenue,
-            );
-            output_store.add(
-                delta.ordinal,
-                StoreKey::CumulativeTotalRevenueUSD.get_unique_pool_key(&pool_address),
-                &(supply_side_revenue + protocol_side_revenue),
-            );
+            if utils::is_valid_amount(&volume) {
+                output_store.add(
+                    delta.ordinal,
+                    StoreKey::CumulativeVolumeUSD.get_unique_pool_key(&pool_address),
+                    &volume,
+                );
+
+                let (supply_side_revenue, protocol_side_revenue) = utils::calculate_revenue(volume);
+                output_store.add(
+                    delta.ordinal,
+                    StoreKey::CumulativeSupplySideRevenueUSD.get_unique_pool_key(&pool_address),
+                    &supply_side_revenue,
+                );
+                output_store.add(
+                    delta.ordinal,
+                    StoreKey::CumulativeProtocolSideRevenueUSD.get_unique_pool_key(&pool_address),
+                    &protocol_side_revenue,
+                );
+                output_store.add(
+                    delta.ordinal,
+                    StoreKey::CumulativeTotalRevenueUSD.get_unique_pool_key(&pool_address),
+                    &(supply_side_revenue + protocol_side_revenue),
+                );
+            }
         }
     }
 }

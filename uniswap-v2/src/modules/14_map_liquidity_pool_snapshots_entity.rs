@@ -196,8 +196,7 @@ fn create_liquidity_pool_daily_snapshot(
                             vec![&pool_address, &pool.token0_address()],
                         ),
                     )
-                    .unwrap_or(BigInt::zero())
-                    .to_string(),
+                    .unwrap_or(BigInt::zero()),
                 volume_by_token_amount_store
                     .get_at(
                         ordinal,
@@ -206,8 +205,7 @@ fn create_liquidity_pool_daily_snapshot(
                             vec![&pool_address, &pool.token1_address()],
                         ),
                     )
-                    .unwrap_or(BigInt::zero())
-                    .to_string(),
+                    .unwrap_or(BigInt::zero()),
             ],
         )
         .change(
@@ -222,7 +220,7 @@ fn create_liquidity_pool_daily_snapshot(
                         ),
                     )
                     .unwrap_or(BigDecimal::zero())
-                    .to_string(),
+                    .with_prec(20),
                 daily_and_hourly_fields_store
                     .get_at(
                         ordinal,
@@ -232,7 +230,7 @@ fn create_liquidity_pool_daily_snapshot(
                         ),
                     )
                     .unwrap_or(BigDecimal::zero())
-                    .to_string(),
+                    .with_prec(20),
             ],
         )
         .change(
@@ -252,18 +250,19 @@ fn create_liquidity_pool_daily_snapshot(
                         ordinal,
                         StoreKey::Token0Balance.get_unique_pool_key(&pool_address),
                     )
-                    .unwrap_or(BigInt::zero())
-                    .to_string(),
+                    .unwrap_or(BigInt::zero()),
                 balances_store
                     .get_at(
                         ordinal,
                         StoreKey::Token1Balance.get_unique_pool_key(&pool_address),
                     )
-                    .unwrap_or(BigInt::zero())
-                    .to_string(),
+                    .unwrap_or(BigInt::zero()),
             ],
         )
-        .change("inputTokenWeights", vec!["0.5".to_string(); 2])
+        .change(
+            "inputTokenWeights",
+            vec![BigDecimal::try_from("0.5").unwrap(); 2],
+        )
         .change(
             "outputTokenSupply",
             pool_supply_store
@@ -282,14 +281,14 @@ fn create_liquidity_pool_daily_snapshot(
                         StoreKey::TokenPrice.get_unique_pool_key(&pool.token0_address()),
                     )
                     .unwrap_or(BigDecimal::zero())
-                    .to_string(),
+                    .with_prec(20),
                 prices_store
                     .get_at(
                         ordinal,
                         StoreKey::TokenPrice.get_unique_pool_key(&pool.token1_address()),
                     )
                     .unwrap_or(BigDecimal::zero())
-                    .to_string(),
+                    .with_prec(20),
             ],
         )
         .change("blockNumber", block_number)
@@ -416,8 +415,7 @@ fn create_liquidity_pool_hourly_snapshot(
                             vec![&pool_address, &pool.token0_address()],
                         ),
                     )
-                    .unwrap_or(BigInt::zero())
-                    .to_string(),
+                    .unwrap_or(BigInt::zero()),
                 volume_by_token_amount_store
                     .get_at(
                         ordinal,
@@ -426,8 +424,7 @@ fn create_liquidity_pool_hourly_snapshot(
                             vec![&pool_address, &pool.token1_address()],
                         ),
                     )
-                    .unwrap_or(BigInt::zero())
-                    .to_string(),
+                    .unwrap_or(BigInt::zero()),
             ],
         )
         .change(
@@ -442,7 +439,7 @@ fn create_liquidity_pool_hourly_snapshot(
                         ),
                     )
                     .unwrap_or(BigDecimal::zero())
-                    .to_string(),
+                    .with_prec(20),
                 daily_and_hourly_fields_store
                     .get_at(
                         ordinal,
@@ -452,7 +449,7 @@ fn create_liquidity_pool_hourly_snapshot(
                         ),
                     )
                     .unwrap_or(BigDecimal::zero())
-                    .to_string(),
+                    .with_prec(20),
             ],
         )
         .change(
@@ -472,18 +469,19 @@ fn create_liquidity_pool_hourly_snapshot(
                         ordinal,
                         StoreKey::Token0Balance.get_unique_pool_key(&pool_address),
                     )
-                    .unwrap_or(BigInt::zero())
-                    .to_string(),
+                    .unwrap_or(BigInt::zero()),
                 balances_store
                     .get_at(
                         ordinal,
                         StoreKey::Token1Balance.get_unique_pool_key(&pool_address),
                     )
-                    .unwrap_or(BigInt::zero())
-                    .to_string(),
+                    .unwrap_or(BigInt::zero()),
             ],
         )
-        .change("inputTokenWeights", vec!["0.5".to_string(); 2])
+        .change(
+            "inputTokenWeights",
+            vec![BigDecimal::try_from("0.5").unwrap(); 2],
+        )
         .change(
             "outputTokenSupply",
             pool_supply_store

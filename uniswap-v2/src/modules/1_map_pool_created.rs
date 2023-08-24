@@ -25,17 +25,22 @@ fn get_pools(block: &eth::Block, pools: &mut Vec<Pool>) {
         let token0 = TokenContract::new(Address::from_slice(event.token0.as_slice())).as_struct();
         let token1 = TokenContract::new(Address::from_slice(event.token1.as_slice())).as_struct();
 
-        pools.push(Pool {
-            name: format! {"{}/{}", token0.symbol, token1.symbol},
-            symbol: String::new(),
-            address: pool.address.clone(),
-            input_tokens: Some(Erc20Tokens {
-                items: vec![token0, token1],
-            }),
-            output_token: Some(pool),
-            created_timestamp: block.timestamp_seconds() as i64,
-            created_block_number: block.number as i64,
-        })
+        if !constants::BLACKLISTED_TOKENS.contains(&token0.address.as_str())
+            && !constants::BLACKLISTED_POOLS.contains(&pool.address.as_str())
+            && !constants::BLACKLISTED_TOKENS.contains(&token1.address.as_str())
+        {
+            pools.push(Pool {
+                name: format! {"{}/{}", token0.symbol, token1.symbol},
+                symbol: String::new(),
+                address: pool.address.clone(),
+                input_tokens: Some(Erc20Tokens {
+                    items: vec![token0, token1],
+                }),
+                output_token: Some(pool),
+                created_timestamp: block.timestamp_seconds() as i64,
+                created_block_number: block.number as i64,
+            })
+        }
     };
 
     let mut eh = EventHandler::new(&block);

@@ -428,10 +428,10 @@ type LiquidityPool @entity {
   cumulativeVolumeUSD: BigDecimal!
 
   " Amount of input tokens in the pool. The ordering should be the same as the pool's `inputTokens` field. "
-  inputTokenBalances: [String!]!
+  inputTokenBalances: [BigInt!]!
 
   " Weights of input tokens in the liquidity pool in percentage values. For example, 50/50 for Uniswap pools, 48.2/51.8 for a Curve pool, 10/10/80 for a Balancer pool "
-  inputTokenWeights: [String!]!
+  inputTokenWeights: [BigDecimal!]!
 
   " Total supply of output token. Note that certain DEXes don't have an output token (e.g. Bancor) "
   outputTokenSupply: BigInt
@@ -515,19 +515,19 @@ type LiquidityPoolDailySnapshot @entity {
   dailyVolumeUSD: BigDecimal!
 
   " All trade volume occurred in a given day for a specific input token, in native amount. The ordering should be the same as the pool's `inputTokens` field. "
-  dailyVolumeByTokenAmount: [String!]!
+  dailyVolumeByTokenAmount: [BigInt!]!
 
   " All trade volume occurred in a given day for a specific input token, in USD. The ordering should be the same as the pool's `inputTokens` field. "
-  dailyVolumeByTokenUSD: [String!]!
+  dailyVolumeByTokenUSD: [BigDecimal!]!
 
   " All historical trade volume occurred in this pool, in USD "
   cumulativeVolumeUSD: BigDecimal!
 
   " Amount of input tokens in the pool. The ordering should be the same as the pool's `inputTokens` field. "
-  inputTokenBalances: [String!]!
+  inputTokenBalances: [BigInt!]!
 
   " Weights of input tokens in the liquidity pool in percentage values. For example, 50/50 for Uniswap pools, 48.2/51.8 for a Curve pool, 10/10/80 for a Balancer pool "
-  inputTokenWeights: [String!]!
+  inputTokenWeights: [BigDecimal!]!
 
   " Total supply of output token. Note that certain DEXes don't have an output token (e.g. Bancor) "
   outputTokenSupply: BigInt
@@ -544,7 +544,7 @@ type LiquidityPoolDailySnapshot @entity {
   " Per-block reward token emission as of the current block normalized to a day, in USD value. This should be ideally calculated as the theoretical rate instead of the realized amount. "
   rewardTokenEmissionsUSD: [BigDecimal!]
 
-  _inputTokenPrices: [String!]
+  _inputTokenPrices: [BigDecimal!]
 }
 
 type LiquidityPoolHourlySnapshot @entity {
@@ -590,19 +590,19 @@ type LiquidityPoolHourlySnapshot @entity {
   hourlyVolumeUSD: BigDecimal!
 
   " All trade volume occurred in a given hour for a specific input token, in native amount. The ordering should be the same as the pool's `inputTokens` field. "
-  hourlyVolumeByTokenAmount: [String!]!
+  hourlyVolumeByTokenAmount: [BigInt!]!
 
   " All trade volume occurred in a given hour for a specific input token, in USD. The ordering should be the same as the pool's `inputTokens` field. "
-  hourlyVolumeByTokenUSD: [String!]!
+  hourlyVolumeByTokenUSD: [BigDecimal!]!
 
   " All historical trade volume occurred in this pool, in USD "
   cumulativeVolumeUSD: BigDecimal!
 
   " Amount of input tokens in the pool. The ordering should be the same as the pool's `inputTokens` field. "
-  inputTokenBalances: [String!]!
+  inputTokenBalances: [BigInt!]!
 
   " Weights of input tokens in the liquidity pool in percentage values. For example, 50/50 for Uniswap pools, 48.2/51.8 for a Curve pool, 10/10/80 for a Balancer pool "
-  inputTokenWeights: [String!]!
+  inputTokenWeights: [BigDecimal!]!
 
   " Total supply of output token. Note that certain DEXes don't have an output token (e.g. Bancor) "
   outputTokenSupply: BigInt
@@ -690,7 +690,7 @@ type Deposit implements Event @entity {
   outputToken: Token
 
   " Amount of input tokens in the token's native unit "
-  inputTokenAmounts: [String!]!
+  inputTokenAmounts: [BigInt!]!
 
   " Amount of output tokens in the token's native unit "
   outputTokenAmount: BigInt
@@ -734,7 +734,7 @@ type Withdraw implements Event @entity {
   outputToken: Token
 
   " Amount of input tokens in the token's native unit "
-  inputTokenAmounts: [String!]!
+  inputTokenAmounts: [BigInt!]!
 
   " Amount of output tokens in the token's native unit "
   outputTokenAmount: BigInt
