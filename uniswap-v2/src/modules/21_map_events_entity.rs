@@ -119,7 +119,7 @@ fn create_deposit_transaction(
                 .collect::<Vec<BigInt>>(),
         )
         .change("outputTokenAmount", output_token_amount)
-        .change("amountUSD", amount_usd.with_prec(3))
+        .change("amountUSD", amount_usd.with_prec(20))
         .change("pool", pool.address.clone());
 
     deposit_entity_change
@@ -168,7 +168,7 @@ fn create_withdraw_transaction(
                 .collect::<Vec<BigInt>>(),
         )
         .change("outputTokenAmount", output_token_amount)
-        .change("amountUSD", amount_usd.with_prec(3))
+        .change("amountUSD", amount_usd.with_prec(20))
         .change("pool", pool.address.clone());
 
     withdraw_entity_change
@@ -208,10 +208,10 @@ fn create_swap_transaction(
         .change("timestamp", BigInt::from(event.timestamp))
         .change("tokenIn", token_in.address)
         .change("amountIn", amount_in)
-        .change("amountInUSD", amount_in_usd.with_prec(3))
+        .change("amountInUSD", amount_in_usd.with_prec(20))
         .change("tokenOut", token_out.address)
         .change("amountOut", amount_out)
-        .change("amountOutUSD", amount_out_usd.with_prec(3))
+        .change("amountOutUSD", amount_out_usd.with_prec(20))
         .change("pool", event.pool.clone());
 
     swap_entity_change

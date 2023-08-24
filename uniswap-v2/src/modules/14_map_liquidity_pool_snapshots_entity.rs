@@ -220,7 +220,7 @@ fn create_liquidity_pool_daily_snapshot(
                         ),
                     )
                     .unwrap_or(BigDecimal::zero())
-                    .with_prec(3),
+                    .with_prec(20),
                 daily_and_hourly_fields_store
                     .get_at(
                         ordinal,
@@ -230,7 +230,7 @@ fn create_liquidity_pool_daily_snapshot(
                         ),
                     )
                     .unwrap_or(BigDecimal::zero())
-                    .with_prec(3),
+                    .with_prec(20),
             ],
         )
         .change(
@@ -281,14 +281,14 @@ fn create_liquidity_pool_daily_snapshot(
                         StoreKey::TokenPrice.get_unique_pool_key(&pool.token0_address()),
                     )
                     .unwrap_or(BigDecimal::zero())
-                    .with_prec(3),
+                    .with_prec(20),
                 prices_store
                     .get_at(
                         ordinal,
                         StoreKey::TokenPrice.get_unique_pool_key(&pool.token1_address()),
                     )
                     .unwrap_or(BigDecimal::zero())
-                    .with_prec(3),
+                    .with_prec(20),
             ],
         )
         .change("blockNumber", block_number)
@@ -439,7 +439,7 @@ fn create_liquidity_pool_hourly_snapshot(
                         ),
                     )
                     .unwrap_or(BigDecimal::zero())
-                    .with_prec(3),
+                    .with_prec(20),
                 daily_and_hourly_fields_store
                     .get_at(
                         ordinal,
@@ -449,7 +449,7 @@ fn create_liquidity_pool_hourly_snapshot(
                         ),
                     )
                     .unwrap_or(BigDecimal::zero())
-                    .with_prec(3),
+                    .with_prec(20),
             ],
         )
         .change(
