@@ -1,0 +1,12 @@
+type pool_registrations @entity {
+    id: ID!
+    tx_hash: String!
+    log_index: BigInt!
+    block_time: String!
+    block_number: BigInt!
+    pool_id: String!
+    pool_address: String!
+    specialization: BigInt!
+    from_address: String!
+    to_address: String!
+}

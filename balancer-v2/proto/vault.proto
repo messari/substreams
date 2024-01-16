@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package vault.v1;
+
+message Events {
+    repeated PoolRegistered pool_registrations = 1;
+}
+
+message PoolRegistered {
+    string tx_hash = 1;
+    uint32 log_index = 2;
+    google.protobuf.Timestamp block_time = 3;
+    uint64 block_number = 4;
+    bytes pool_id = 5;
+    bytes pool_address = 6;
+    uint32 specialization = 7;
+    bytes from_address = 8;
+    bytes to_address = 9;
+}

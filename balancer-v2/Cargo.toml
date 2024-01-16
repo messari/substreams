@@ -1,0 +1,29 @@
+[package]
+name = "substreams-balancer-v2"
+edition = "2021"
+version = "0.0.1"
+description = "Messari's standardized substream for Balancer v2"
+repository = "https://github.com/messari/substreams/"
+
+[lib]
+name = "substreams"
+crate-type = ["cdylib"]
+
+[dependencies]
+pad = "0.1"
+hex = "0.4.3"
+ethabi = "17.0"
+hex-literal = "0.3.4"
+prost = "^0.11.0"
+prost-types = "0.11"
+num-bigint = "0.4"
+num-traits = "0.2.15"
+substreams-database-change = "1"
+substreams-entity-change = "1.3.0"
+substreams.workspace = true
+substreams-ethereum.workspace = true
+substreams-helper = { path = "../substreams-helper" }
+
+[build-dependencies]
+anyhow = "1"
+substreams-common = { path = "../common" }
