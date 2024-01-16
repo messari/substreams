@@ -1,0 +1,17 @@
+specVersion: 0.0.6
+description: Balancer v2 powered by substreams
+repository: https://github.com/messari/substreams
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: substreams
+    name: balancer_v2
+    network: mainnet
+    source:
+      package:
+        moduleName: graph_out
+        file: balancer-v2-v0.0.1.spkg
+    mapping:
+      kind: substreams/graph-entities
+      apiVersion: 0.0.5
