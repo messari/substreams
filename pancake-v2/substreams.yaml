@@ -1,0 +1,100 @@
+specVersion: v0.1.0
+package:
+  name: substreams_pancake_v2
+  version: v0.1.0
+
+imports:
+  eth: https://github.com/streamingfast/sf-ethereum/releases/download/v0.10.2/ethereum-v0.10.4.spkg
+  entities_change: https://github.com/streamingfast/substreams-entity-change/releases/download/v0.2.0/substreams-entity-change-v0.2.0.spkg
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/substreams_pancake_v2.wasm"
+
+protobuf:
+  files:
+    - common.proto
+    - erc20.proto
+    - pancake.proto
+  importPaths:
+    - ./proto/v1
+    - ../common/proto
+
+modules:
+  - name: map_pool_created
+    kind: map
+    initialBlock: 6809737
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:messari.pancake.v2.Pools
+
+  - name: store_pools
+    kind: store
+    updatePolicy: set_if_not_exists
+    valueType: proto:messari.pancake.v2.Pool
+    inputs:
+      - map: map_pool_created
+
+  - name: store_output_token_supply
+    kind: store
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pools
+
+  - name: map_pool_events
+    kind: map
+    initialBlock: 6809737
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pools
+      - store: store_output_token_supply
+        mode: deltas
+    output:
+      type: proto:messari.pancake.v2.Events
+
+  - name: store_input_token_balances
+    kind: store
+    updatePolicy: set
+    valueType: bigint
+    inputs:
+      - map: map_pool_events
+
+  - name: store_native_prices
+    kind: store
+    updatePolicy: set
+    valueType: bigdecimal
+    inputs:
+      - store: store_pools
+      - store: store_input_token_balances
+      - store: store_input_token_balances
+        mode: deltas
+
+  - name: map_token_entity
+    kind: map
+    initialBlock: 6809737
+    inputs:
+      - map: map_pool_created
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
+  - name: map_events_entity
+    kind: map
+    initialBlock: 6809737
+    inputs:
+      - map: map_pool_events
+      - store: store_pools
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
+  - name: graph_out
+    kind: map
+    initialBlock: 6809737
+    inputs:
+      - map: map_token_entity
+      - map: map_events_entity
+    output:
+      type: proto:substreams.entity.v1.EntityChanges

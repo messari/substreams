@@ -1,0 +1,17 @@
+specVersion: 0.0.4
+description: Pancake v2 powered by substreams
+repository: https://github.com/messari/substreams
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: substreams
+    name: pancake_v2
+    network: bsc
+    source:
+      package:
+        moduleName: graph_out
+        file: substreams-pancake-v2-v0.1.0.spkg
+    mapping:
+      kind: substreams/graph-entities
+      apiVersion: 0.0.5
