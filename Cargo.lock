@@ -1291,6 +1291,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "substreams-pancake-v2"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ethabi",
+ "hex",
+ "hex-literal",
+ "pad",
+ "prost 0.11.9",
+ "substreams 0.5.10",
+ "substreams-common",
+ "substreams-entity-change 1.3.0",
+ "substreams-ethereum",
+ "substreams-helper",
+]
+
+[[package]]
 name = "substreams-solana"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

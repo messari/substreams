@@ -15,6 +15,7 @@ members = [
     "eth-supply",
     "synthetix",
     "aave-v2",
+    "pancake-v2",
 ]
 exclude = ["messari-cli"]
 
