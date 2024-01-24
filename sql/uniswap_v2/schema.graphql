@@ -1,0 +1,63 @@
+type approval @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    owner: String!
+    spender: String!
+    value: BigDecimal!
+}
+type burn @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    amount0: BigDecimal!
+    amount1: BigDecimal!
+    sender: String!
+    to: String!
+}
+type mint @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    amount0: BigDecimal!
+    amount1: BigDecimal!
+    sender: String!
+}
+type swap @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    amount0_in: BigDecimal!
+    amount0_out: BigDecimal!
+    amount1_in: BigDecimal!
+    amount1_out: BigDecimal!
+    sender: String!
+    to: String!
+}
+type sync @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    reserve0: BigDecimal!
+    reserve1: BigDecimal!
+}
+type transfer @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    from: String!
+    to: String!
+    value: BigDecimal!
+}

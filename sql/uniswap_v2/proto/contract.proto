@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package contract.v1;
+
+message Events {
+    repeated Approval approvals = 1;
+    repeated Burn burns = 2;
+    repeated Mint mints = 3;
+    repeated Swap swaps = 4;
+    repeated Sync syncs = 5;
+    repeated Transfer transfers = 6;
+}
+
+message Approval {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes owner = 5;
+    bytes spender = 6;
+    string value = 7;
+}
+
+message Burn {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes sender = 5;
+    string amount0 = 6;
+    string amount1 = 7;
+    bytes to = 8;
+}
+
+message Mint {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes sender = 5;
+    string amount0 = 6;
+    string amount1 = 7;
+}
+
+message Swap {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes sender = 5;
+    string amount0_in = 6;
+    string amount1_in = 7;
+    string amount0_out = 8;
+    string amount1_out = 9;
+    bytes to = 10;
+}
+
+message Sync {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string reserve0 = 5;
+    string reserve1 = 6;
+}
+
+message Transfer {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes from = 5;
+    bytes to = 6;
+    string value = 7;
+}
