@@ -1,1 +1,3 @@
-pub mod contract;
+
+pub mod factory_contract;
+pub mod pools_contract;

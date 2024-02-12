@@ -1,40 +1,56 @@
-type approval @entity {
+type factory_pair_created @entity {
     id: ID!
     evt_tx_hash: String!
     evt_index: BigInt!
     evt_block_time: String!
     evt_block_number: BigInt!
+    pair: String!
+    param3: BigDecimal!
+    token0: String!
+    token1: String!
+}
+
+type pools_approval @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    evt_address: String!
     owner: String!
     spender: String!
     value: BigDecimal!
 }
-type burn @entity {
+type pools_burn @entity {
     id: ID!
     evt_tx_hash: String!
     evt_index: BigInt!
     evt_block_time: String!
     evt_block_number: BigInt!
+    evt_address: String!
     amount0: BigDecimal!
     amount1: BigDecimal!
     sender: String!
     to: String!
 }
-type mint @entity {
+type pools_mint @entity {
     id: ID!
     evt_tx_hash: String!
     evt_index: BigInt!
     evt_block_time: String!
     evt_block_number: BigInt!
+    evt_address: String!
     amount0: BigDecimal!
     amount1: BigDecimal!
     sender: String!
 }
-type swap @entity {
+type pools_swap @entity {
     id: ID!
     evt_tx_hash: String!
     evt_index: BigInt!
     evt_block_time: String!
     evt_block_number: BigInt!
+    evt_address: String!
     amount0_in: BigDecimal!
     amount0_out: BigDecimal!
     amount1_in: BigDecimal!
@@ -42,21 +58,23 @@ type swap @entity {
     sender: String!
     to: String!
 }
-type sync @entity {
+type pools_sync @entity {
     id: ID!
     evt_tx_hash: String!
     evt_index: BigInt!
     evt_block_time: String!
     evt_block_number: BigInt!
+    evt_address: String!
     reserve0: BigDecimal!
     reserve1: BigDecimal!
 }
-type transfer @entity {
+type pools_transfer @entity {
     id: ID!
     evt_tx_hash: String!
     evt_index: BigInt!
     evt_block_time: String!
     evt_block_number: BigInt!
+    evt_address: String!
     from: String!
     to: String!
     value: BigDecimal!

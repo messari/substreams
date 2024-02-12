@@ -21,17 +21,26 @@ binaries:
     file: ../../target/wasm32-unknown-unknown/release/substreams.wasm
 
 modules:
-  - name: map_events
-    kind: map
-    initialBlock: 10110528
+  - name: store_factory_pools_created
+    kind: store
+    initialBlock: 10000835
+    updatePolicy: set
+    valueType: proto:dynamic_datasource
     inputs:
       - source: sf.ethereum.type.v2.Block
+
+  - name: map_events
+    kind: map
+    initialBlock: 10000835
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_factory_pools_created
     output:
       type: proto:contract.v1.Events
 
   - name: db_out
     kind: map
-    initialBlock: 10110528
+    initialBlock: 10000835
     inputs:
       - map: map_events
     output:
@@ -39,7 +48,7 @@ modules:
 
   - name: graph_out
     kind: map
-    initialBlock: 10110528
+    initialBlock: 10000835
     inputs:
       - map: map_events
     output:

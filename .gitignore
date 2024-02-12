@@ -9,6 +9,8 @@ Reference/
 **/target/
 **/build/
 **/data/
+**/logs/dbt.log
+**/logs/
 **/*.spkg
 **/buf.gen.yaml
 replay.log
