@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package contract.v1;
+
+message Events {
+    repeated factory_PairCreated factory_pair_createds = 1;
+    repeated pools_Approval pools_approvals = 2;
+    repeated pools_Burn pools_burns = 3;
+    repeated pools_Mint pools_mints = 4;
+    repeated pools_Swap pools_swaps = 5;
+    repeated pools_Sync pools_syncs = 6;
+    repeated pools_Transfer pools_transfers = 7;
+}
+
+message factory_PairCreated {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes token0 = 5;
+    bytes token1 = 6;
+    bytes pair = 7;
+    string param3 = 8;
+}
+
+message pools_Approval {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    bytes owner = 6;
+    bytes spender = 7;
+    string value = 8;
+}
+
+message pools_Burn {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    bytes sender = 6;
+    string amount0 = 7;
+    string amount1 = 8;
+    bytes to = 9;
+}
+
+message pools_Mint {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    bytes sender = 6;
+    string amount0 = 7;
+    string amount1 = 8;
+}
+
+message pools_Swap {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    bytes sender = 6;
+    string amount0_in = 7;
+    string amount1_in = 8;
+    string amount0_out = 9;
+    string amount1_out = 10;
+    bytes to = 11;
+}
+
+message pools_Sync {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    string reserve0 = 6;
+    string reserve1 = 7;
+}
+
+message pools_Transfer {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    bytes from = 6;
+    bytes to = 7;
+    string value = 8;
+}
