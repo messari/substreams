@@ -1,0 +1,17 @@
+specVersion: 0.0.6
+description: balancer-v2 substreams based subgraph
+repository: # fill in with git remote url
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: substreams
+    name: balancer-v2
+    network: mainnet
+    source:
+      package:
+        moduleName: graph_out
+        file: balancer-v2-v0.1.0.spkg
+    mapping:
+      kind: substreams/graph-entities
+      apiVersion: 0.0.5
