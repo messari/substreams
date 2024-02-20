@@ -1,0 +1,708 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package contract.v1;
+
+message Events {
+    repeated vault_AuthorizerChanged vault_authorizer_changeds = 1;
+    repeated vault_ExternalBalanceTransfer vault_external_balance_transfers = 2;
+    repeated vault_FlashLoan vault_flash_loans = 3;
+    repeated vault_InternalBalanceChanged vault_internal_balance_changeds = 4;
+    repeated vault_PausedStateChanged vault_paused_state_changeds = 5;
+    repeated vault_PoolBalanceChanged vault_pool_balance_changeds = 6;
+    repeated vault_PoolBalanceManaged vault_pool_balance_manageds = 7;
+    repeated vault_PoolRegistered vault_pool_registereds = 8;
+    repeated vault_RelayerApprovalChanged vault_relayer_approval_changeds = 9;
+    repeated vault_Swap vault_swaps = 10;
+    repeated vault_TokensDeregistered vault_tokens_deregistereds = 11;
+    repeated vault_TokensRegistered vault_tokens_registereds = 12;
+    repeated pools_AmpUpdateStarted pools_amp_update_starteds = 13;
+    repeated pools_AmpUpdateStopped pools_amp_update_stoppeds = 14;
+    repeated pools_Approval pools_approvals = 15;
+    repeated pools_PausedStateChanged pools_paused_state_changeds = 16;
+    repeated pools_ProtocolFeePercentageCacheUpdated pools_protocol_fee_percentage_cache_updateds = 17;
+    repeated pools_RecoveryModeStateChanged pools_recovery_mode_state_changeds = 18;
+    repeated pools_SwapFeePercentageChanged pools_swap_fee_percentage_changeds = 19;
+    repeated pools_TokenRateCacheUpdated pools_token_rate_cache_updateds = 20;
+    repeated pools_TokenRateProviderSet pools_token_rate_provider_sets = 21;
+    repeated pools_Transfer pools_transfers = 22;
+}
+
+message Calls {
+    repeated vault_BatchSwapCall vault_call_batch_swaps = 1;
+    repeated vault_DeregisterTokensCall vault_call_deregister_tokens = 2;
+    repeated vault_ExitPoolCall vault_call_exit_pools = 3;
+    repeated vault_FlashLoanCall vault_call_flash_loans = 4;
+    repeated vault_JoinPoolCall vault_call_join_pools = 5;
+    repeated vault_ManagePoolBalanceCall vault_call_manage_pool_balances = 6;
+    repeated vault_ManageUserBalanceCall vault_call_manage_user_balances = 7;
+    repeated vault_QueryBatchSwapCall vault_call_query_batch_swaps = 8;
+    repeated vault_RegisterPoolCall vault_call_register_pools = 9;
+    repeated vault_RegisterTokensCall vault_call_register_tokens = 10;
+    repeated vault_SetAuthorizerCall vault_call_set_authorizers = 11;
+    repeated vault_SetPausedCall vault_call_set_pauseds = 12;
+    repeated vault_SetRelayerApprovalCall vault_call_set_relayer_approvals = 13;
+    repeated vault_SwapCall vault_call_swaps = 14;
+    repeated pools_ApproveCall pools_call_approves = 15;
+    repeated pools_DecreaseAllowanceCall pools_call_decrease_allowances = 16;
+    repeated pools_DisableRecoveryModeCall pools_call_disable_recovery_modes = 17;
+    repeated pools_EnableRecoveryModeCall pools_call_enable_recovery_modes = 18;
+    repeated pools_IncreaseAllowanceCall pools_call_increase_allowances = 19;
+    repeated pools_OnExitPoolCall pools_call_on_exit_pools = 20;
+    repeated pools_OnJoinPoolCall pools_call_on_join_pools = 21;
+    repeated pools_OnSwapCall pools_call_on_swaps = 22;
+    repeated pools_PauseCall pools_call_pauses = 23;
+    repeated pools_PermitCall pools_call_permits = 24;
+    repeated pools_QueryExitCall pools_call_query_exits = 25;
+    repeated pools_QueryJoinCall pools_call_query_joins = 26;
+    repeated pools_SetAssetManagerPoolConfigCall pools_call_set_asset_manager_pool_configs = 27;
+    repeated pools_SetSwapFeePercentageCall pools_call_set_swap_fee_percentages = 28;
+    repeated pools_SetTokenRateCacheDurationCall pools_call_set_token_rate_cache_durations = 29;
+    repeated pools_StartAmplificationParameterUpdateCall pools_call_start_amplification_parameter_updates = 30;
+    repeated pools_StopAmplificationParameterUpdateCall pools_call_stop_amplification_parameter_updates = 31;
+    repeated pools_TransferCall pools_call_transfers = 32;
+    repeated pools_TransferFromCall pools_call_transfer_froms = 33;
+    repeated pools_UnpauseCall pools_call_unpauses = 34;
+    repeated pools_UpdateProtocolFeePercentageCacheCall pools_call_update_protocol_fee_percentage_caches = 35;
+    repeated pools_UpdateTokenRateCacheCall pools_call_update_token_rate_caches = 36;
+}
+
+
+message vault_AuthorizerChanged {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes new_authorizer = 5;
+}
+
+message vault_ExternalBalanceTransfer {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes token = 5;
+    bytes sender = 6;
+    bytes recipient = 7;
+    string amount = 8;
+}
+
+message vault_FlashLoan {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes recipient = 5;
+    bytes token = 6;
+    string amount = 7;
+    string fee_amount = 8;
+}
+
+message vault_InternalBalanceChanged {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes user = 5;
+    bytes token = 6;
+    string delta = 7;
+}
+
+message vault_PausedStateChanged {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bool paused = 5;
+}
+
+message vault_PoolBalanceChanged {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes pool_id = 5;
+    bytes liquidity_provider = 6;
+    repeated bytes tokens = 7;
+    repeated string deltas = 8;
+    repeated string protocol_fee_amounts = 9;
+}
+
+message vault_PoolBalanceManaged {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes pool_id = 5;
+    bytes asset_manager = 6;
+    bytes token = 7;
+    string cash_delta = 8;
+    string managed_delta = 9;
+}
+
+message vault_PoolRegistered {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes pool_id = 5;
+    bytes pool_address = 6;
+    uint64 specialization = 7;
+}
+
+message vault_RelayerApprovalChanged {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes relayer = 5;
+    bytes sender = 6;
+    bool approved = 7;
+}
+
+message vault_Swap {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes pool_id = 5;
+    bytes token_in = 6;
+    bytes token_out = 7;
+    string amount_in = 8;
+    string amount_out = 9;
+}
+
+message vault_TokensDeregistered {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes pool_id = 5;
+    repeated bytes tokens = 6;
+}
+
+message vault_TokensRegistered {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    bytes pool_id = 5;
+    repeated bytes tokens = 6;
+    repeated bytes asset_managers = 7;
+}
+
+message vault_BatchSwapCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    uint64 kind = 6;
+    repeated bytes assets = 7;
+    repeated string limits = 8;
+    string deadline = 9;
+    repeated string output_asset_deltas = 10;
+}
+
+message vault_DeregisterTokensCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    bytes pool_id = 6;
+    repeated bytes tokens = 7;
+}
+
+message vault_ExitPoolCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    bytes pool_id = 6;
+    bytes sender = 7;
+    bytes recipient = 8;
+}
+
+message vault_FlashLoanCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    bytes recipient = 6;
+    repeated bytes tokens = 7;
+    repeated string amounts = 8;
+    bytes user_data = 9;
+}
+
+message vault_JoinPoolCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    bytes pool_id = 6;
+    bytes sender = 7;
+    bytes recipient = 8;
+}
+
+message vault_ManagePoolBalanceCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+}
+
+message vault_ManageUserBalanceCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+}
+
+message vault_QueryBatchSwapCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    uint64 kind = 6;
+    repeated bytes assets = 7;
+    repeated string output_param0 = 8;
+}
+
+message vault_RegisterPoolCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    uint64 specialization = 6;
+    bytes output_param0 = 7;
+}
+
+message vault_RegisterTokensCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    bytes pool_id = 6;
+    repeated bytes tokens = 7;
+    repeated bytes asset_managers = 8;
+}
+
+message vault_SetAuthorizerCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    bytes new_authorizer = 6;
+}
+
+message vault_SetPausedCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    bool paused = 6;
+}
+
+message vault_SetRelayerApprovalCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    bytes sender = 6;
+    bytes relayer = 7;
+    bool approved = 8;
+}
+
+message vault_SwapCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string limit = 6;
+    string deadline = 7;
+    string output_amount_calculated = 8;
+}
+
+message pools_AmpUpdateStarted {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    string start_value = 6;
+    string end_value = 7;
+    string start_time = 8;
+    string end_time = 9;
+}
+
+message pools_AmpUpdateStopped {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    string current_value = 6;
+}
+
+message pools_Approval {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    bytes owner = 6;
+    bytes spender = 7;
+    string value = 8;
+}
+
+message pools_PausedStateChanged {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    bool paused = 6;
+}
+
+message pools_ProtocolFeePercentageCacheUpdated {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    string fee_type = 6;
+    string protocol_fee_percentage = 7;
+}
+
+message pools_RecoveryModeStateChanged {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    bool enabled = 6;
+}
+
+message pools_SwapFeePercentageChanged {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    string swap_fee_percentage = 6;
+}
+
+message pools_TokenRateCacheUpdated {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    string token_index = 6;
+    string rate = 7;
+}
+
+message pools_TokenRateProviderSet {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    string token_index = 6;
+    bytes provider = 7;
+    string cache_duration = 8;
+}
+
+message pools_Transfer {
+    string evt_tx_hash = 1;
+    uint32 evt_index = 2;
+    google.protobuf.Timestamp evt_block_time = 3;
+    uint64 evt_block_number = 4;
+    string evt_address = 5;
+    bytes from = 6;
+    bytes to = 7;
+    string value = 8;
+}
+
+message pools_ApproveCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes spender = 7;
+    string amount = 8;
+    bool output_param0 = 9;
+}
+
+message pools_DecreaseAllowanceCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes spender = 7;
+    string amount = 8;
+    bool output_param0 = 9;
+}
+
+message pools_DisableRecoveryModeCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+}
+
+message pools_EnableRecoveryModeCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+}
+
+message pools_IncreaseAllowanceCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes spender = 7;
+    string added_value = 8;
+    bool output_param0 = 9;
+}
+
+message pools_OnExitPoolCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes pool_id = 7;
+    bytes sender = 8;
+    bytes recipient = 9;
+    repeated string balances = 10;
+    string last_change_block = 11;
+    string protocol_swap_fee_percentage = 12;
+    bytes user_data = 13;
+    repeated string output_param0 = 14;
+    repeated string output_param1 = 15;
+}
+
+message pools_OnJoinPoolCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes pool_id = 7;
+    bytes sender = 8;
+    bytes recipient = 9;
+    repeated string balances = 10;
+    string last_change_block = 11;
+    string protocol_swap_fee_percentage = 12;
+    bytes user_data = 13;
+    repeated string output_param0 = 14;
+    repeated string output_param1 = 15;
+}
+
+message pools_OnSwapCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    repeated string balances = 7;
+    string index_in = 8;
+    string index_out = 9;
+    string output_param0 = 10;
+}
+
+message pools_PauseCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+}
+
+message pools_PermitCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes owner = 7;
+    bytes spender = 8;
+    string value = 9;
+    string deadline = 10;
+    uint64 v = 11;
+    bytes r = 12;
+    bytes s = 13;
+}
+
+message pools_QueryExitCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes pool_id = 7;
+    bytes sender = 8;
+    bytes recipient = 9;
+    repeated string balances = 10;
+    string last_change_block = 11;
+    string protocol_swap_fee_percentage = 12;
+    bytes user_data = 13;
+    string output_bpt_in = 14;
+    repeated string output_amounts_out = 15;
+}
+
+message pools_QueryJoinCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes pool_id = 7;
+    bytes sender = 8;
+    bytes recipient = 9;
+    repeated string balances = 10;
+    string last_change_block = 11;
+    string protocol_swap_fee_percentage = 12;
+    bytes user_data = 13;
+    string output_bpt_out = 14;
+    repeated string output_amounts_in = 15;
+}
+
+message pools_SetAssetManagerPoolConfigCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes token = 7;
+    bytes pool_config = 8;
+}
+
+message pools_SetSwapFeePercentageCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    string swap_fee_percentage = 7;
+}
+
+message pools_SetTokenRateCacheDurationCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes token = 7;
+    string duration = 8;
+}
+
+message pools_StartAmplificationParameterUpdateCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    string raw_end_value = 7;
+    string end_time = 8;
+}
+
+message pools_StopAmplificationParameterUpdateCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+}
+
+message pools_TransferCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes recipient = 7;
+    string amount = 8;
+    bool output_param0 = 9;
+}
+
+message pools_TransferFromCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes sender = 7;
+    bytes recipient = 8;
+    string amount = 9;
+    bool output_param0 = 10;
+}
+
+message pools_UnpauseCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+}
+
+message pools_UpdateProtocolFeePercentageCacheCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+}
+
+message pools_UpdateTokenRateCacheCall {
+    string call_tx_hash = 1;
+    google.protobuf.Timestamp call_block_time = 2;
+    uint64 call_block_number = 3;
+    uint64 call_ordinal = 4;
+    bool call_success = 5;
+    string call_address = 6;
+    bytes token = 7;
+}

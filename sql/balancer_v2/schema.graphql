@@ -1,0 +1,644 @@
+type vault_authorizer_changed @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    new_authorizer: String!
+}
+type vault_external_balance_transfer @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    amount: BigDecimal!
+    recipient: String!
+    sender: String!
+    token: String!
+}
+type vault_flash_loan @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    amount: BigDecimal!
+    fee_amount: BigDecimal!
+    recipient: String!
+    token: String!
+}
+type vault_internal_balance_changed @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    delta: BigDecimal!
+    token: String!
+    user: String!
+}
+type vault_paused_state_changed @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    paused: Boolean!
+}
+type vault_pool_balance_changed @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    deltas: [BigDecimal!]!
+    liquidity_provider: String!
+    pool_id: String!
+    protocol_fee_amounts: [BigDecimal!]!
+    tokens: [String!]!
+}
+type vault_pool_balance_managed @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    asset_manager: String!
+    cash_delta: BigDecimal!
+    managed_delta: BigDecimal!
+    pool_id: String!
+    token: String!
+}
+type vault_pool_registered @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    pool_address: String!
+    pool_id: String!
+    specialization: Int!
+}
+type vault_relayer_approval_changed @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    approved: Boolean!
+    relayer: String!
+    sender: String!
+}
+type vault_swap @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    amount_in: BigDecimal!
+    amount_out: BigDecimal!
+    pool_id: String!
+    token_in: String!
+    token_out: String!
+}
+type vault_tokens_deregistered @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    pool_id: String!
+    tokens: [String!]!
+}
+type vault_tokens_registered @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    asset_managers: [String!]!
+    pool_id: String!
+    tokens: [String!]!
+}
+type vault_call_batch_swap @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    assets: [String!]!
+    deadline: BigDecimal!
+    kind: Int!
+    limits: [BigDecimal!]!
+    output_asset_deltas: [BigDecimal!]!
+    swaps: [skip]!
+}
+type vault_call_deregister_tokens @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    pool_id: String!
+    tokens: [String!]!
+}
+type vault_call_exit_pool @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    pool_id: String!
+    recipient: String!
+    sender: String!
+}
+type vault_call_flash_loan @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    amounts: [BigDecimal!]!
+    recipient: String!
+    tokens: [String!]!
+    user_data: String!
+}
+type vault_call_join_pool @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    pool_id: String!
+    recipient: String!
+    sender: String!
+}
+type vault_call_manage_pool_balance @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    ops: [skip]!
+}
+type vault_call_manage_user_balance @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    ops: [skip]!
+}
+type vault_call_query_batch_swap @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    assets: [String!]!
+    kind: Int!
+    output_param0: [BigDecimal!]!
+    swaps: [skip]!
+}
+type vault_call_register_pool @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    output_param0: String!
+    specialization: Int!
+}
+type vault_call_register_tokens @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    asset_managers: [String!]!
+    pool_id: String!
+    tokens: [String!]!
+}
+type vault_call_set_authorizer @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    new_authorizer: String!
+}
+type vault_call_set_paused @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    paused: Boolean!
+}
+type vault_call_set_relayer_approval @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    approved: Boolean!
+    relayer: String!
+    sender: String!
+}
+type vault_call_swap @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    deadline: BigDecimal!
+    limit: BigDecimal!
+    output_amount_calculated: BigDecimal!
+}
+
+
+type pools_amp_update_started @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    evt_address: String!
+    end_time: BigDecimal!
+    end_value: BigDecimal!
+    start_time: BigDecimal!
+    start_value: BigDecimal!
+}
+type pools_amp_update_stopped @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    evt_address: String!
+    current_value: BigDecimal!
+}
+type pools_approval @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    evt_address: String!
+    owner: String!
+    spender: String!
+    value: BigDecimal!
+}
+type pools_paused_state_changed @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    evt_address: String!
+    paused: Boolean!
+}
+type pools_protocol_fee_percentage_cache_updated @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    evt_address: String!
+    fee_type: BigDecimal!
+    protocol_fee_percentage: BigDecimal!
+}
+type pools_recovery_mode_state_changed @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    evt_address: String!
+    enabled: Boolean!
+}
+type pools_swap_fee_percentage_changed @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    evt_address: String!
+    swap_fee_percentage: BigDecimal!
+}
+type pools_token_rate_cache_updated @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    evt_address: String!
+    rate: BigDecimal!
+    token_index: BigDecimal!
+}
+type pools_token_rate_provider_set @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    evt_address: String!
+    cache_duration: BigDecimal!
+    provider: String!
+    token_index: BigDecimal!
+}
+type pools_transfer @entity {
+    id: ID!
+    evt_tx_hash: String!
+    evt_index: BigInt!
+    evt_block_time: String!
+    evt_block_number: BigInt!
+    evt_address: String!
+    from: String!
+    to: String!
+    value: BigDecimal!
+}type pools_call_approve @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    amount: BigDecimal!
+    output_param0: Boolean!
+    spender: String!
+}
+type pools_call_decrease_allowance @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    amount: BigDecimal!
+    output_param0: Boolean!
+    spender: String!
+}
+type pools_call_disable_recovery_mode @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+}
+type pools_call_enable_recovery_mode @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+}
+type pools_call_increase_allowance @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    added_value: BigDecimal!
+    output_param0: Boolean!
+    spender: String!
+}
+type pools_call_on_exit_pool @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    balances: [BigDecimal!]!
+    last_change_block: BigDecimal!
+    output_param0: [BigDecimal!]!
+    output_param1: [BigDecimal!]!
+    pool_id: String!
+    protocol_swap_fee_percentage: BigDecimal!
+    recipient: String!
+    sender: String!
+    user_data: String!
+}
+type pools_call_on_join_pool @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    balances: [BigDecimal!]!
+    last_change_block: BigDecimal!
+    output_param0: [BigDecimal!]!
+    output_param1: [BigDecimal!]!
+    pool_id: String!
+    protocol_swap_fee_percentage: BigDecimal!
+    recipient: String!
+    sender: String!
+    user_data: String!
+}
+type pools_call_on_swap @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    balances: [BigDecimal!]!
+    index_in: BigDecimal!
+    index_out: BigDecimal!
+    output_param0: BigDecimal!
+}
+type pools_call_pause @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+}
+type pools_call_permit @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    deadline: BigDecimal!
+    owner: String!
+    r: String!
+    s: String!
+    spender: String!
+    v: Int!
+    value: BigDecimal!
+}
+type pools_call_query_exit @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    balances: [BigDecimal!]!
+    last_change_block: BigDecimal!
+    output_amounts_out: [BigDecimal!]!
+    output_bpt_in: BigDecimal!
+    pool_id: String!
+    protocol_swap_fee_percentage: BigDecimal!
+    recipient: String!
+    sender: String!
+    user_data: String!
+}
+type pools_call_query_join @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    balances: [BigDecimal!]!
+    last_change_block: BigDecimal!
+    output_amounts_in: [BigDecimal!]!
+    output_bpt_out: BigDecimal!
+    pool_id: String!
+    protocol_swap_fee_percentage: BigDecimal!
+    recipient: String!
+    sender: String!
+    user_data: String!
+}
+type pools_call_set_asset_manager_pool_config @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    pool_config: String!
+    token: String!
+}
+type pools_call_set_swap_fee_percentage @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    swap_fee_percentage: BigDecimal!
+}
+type pools_call_set_token_rate_cache_duration @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    duration: BigDecimal!
+    token: String!
+}
+type pools_call_start_amplification_parameter_update @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    end_time: BigDecimal!
+    raw_end_value: BigDecimal!
+}
+type pools_call_stop_amplification_parameter_update @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+}
+type pools_call_transfer @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    amount: BigDecimal!
+    output_param0: Boolean!
+    recipient: String!
+}
+type pools_call_transfer_from @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    amount: BigDecimal!
+    output_param0: Boolean!
+    recipient: String!
+    sender: String!
+}
+type pools_call_unpause @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+}
+type pools_call_update_protocol_fee_percentage_cache @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+}
+type pools_call_update_token_rate_cache @entity {
+    id: ID!
+    call_tx_hash: String!
+    call_block_time: String!
+    call_block_number: BigInt!
+    call_ordinal: BigInt!
+    call_success: Bool!
+    call_address: String!
+    token: String!
+}
+

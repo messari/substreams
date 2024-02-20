@@ -16,12 +16,13 @@ members = [
     "synthetix",
     "aave-v2",
     "sql/uniswap_v2",
+    "sql/balancer_v2",
 ]
 exclude = ["messari-cli"]
 
 [workspace.dependencies]
 substreams = "0.5.0"
-substreams-ethereum = "0.8.0"
+substreams-ethereum = "0.9.0"
 substreams-solana = "0.1.0"
 
 [build]
