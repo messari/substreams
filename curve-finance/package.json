@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "substreams-sink-csv": "^0.3.1"
+  }
+}

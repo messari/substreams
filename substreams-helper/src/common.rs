@@ -32,6 +32,12 @@ impl HasAddresser for StoreGetString {
     }
 }
 
+impl HasAddresser for &StoreGetString {
+    fn has_address(&self, key: Address) -> bool {
+        self.get_last(key.to_hex()).is_some()
+    }
+}
+
 impl<T: Default + prost::Message> HasAddresser for StoreGetProto<T> {
     fn has_address(&self, key: Address) -> bool {
         self.get_last(key.to_hex()).is_some()

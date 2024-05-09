@@ -1,0 +1,21 @@
+pub const ADRRESS_PROVIDER: &str = "0x0000000022d53366457f9d5e68ec105046fc4383";
+
+// Ethereum missing pools
+pub const POOLS_DEPLOYED_BEFORE_FACTORIES: [&str; 16] = [
+    "0x42d7025938bec20b69cbae5a77421082407f053a", 
+    "0x7f55dde206dbad629c080068923b36fe9d6bdbef",
+    "0xd81da8d904b52208541bade1bd6595d8a251f8dd",
+    "0x8038c01a0390a8c547446a0b2c18fc9aefecc10c",
+    "0x3e01dd8a5e1fb3481f0f589056b428fc308af0fb",
+    "0xe7a24ef0c5e95ffb0f6684b813a78f2a3ad7d171",
+    "0x0f9cb53ebe405d49a0bbdbd291a65ff571bc83e1",
+    "0x4f062658eaaf2c1ccf8c8e36d6824cdf41167956",
+    "0x3ef6a01a0f81d6046290f3e2a8c5b843e738e604",
+    "0x36965b1a6b97c1b33416e5d53fb5621ade1f1e80",
+    "0x071c661b4deefb59e2a3ddb20db036821eee8f4b",
+    "0x8474ddbe98f5aa3179b3b3f5942d724afcdec9f6",
+    "0x890f4e345b1daed0367a877a1612f86a1f86985f",
+    "0xc18cc39da8b11da8c3541c598ee022258f9744da",
+    "0x618788357d0ebd8a37e763adab3bc575d54c2c7d",
+    "0xc25099792e9349c7dd09759744ea681c7de2cb66",
+];

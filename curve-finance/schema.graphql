@@ -1,0 +1,22 @@
+type Fees @entity {
+  " {Address of the pool}-{block number} "
+  id: ID!
+
+  " Address of the curve pool "
+  pool: String!
+
+  " Fee of the curve pool "
+  fee: BigInt!
+
+  " Admin fee of the curve pool "
+  adminFee: BigInt!
+
+  " Admin balances of the curve pool "
+  adminBalances: [BigInt!]!
+
+  " Block number of this event "
+  blockNumber: BigInt!
+
+  " Timestamp of this event "
+  timestamp: BigInt!
+}

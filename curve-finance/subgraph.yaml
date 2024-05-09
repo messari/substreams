@@ -1,0 +1,17 @@
+specVersion: 0.0.4
+description: Curve Finance Fees powered by substreams
+repository: https://github.com/messari/substreams
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: substreams
+    name: curve_finance_fee
+    network: mainnet
+    source:
+      package:
+        moduleName: graph_out
+        file: curve-finance-substream-v0.1.0.spkg
+    mapping:
+      kind: substreams/graph-entities
+      apiVersion: 0.0.5

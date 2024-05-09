@@ -15,12 +15,13 @@ members = [
     "eth-supply",
     "synthetix",
     "aave-v2",
+    "curve-finance",
 ]
 exclude = ["messari-cli"]
 
 [workspace.dependencies]
 substreams = "0.5.0"
-substreams-ethereum = "0.8.0"
+substreams-ethereum = "0.9"
 substreams-solana = "0.1.0"
 
 [build]

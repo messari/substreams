@@ -1,0 +1,83 @@
+specVersion: v0.1.0
+package:
+  name: curve_finance_substream
+  version: v0.1.0
+
+imports:
+  sql: https://github.com/streamingfast/substreams-sink-sql/releases/download/protodefs-v1.0.7/substreams-sink-sql-protodefs-v1.0.7.spkg
+  graph: https://github.com/streamingfast/substreams-sink-subgraph/releases/download/v0.1.0/substreams-sink-subgraph-protodefs-v0.1.0.spkg
+  database_change: https://github.com/streamingfast/substreams-sink-database-changes/releases/download/v1.2.1/substreams-database-change-v1.2.1.spkg
+  entity: https://github.com/streamingfast/substreams-entity-change/releases/download/v1.1.0/substreams-entity-change-v1.1.0.spkg
+
+protobuf:
+  files:
+    - common.proto
+    - erc20.proto
+    - contract.proto
+  importPaths:
+    - ./proto
+    - ../common/proto
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: "../target/wasm32-unknown-unknown/release/curve_finance_substream.wasm"
+
+modules:
+  - name: map_factory_added
+    kind: map
+    initialBlock: 11153725
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:messari.contract.v1.Factories
+
+  - name: store_factories
+    kind: store
+    updatePolicy: set_if_not_exists
+    valueType: string
+    inputs:
+      - map: map_factory_added
+
+  - name: map_pool_created
+    kind: map
+    initialBlock: 11153725
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_factories
+    output:
+      type: proto:messari.contract.v1.Pools
+
+  - name: store_pools
+    kind: store
+    updatePolicy: set_if_not_exists
+    valueType: string
+    inputs:
+      - map: map_pool_created
+  
+  - name: store_pool_admin_balances
+    kind: store
+    updatePolicy: set
+    valueType: bigint
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pools
+  
+  - name: map_fees_entity
+    kind: map
+    initialBlock: 11153725
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pool_admin_balances
+      - store: store_pool_admin_balances
+        mode: deltas
+    output:
+      type: proto:substreams.entity.v1.EntityChanges
+
+  - name: graph_out
+    kind: map
+    initialBlock: 11153725
+    inputs:
+      - map: map_fees_entity
+    output:
+      type: proto:substreams.entity.v1.EntityChanges

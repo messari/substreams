@@ -9,7 +9,15 @@ Reference/
 **/target/
 **/build/
 **/data/
+**/node_modules/
+
 **/*.spkg
+**/*.csv
+**/*.clock
+**/*.cursor
+**/*.session
+
+
 **/buf.gen.yaml
 replay.log
 Cargo.lock
